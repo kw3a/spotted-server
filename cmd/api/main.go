@@ -10,7 +10,10 @@ import (
 )
 
 func main() {
-	godotenv.Load("../../.env")
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		log.Fatal("Error loading.env file")
+	}
 	port := os.Getenv("PORT")
 	if port == "" {
 		log.Fatal("port must be set")

@@ -11,7 +11,10 @@ import (
 )
 
 func main() {
-	godotenv.Load("../../.env")
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		log.Fatal("Error loading.env file")
+	}
 	source := os.Getenv("DATABASE_URL")
 	if source == "" {
 		log.Fatal("DATABASE_URL environment variable is not set")

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	_ "github.com/go-sql-driver/mysql"
@@ -41,8 +42,9 @@ func Run(port int) error {
 	r.Mount("/api", apiRouter)
 	strPort := strconv.Itoa(port)
 	srv := &http.Server{
-		Addr:    ":" + strPort,
-		Handler: r,
+		Addr:              ":" + strPort,
+		Handler:           r,
+		ReadHeaderTimeout: time.Second * 30,
 	}
 	fmt.Printf("Serving on port: %s\n", strPort)
 	return srv.ListenAndServe()
