@@ -10,5 +10,5 @@ func (apiCfg *ApiConfig) handlerQuizzesGet(w http.ResponseWriter, r *http.Reques
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	log.Fatal(respondWithJSON(w, http.StatusOK, (dbQuizzes)))
+	respondWithJSON(w, http.StatusOK, (dbQuizzes))
 }
