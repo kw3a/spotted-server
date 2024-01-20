@@ -1,0 +1,13 @@
+-- +goose Up
+CREATE TABLE problem(
+  id CHAR(36) PRIMARY KEY,
+  description TEXT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  memory_limit INTEGER NOT NULL,
+  time_limit DOUBLE PRECISION NOT NULL,
+  quiz_id CHAR(36) NOT NULL,
+  FOREIGN KEY (quiz_id) REFERENCES quiz(id) ON DELETE CASCADE
+);
+
+-- +goose Down
+DROP TABLE problem;
