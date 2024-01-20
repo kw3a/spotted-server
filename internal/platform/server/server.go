@@ -44,7 +44,7 @@ func Run(port int) error {
 	srv := &http.Server{
 		Addr:              ":" + strPort,
 		Handler:           r,
-		ReadHeaderTimeout: 30 * time.Second,
+		ReadHeaderTimeout: time.Second * 30,
 	}
 	fmt.Printf("Serving on port: %s\n", strPort)
 	return srv.ListenAndServe()
