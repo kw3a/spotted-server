@@ -1,11 +1,15 @@
 package server
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+)
 
 func (apiCfg *ApiConfig) handlerQuizzesGet(w http.ResponseWriter, r *http.Request) {
 	dbQuizzes, err := apiCfg.DB.GetQuizzes(r.Context())
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		log.Fatal(respondWithError(w, http.StatusInternalServerError, err.Error()))
 	}
-	respondWithJSON(w, http.StatusOK, (dbQuizzes))
+	log.Fatal(respondWithJSON(w, http.StatusOK, (dbQuizzes)))
+
 }

@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -13,13 +14,13 @@ func (apiCfg *ApiConfig) handlerProblemGet(w http.ResponseWriter, r *http.Reques
 	quizID := chi.URLParam(r, "quizID")
 	err := uuid.Validate(quizID)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Not valid quiz id")
+		log.Fatal(respondWithError(w, http.StatusBadRequest, "Not valid quiz id"))
 		return
 	}
 	problemID := chi.URLParam(r, "problemID")
 	err = uuid.Validate(problemID)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Not valid problem id")
+		log.Fatal(respondWithError(w, http.StatusBadRequest, "Not valid problem id"))
 		return
 	}
 	dbProblem, err := apiCfg.DB.GetProblem(r.Context(), database.GetProblemParams{
@@ -29,17 +30,17 @@ func (apiCfg *ApiConfig) handlerProblemGet(w http.ResponseWriter, r *http.Reques
 		ID_2:     problemID,
 	})
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		log.Fatal(respondWithError(w, http.StatusInternalServerError, err.Error()))
 		return
 	}
-	respondWithJSON(w, http.StatusOK, databaseProblemToProblem(dbProblem))
+	log.Fatal(respondWithJSON(w, http.StatusOK, databaseProblemToProblem(dbProblem)))
 }
 
 func (apiCfg *ApiConfig) handlerProblemsGet(w http.ResponseWriter, r *http.Request) {
 	quizID := chi.URLParam(r, "quizID")
 	err := uuid.Validate(quizID)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Not valid quiz id")
+		log.Fatal(respondWithError(w, http.StatusBadRequest, "Not valid quiz id"))
 		return
 	}
 	dbProblems, err := apiCfg.DB.GetProblems(r.Context(), database.GetProblemsParams{
@@ -47,10 +48,10 @@ func (apiCfg *ApiConfig) handlerProblemsGet(w http.ResponseWriter, r *http.Reque
 		QuizID_2: quizID,
 	})
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		log.Fatal(respondWithError(w, http.StatusInternalServerError, err.Error()))
 		return
 	}
-	respondWithJSON(w, http.StatusOK, databaseProblemsToProblems(dbProblems))
+	log.Fatal(respondWithJSON(w, http.StatusOK, databaseProblemsToProblems(dbProblems)))
 }
 
 func (apiCfg *ApiConfig) handlerProblemCreate(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +67,7 @@ func (apiCfg *ApiConfig) handlerProblemCreate(w http.ResponseWriter, r *http.Req
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Could not parse parameters")
+		log.Fatal(respondWithError(w, http.StatusBadRequest, "Could not parse parameters"))
 		return
 	}
 	err = apiCfg.DB.CreateProblem(r.Context(), database.CreateProblemParams{
@@ -78,7 +79,7 @@ func (apiCfg *ApiConfig) handlerProblemCreate(w http.ResponseWriter, r *http.Req
 		QuizID:      params.QuizID,
 	})
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Couldn't create")
+		log.Fatal(respondWithError(w, http.StatusBadRequest, "Couldn't create"))
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
