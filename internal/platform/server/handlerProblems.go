@@ -50,6 +50,10 @@ func (apiCfg *ApiConfig) handlerProblemsGet(w http.ResponseWriter, r *http.Reque
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	if len(dbProblems) == 0 {
+		respondEmpty(w, http.StatusOK, "Problems not found")
+		return
+	}
 	respondWithJSON(w, http.StatusOK, databaseProblemsToProblems(dbProblems))
 }
 
