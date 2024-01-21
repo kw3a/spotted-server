@@ -19,7 +19,6 @@ type ApiConfig struct {
 }
 
 func Run(port int) error {
-
 	apiCfg := ApiConfig{}
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
@@ -31,11 +30,15 @@ func Run(port int) error {
 			log.Fatal(err)
 			return err
 		}
+		err = db.Ping()
+		if err != nil {
+			log.Fatal(err)
+			return err
+		}
 		dbQueries := database.New(db)
 		apiCfg.DB = dbQueries
 		log.Println("Connected to database!")
 	}
-
 	r := chi.NewRouter()
 	apiRouter := chi.NewRouter()
 	registerRoutes(apiRouter, &apiCfg)
