@@ -48,6 +48,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	_, err = seedTestCases(db, problemIDs)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func Seed(db *sql.DB, queries []string, table_name string) error {

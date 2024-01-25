@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
-	"gitlab.com/kw3a/spotted-server/internal/platform/server"
+	"gitlab.com/kw3a/spotted-server/internal/server"
 )
 
 func main() {
