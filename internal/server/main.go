@@ -15,11 +15,11 @@ import (
 )
 
 type ApiConfig struct {
-	DB *database.Queries
+	DB        *database.Queries
+	jwtSecret string
 }
 
 func Run(port int) error {
-
 	apiCfg := ApiConfig{}
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
@@ -28,14 +28,23 @@ func Run(port int) error {
 	} else {
 		db, err := sql.Open("mysql", dbURL)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			return err
+		}
+		err = db.Ping()
+		if err != nil {
+			log.Println(err)
 			return err
 		}
 		dbQueries := database.New(db)
 		apiCfg.DB = dbQueries
 		log.Println("Connected to database!")
 	}
-
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		return fmt.Errorf("jwt is required")
+	}
+	apiCfg.jwtSecret = jwtSecret
 	r := chi.NewRouter()
 	apiRouter := chi.NewRouter()
 	registerRoutes(apiRouter, &apiCfg)
@@ -59,4 +68,7 @@ func registerRoutes(r *chi.Mux, apiCfg *ApiConfig) {
 	r.Get("/quizzes/{quizID}/problems/{problemID}", apiCfg.handlerProblemGet)
 	r.Post("/problems", apiCfg.handlerProblemCreate)
 	r.Get("/quizzes", apiCfg.handlerQuizzesGet)
+
+	r.Post("/quizzes/{quizID}/problems/{problemID}/submissions", apiCfg.middlewareAuth(apiCfg.handlerSubmissionCreate))
+	r.Post("/login", apiCfg.handlerLogin)
 }

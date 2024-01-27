@@ -121,6 +121,7 @@ SELECT problem.id, problem.description, problem.title, problem.memory_limit, pro
 FROM problem
 JOIN example ON problem.id = example.problem_id
 WHERE problem.quiz_id = ?
+ORDER BY id, language_id DESC
 `
 
 type GetProblemsParams struct {

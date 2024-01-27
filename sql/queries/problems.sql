@@ -25,4 +25,6 @@ UNION
 SELECT problem.*, 0 AS language_id, "" AS language_name, 0 AS language_version, example.input, example.output
 FROM problem
 JOIN example ON problem.id = example.problem_id
-WHERE problem.quiz_id = ?;
+WHERE problem.quiz_id = ?
+ORDER BY id, language_id DESC;
+--
