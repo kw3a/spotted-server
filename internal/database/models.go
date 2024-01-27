@@ -123,6 +123,8 @@ type TestCaseResult struct {
 }
 
 type User struct {
-	ID   string
-	Name string
+	ID       string
+	Name     string
+	Email    string
+	Password string
 }
