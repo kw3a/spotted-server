@@ -4,11 +4,13 @@ services:
 
   mysql:
     image: mysql
-    restart: "no"
+    container_name: spotted-mysql
+    restart: "always"
     environment:
       MYSQL_DATABASE: spotted-db
       MYSQL_ROOT_PASSWORD: root
-    #volumes:
-    #  - /opt/docker/volumes/mysql-data:/var/lib/mysql
+      MYSQL_ALLOW_LOCAL_INFILE: "1"
     ports:
       - 7778:3306
+    #volumes:
+    #  - ./sql-generator:/sql-generator

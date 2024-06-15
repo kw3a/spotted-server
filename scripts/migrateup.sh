@@ -6,3 +6,5 @@ fi
 
 cd sql/schema
 goose mysql $DATABASE_URL up
+cd ../triggers
+goose mysql $DATABASE_URL up

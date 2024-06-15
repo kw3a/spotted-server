@@ -36,138 +36,44 @@ func (q *Queries) CreateProblem(ctx context.Context, arg CreateProblemParams) er
 	return err
 }
 
-const getProblem = `-- name: GetProblem :many
-SELECT problem.id, problem.description, problem.title, problem.memory_limit, problem.time_limit, problem.quiz_id, language.id as language_id, language.name as language_name, language.version as language_version, "" AS input, "" AS output
+const selectProblem = `-- name: SelectProblem :one
+SELECT problem.title, problem.description
 FROM problem
-JOIN language_problem ON problem.id = language_problem.problem_id
-JOIN language ON language_problem.language_id = language.id
-WHERE problem.quiz_id = ? and problem.id = ?
-UNION
-SELECT problem.id, problem.description, problem.title, problem.memory_limit, problem.time_limit, problem.quiz_id, 0 AS language_id, "" AS language_name, 0 AS language_version, example.input, example.output
-FROM problem
-JOIN example ON problem.id = example.problem_id
-WHERE problem.quiz_id = ? and problem.id = ?
+WHERE problem.id = ?
 `
 
-type GetProblemParams struct {
-	QuizID   string
-	ID       string
-	QuizID_2 string
-	ID_2     string
+type SelectProblemRow struct {
+	Title       string
+	Description string
 }
 
-type GetProblemRow struct {
-	ID              string
-	Description     string
-	Title           string
-	MemoryLimit     int32
-	TimeLimit       float64
-	QuizID          string
-	LanguageID      int32
-	LanguageName    string
-	LanguageVersion int32
-	Input           string
-	Output          string
+func (q *Queries) SelectProblem(ctx context.Context, id string) (SelectProblemRow, error) {
+	row := q.db.QueryRowContext(ctx, selectProblem, id)
+	var i SelectProblemRow
+	err := row.Scan(&i.Title, &i.Description)
+	return i, err
 }
 
-func (q *Queries) GetProblem(ctx context.Context, arg GetProblemParams) ([]GetProblemRow, error) {
-	rows, err := q.db.QueryContext(ctx, getProblem,
-		arg.QuizID,
-		arg.ID,
-		arg.QuizID_2,
-		arg.ID_2,
-	)
+const selectProblemIDs = `-- name: SelectProblemIDs :many
+SELECT problem.id
+FROM problem
+INNER JOIN quiz ON problem.quiz_id = quiz.id
+WHERE quiz.id = ?
+`
+
+func (q *Queries) SelectProblemIDs(ctx context.Context, id string) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, selectProblemIDs, id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetProblemRow
+	var items []string
 	for rows.Next() {
-		var i GetProblemRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Description,
-			&i.Title,
-			&i.MemoryLimit,
-			&i.TimeLimit,
-			&i.QuizID,
-			&i.LanguageID,
-			&i.LanguageName,
-			&i.LanguageVersion,
-			&i.Input,
-			&i.Output,
-		); err != nil {
+		var id string
+		if err := rows.Scan(&id); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getProblems = `-- name: GetProblems :many
-SELECT problem.id, problem.description, problem.title, problem.memory_limit, problem.time_limit, problem.quiz_id, language.id as language_id, language.name as language_name, language.version as language_version, "" AS input, "" AS output
-FROM problem
-JOIN language_problem ON problem.id = language_problem.problem_id
-JOIN language ON language_problem.language_id = language.id
-WHERE problem.quiz_id = ?
-UNION
-SELECT problem.id, problem.description, problem.title, problem.memory_limit, problem.time_limit, problem.quiz_id, 0 AS language_id, "" AS language_name, 0 AS language_version, example.input, example.output
-FROM problem
-JOIN example ON problem.id = example.problem_id
-WHERE problem.quiz_id = ?
-ORDER BY id, language_id DESC
-`
-
-type GetProblemsParams struct {
-	QuizID   string
-	QuizID_2 string
-}
-
-type GetProblemsRow struct {
-	ID              string
-	Description     string
-	Title           string
-	MemoryLimit     int32
-	TimeLimit       float64
-	QuizID          string
-	LanguageID      int32
-	LanguageName    string
-	LanguageVersion int32
-	Input           string
-	Output          string
-}
-
-func (q *Queries) GetProblems(ctx context.Context, arg GetProblemsParams) ([]GetProblemsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getProblems, arg.QuizID, arg.QuizID_2)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetProblemsRow
-	for rows.Next() {
-		var i GetProblemsRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Description,
-			&i.Title,
-			&i.MemoryLimit,
-			&i.TimeLimit,
-			&i.QuizID,
-			&i.LanguageID,
-			&i.LanguageName,
-			&i.LanguageVersion,
-			&i.Input,
-			&i.Output,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
+		items = append(items, id)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

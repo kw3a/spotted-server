@@ -10,7 +10,7 @@ import (
 )
 
 const getQuizzes = `-- name: GetQuizzes :many
-SELECT id, title, description 
+SELECT id, title, description, duration 
 FROM quiz
 LIMIT 10
 `
@@ -24,7 +24,12 @@ func (q *Queries) GetQuizzes(ctx context.Context) ([]Quiz, error) {
 	var items []Quiz
 	for rows.Next() {
 		var i Quiz
-		if err := rows.Scan(&i.ID, &i.Title, &i.Description); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.Duration,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

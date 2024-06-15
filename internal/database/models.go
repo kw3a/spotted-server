@@ -5,55 +5,9 @@
 package database
 
 import (
-	"database/sql/driver"
-	"fmt"
+	"database/sql"
 	"time"
 )
-
-type TestCaseResultStatus string
-
-const (
-	TestCaseResultStatusAccepted     TestCaseResultStatus = "Accepted"
-	TestCaseResultStatusWrongAnswer  TestCaseResultStatus = "Wrong Answer"
-	TestCaseResultStatusTimelimit    TestCaseResultStatus = "Time limit"
-	TestCaseResultStatusMemorylimit  TestCaseResultStatus = "Memory limit"
-	TestCaseResultStatusCompileerror TestCaseResultStatus = "Compile error"
-)
-
-func (e *TestCaseResultStatus) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = TestCaseResultStatus(s)
-	case string:
-		*e = TestCaseResultStatus(s)
-	default:
-		return fmt.Errorf("unsupported scan type for TestCaseResultStatus: %T", src)
-	}
-	return nil
-}
-
-type NullTestCaseResultStatus struct {
-	TestCaseResultStatus TestCaseResultStatus
-	Valid                bool // Valid is true if TestCaseResultStatus is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullTestCaseResultStatus) Scan(value interface{}) error {
-	if value == nil {
-		ns.TestCaseResultStatus, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.TestCaseResultStatus.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullTestCaseResultStatus) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.TestCaseResultStatus), nil
-}
 
 type Example struct {
 	ID        string
@@ -62,23 +16,30 @@ type Example struct {
 	ProblemID string
 }
 
+type Jwt struct {
+	RefreshToken string
+	CreatedAt    time.Time
+}
+
 type Language struct {
 	ID      int32
 	Name    string
 	Version int32
 }
 
-type LanguageProblem struct {
+type LanguageQuiz struct {
 	ID         string
 	LanguageID int32
-	ProblemID  string
+	QuizID     string
 }
 
 type Participation struct {
-	ID     string
-	Date   time.Time
-	UserID string
-	QuizID string
+	ID        string
+	CreatedAt sql.NullTime
+	UpdatedAt sql.NullTime
+	ExpiresAt time.Time
+	UserID    string
+	QuizID    string
 }
 
 type Problem struct {
@@ -94,15 +55,18 @@ type Quiz struct {
 	ID          string
 	Title       string
 	Description string
+	Duration    int32
 }
 
 type Submission struct {
-	ID         string
-	Src        string
-	Time       time.Time
-	ProblemID  string
-	UserID     string
-	LanguageID int32
+	ID                string
+	CreatedAt         sql.NullTime
+	UpdatedAt         sql.NullTime
+	Src               string
+	AcceptedTestCases uint32
+	ProblemID         string
+	ParticipationID   string
+	LanguageID        int32
 }
 
 type TestCase struct {
@@ -113,18 +77,19 @@ type TestCase struct {
 }
 
 type TestCaseResult struct {
-	ID           string
-	Status       TestCaseResultStatus
-	Metrics      int32
-	Output       string
-	JudgeToken   string
+	ID           sql.NullString
+	Status       string
+	Time         string
+	Memory       int32
 	TestCaseID   string
 	SubmissionID string
 }
 
 type User struct {
-	ID       string
-	Name     string
-	Email    string
-	Password string
+	ID          string
+	Name        string
+	Email       string
+	Password    string
+	Role        string
+	Description sql.NullString
 }

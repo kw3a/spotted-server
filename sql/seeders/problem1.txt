@@ -1,3 +1,0 @@
-You are given n one-dimensional segments (each segment is denoted by two integers — its endpoints). Lets define the function f(x) as the number of segments covering point x (a segment covers the point x if l≤x≤r, where l is the left endpoint and r is the right endpoint of the segment).
-An integer point x is called ideal if it belongs to more segments than any other integer point, i. e. f(y)<f(x) is true for any other integer point y. 
-You are given an integer k. Your task is to determine whether it is possible to remove some (possibly zero) segments, so that the given point k becomes ideal.

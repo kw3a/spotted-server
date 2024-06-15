@@ -1,7 +1,7 @@
 package server
 
 import (
-	"database/sql"
+	"embed"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,65 +10,136 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	_ "github.com/go-sql-driver/mysql"
-	"gitlab.com/kw3a/spotted-server/internal/database"
 )
 
-type ApiConfig struct {
-	DB        *database.Queries
-	jwtSecret string
+//go:embed "static"
+var Files embed.FS
+
+type EnvVariables struct {
+	port           string
+	dbURL          string
+	jwtSecret      string
+	judgeURL       string
+	judgeAuthToken string
+	myURL          string
 }
 
-func Run(port int) error {
-	apiCfg := ApiConfig{}
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL == "" {
-		log.Println("DATABASE_URL environment variable is not set")
-		log.Println("Running without CRUD endpoints")
-	} else {
-		db, err := sql.Open("mysql", dbURL)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-		err = db.Ping()
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-		dbQueries := database.New(db)
-		apiCfg.DB = dbQueries
-		log.Println("Connected to database!")
+func Run() error {
+	envVars, err := envVariables()
+	if err != nil {
+		return err
 	}
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		return fmt.Errorf("jwt is required")
-	}
-	apiCfg.jwtSecret = jwtSecret
 	r := chi.NewRouter()
-	apiRouter := chi.NewRouter()
-	registerRoutes(apiRouter, &apiCfg)
-	r.Mount("/api", apiRouter)
-	strPort := strconv.Itoa(port)
+	setupCors(r)
+	//registerRoutes(apiRouter, &apiCfg)
+	callbackPath := "/api/submissions/"
+	callbackURL := envVars.myURL + callbackPath
+	viewRoutes(r, envVars.dbURL, envVars.jwtSecret, envVars.judgeURL, envVars.judgeAuthToken, callbackURL)
 	srv := &http.Server{
-		Addr:              ":" + strPort,
+		Addr:              ":" + envVars.port,
 		Handler:           r,
 		ReadHeaderTimeout: time.Second * 30,
 	}
-	fmt.Printf("Serving on port: %s\n", strPort)
+	fmt.Printf("Serving on port: %s\n", envVars.port)
 	return srv.ListenAndServe()
 }
 
+func envVariables() (EnvVariables, error) {
+	port := os.Getenv("PORT")
+	if port == "" {
+		return EnvVariables{}, fmt.Errorf("PORT environment variable is not set")
+	}
+	_, err := strconv.Atoi(port)
+	if err != nil {
+		return EnvVariables{}, fmt.Errorf("PORT environment variable is not a valid integer")
+	}
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		return EnvVariables{}, fmt.Errorf("DATABASE_URL environment variable is not set")
+	}
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		return EnvVariables{}, fmt.Errorf("JWT_SECRET environment variable is not set")
+	}
+	judgeURL := os.Getenv("JUDGE_URL")
+	if judgeURL == "" {
+		return EnvVariables{}, fmt.Errorf("JUDGE_URL environment variable is not set")
+	}
+	judgeAuthToken := os.Getenv("JUDGE_AUTHN_SECRET")
+	if judgeAuthToken == "" {
+		return EnvVariables{}, fmt.Errorf("JUDGE_AUTHN_SECRET environment variable is not set")
+	}
+	myURL := os.Getenv("MY_URL")
+	if myURL == "" {
+		return EnvVariables{}, fmt.Errorf("MY_URL environment variable is not set")
+	}
+	return EnvVariables{
+    port:           port,
+		dbURL:          dbURL,
+		jwtSecret:      jwtSecret,
+		judgeURL:       judgeURL,
+		judgeAuthToken: judgeAuthToken,
+		myURL:          myURL,
+	}, nil
+
+}
+
+func viewRoutes(r *chi.Mux, dbURL, jwtSecret, judgeURL, judgeAuthToken, callbackURL string) {
+	app, err := NewApp(dbURL, jwtSecret, judgeURL, judgeAuthToken, callbackURL)
+	if err != nil {
+		log.Println(err)
+	}
+	devMiddleware := app.AuthService.DevMiddleware
+	fileServer := http.FileServer(http.FS(Files))
+	r.Get("/", app.JobOffersHandler())
+	r.Handle("/public/*", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
+	r.Handle("/static/*", fileServer)
+	r.Get("/login", app.LoginPageHandler())
+	r.Post("/login", app.AuthService.LoginHandler())
+	r.Get("/languages/{quizID}", app.LanguagesHandler())
+	r.Get("/problems", app.ProblemsHandler())
+	r.Get("/examples", app.ExamplesHandler())
+	r.Get("/quizzes/{quizID}", devMiddleware(app.QuizPageHandler()))
+	r.Get("/source", devMiddleware(app.SourceHandler()))
+
+  r.Post("/submissions", devMiddleware(app.RunHandler()))
+  r.HandleFunc("/results/{submissionID}", devMiddleware(app.ResultsHandler()))
+  r.Put("/api/submissions/{submissionID}/tc/{testCaseID}", app.CallbackHandler())
+}
+
+/*
 func registerRoutes(r *chi.Mux, apiCfg *ApiConfig) {
+	//authService := auth.NewAuthService(apiCfg.jwtSecret, apiCfg.queries)
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	r.Get("/quizzes/{quizID}", apiCfg.handlerProblemsGet)
-	r.Get("/quizzes/{quizID}/problems/{problemID}", apiCfg.handlerProblemGet)
+	//r.Get("/quizzes/{quizID}/problems/{problemID}", apiCfg.handlerProblemGet)
 	r.Post("/problems", apiCfg.handlerProblemCreate)
 	r.Get("/quizzes", apiCfg.handlerQuizzesGet)
 
-	r.Post("/quizzes/{quizID}/problems/{problemID}/submissions", apiCfg.middlewareAuth(apiCfg.handlerSubmissionCreate))
-	r.Post("/login", apiCfg.handlerLogin)
+	//authMiddleware := authService.Middleware
+	//r.Post("/login", login.LoginHandler(apiCfg.jwtSecret, apiCfg.queries))
+	//r.Post("/refresh", login.RefreshHandler(apiCfg.jwtSecret, apiCfg.queries))
+	//r.Post("/revoke", login.RevokeHandler(apiCfg.jwtSecret, apiCfg.queries))
+
+	//judgePackage := codejudge.NewCodeJudge(apiCfg.queries, apiCfg.db, )
+	//r.Post("/submissions/{problemID}", authMiddleware(judgePackage.RunHandler()))
+	//r.Put("/submissions/{submissionID}/tc/{testCaseID}", judgePackage.CallbackHandler())
+	//r.HandleFunc("/results/{submissionID}", judgePackage.JudgeResultsHandler())
+
+}
+*/
+
+func setupCors(r *chi.Mux) {
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	}))
 }

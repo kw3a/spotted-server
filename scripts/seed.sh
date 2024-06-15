@@ -1,4 +1,4 @@
 #!/bin/bash
-cd sql/seeders
+cd seeders
 go build -o seeder
 ./seeder

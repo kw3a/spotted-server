@@ -7,32 +7,56 @@ package database
 
 import (
 	"context"
-	"time"
 )
 
 const createSubmission = `-- name: CreateSubmission :exec
 INSERT INTO submission 
-(id, src, time, problem_id, user_id, language_id)
-VALUES (?, ?, ?, ?, ?, ?)
+(id, src, problem_id, language_id, participation_id)
+SELECT ?, ?, problem.id, ?, participation.id
+FROM problem
+JOIN quiz ON problem.quiz_id = quiz.id
+JOIN participation ON quiz.id = participation.quiz_id
+WHERE problem.id = ? and participation.user_id = ? and participation.expires_at < NOW()
 `
 
 type CreateSubmissionParams struct {
 	ID         string
 	Src        string
-	Time       time.Time
-	ProblemID  string
-	UserID     string
 	LanguageID int32
+	ID_2       string
+	UserID     string
 }
 
 func (q *Queries) CreateSubmission(ctx context.Context, arg CreateSubmissionParams) error {
 	_, err := q.db.ExecContext(ctx, createSubmission,
 		arg.ID,
 		arg.Src,
-		arg.Time,
-		arg.ProblemID,
-		arg.UserID,
 		arg.LanguageID,
+		arg.ID_2,
+		arg.UserID,
 	)
 	return err
+}
+
+const lastSubmission = `-- name: LastSubmission :one
+SELECT submission.src
+FROM submission
+JOIN language ON submission.language_id = language.id
+JOIN participation ON submission.participation_id = participation.id
+WHERE submission.problem_id = ? and submission.language_id = ? and participation.user_id = ?
+ORDER BY submission.created_at DESC
+LIMIT 1
+`
+
+type LastSubmissionParams struct {
+	ProblemID  string
+	LanguageID int32
+	UserID     string
+}
+
+func (q *Queries) LastSubmission(ctx context.Context, arg LastSubmissionParams) (string, error) {
+	row := q.db.QueryRowContext(ctx, lastSubmission, arg.ProblemID, arg.LanguageID, arg.UserID)
+	var src string
+	err := row.Scan(&src)
+	return src, err
 }
