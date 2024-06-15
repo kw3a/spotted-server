@@ -31,17 +31,18 @@ func getRunInput(r *http.Request) (RunInput, error) {
 	if src == "" {
 		return RunInput{}, fmt.Errorf("src is empty")
 	}
-	intLanguageID, err := strconv.Atoi(languageID)
+  languageIDInt, err := strconv.ParseInt(languageID, 10, 32)
+  languageIDInt32 := int32(languageIDInt)
 	if err != nil {
 		return RunInput{}, fmt.Errorf("languageID is not a valid integer")
 	}
-	if intLanguageID < 0 || intLanguageID > 100 {
+	if languageIDInt32< 0 ||languageIDInt32> 100 {
 		return RunInput{}, fmt.Errorf("languageID is not in the valid range")
 	}
 	input := RunInput{
 		ProblemID:  problemID,
 		Src:        src,
-		LanguageID: int32(intLanguageID),
+		LanguageID: languageIDInt32,
 	}
 	return input, nil
 }

@@ -31,19 +31,24 @@ func createSourceHandler(storage SourceStorage, authServ AuthRep) http.HandlerFu
 			http.Error(w, "invalid languageID", http.StatusBadRequest)
 			return
 		}
-		languageIDInt, err := strconv.Atoi(languageID)
+    languageIDInt, err := strconv.ParseInt(languageID, 10, 32)
+    languageIDInt32 := int32(languageIDInt)
+		//languageIDInt, err := strconv.Atoi(languageID)
 		if err != nil {
 			http.Error(w, "invalid languageID", http.StatusBadRequest)
 			return
 		}
-		src, err := storage.LastSrc(r.Context(), userID, problemID, int32(languageIDInt))
+		src, err := storage.LastSrc(r.Context(), userID, problemID, languageIDInt32)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "text/plain")
-		w.Write([]byte(src))
+		_, err = w.Write([]byte(src))
+    if err != nil {
+      http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
 	}
 }
 
