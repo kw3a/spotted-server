@@ -9,7 +9,6 @@ import (
 )
 
 var (
-	errUserID         = errors.New("user ID is not valid")
 	errTokenType      = errors.New("token type is not valid")
 	errExpirationTime = errors.New("the token is expired")
 )
@@ -103,9 +102,5 @@ func (t *ParsedToken) isUserValid() error {
 }
 
 func validateUserID(userID string) error {
-	err := uuid.Validate(userID)
-	if err != nil {
-		return errUserID
-	}
-	return nil
+	return uuid.Validate(userID)
 }

@@ -2,13 +2,13 @@ package codejudgetest
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
 	"github.com/google/uuid"
-	responseparser "github.com/kw3a/spotted-server/internal/http_parser/responseParser"
 	"github.com/kw3a/spotted-server/internal/server/codejudge"
 )
 
@@ -56,6 +56,23 @@ func getTestCases() []codejudge.TestCase {
 	}
 }
 
+func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	response, err := json.Marshal(payload)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(code)
+	_, err = w.Write(response)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+}
+
+func RespondWithError(w http.ResponseWriter, code int, msg string) {
+	RespondWithJSON(w, code, map[string]string{"error": msg})
+}
 func TestComposeUrlEmpty(t *testing.T) {
 	auth_token := getAuthToken()
 	_, err := codejudge.ComposeUrl("", "submissions/batch", auth_token)
@@ -198,20 +215,20 @@ func testServer() *httptest.Server {
 		token := r.URL.Query().Get("X-Auth-Token")
 		base_64 := r.URL.Query().Get("base64_encoded")
 		if token != "test_token" || base_64 != "true" {
-			responseparser.RespondWithError(w, 400, "invalid token")
+			RespondWithError(w, 400, "invalid token")
 			return
 		}
 		params := codejudge.JudgeSubmission{}
 		if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-			responseparser.RespondWithError(w, 401, "can't unmarshal params")
+			RespondWithError(w, 401, "can't unmarshal params")
 			return
 		}
 		if len(params.TestsCases) != 2 {
-			responseparser.RespondWithError(w, 402, "invalid length")
+			RespondWithError(w, 402, "invalid length")
 			return
 		}
 		payload := []codejudge.Token{{Token: "token1"}, {Token: "token2"}}
-		responseparser.RespondWithJSON(w, http.StatusCreated, payload)
+		RespondWithJSON(w, http.StatusCreated, payload)
 	}))
 	return testServer
 }

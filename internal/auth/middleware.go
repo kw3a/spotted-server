@@ -37,8 +37,23 @@ func (auth *AuthService) Middleware(role string, next http.HandlerFunc) http.Han
 		access_token := token.Value
 		userID, err := auth.JWTRep.Authenticate(access_token)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
+      refresh, err := r.Cookie("refresh_token")
+      if err != nil {
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+      }
+			access_token, err = auth.JWTRep.CreateAccess(refresh.Value)
+      if err != nil {
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+      }
+      http.SetCookie(w, &http.Cookie{
+        Name:    "access,token",
+        Value:   access_token,
+        Secure:  true,
+        HttpOnly: true,
+        SameSite: http.SameSiteLaxMode,
+      })
 		}
 		authUser := AuthUser{
 			ID:   userID,
