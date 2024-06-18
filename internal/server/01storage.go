@@ -6,8 +6,10 @@ import (
 	"errors"
 	"log"
 	"strconv"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 	"github.com/kw3a/spotted-server/internal/database"
 	"github.com/kw3a/spotted-server/internal/server/codejudge"
 )
@@ -29,6 +31,29 @@ func NewMysqlStorage(dbURL string) (*MysqlStorage, error) {
 	}
 	queries := database.New(db)
 	return &MysqlStorage{Queries: queries}, nil
+}
+
+func (mysql *MysqlStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, error) {
+	participation, err := mysql.Queries.ParticipationStatus(ctx, database.ParticipationStatusParams{
+		UserID: userID,
+		QuizID: quizID,
+	})
+	if err != nil {
+		return "", false, err
+	}
+	inHour := false
+	if time.Now().Before(participation.ExpiresAt) {
+		inHour = true
+	}
+	return participation.ID, inHour, nil
+}
+
+func (mysql *MysqlStorage) Participate(ctx context.Context, userID string, quizID string) error {
+	return mysql.Queries.Participate(ctx, database.ParticipateParams{
+		ID:     uuid.New().String(),
+		UserID: userID,
+		QuizID: quizID,
+	})
 }
 
 func (mysql *MysqlStorage) SelectProblemIDs(ctx context.Context, QuizID string) ([]string, error) {
@@ -116,13 +141,13 @@ func (mysql *MysqlStorage) LastSrc(ctx context.Context, userID string, problemID
 	return dbLastSubmission, nil
 }
 
-func (s MysqlStorage) CreateSubmission(ctx context.Context, submissionID, userID, problemID, src string, languageID int32) error {
+func (s MysqlStorage) CreateSubmission(ctx context.Context, submissionID, participationID, problemID, src string, languageID int32) error {
 	return s.Queries.CreateSubmission(ctx, database.CreateSubmissionParams{
-		ID:         submissionID,
-		UserID:     userID,
-		Src:        src,
-		ID_2:       problemID,
-		LanguageID: languageID,
+		ID:              submissionID,
+		Src:             src,
+		LanguageID:      languageID,
+		ProblemID:       problemID,
+		ParticipationID: participationID,
 	})
 }
 
@@ -155,15 +180,11 @@ func ToTC(dbTestCases []database.GetTestCasesRow) ([]codejudge.TestCase, error) 
 // This method must work only when TCResult is empty
 func (s MysqlStorage) UpdateTestCaseResult(ctx context.Context, input CallbackInput, submissionID, testCaseID string) error {
 	return s.Queries.UpdateTestCaseResult(ctx, database.UpdateTestCaseResultParams{
-		Status: input.Status.Description,
-		Time:   input.Time.String(),
-		Memory: int32(input.Memory),
-		ID: sql.NullString{
-			String: input.Token,
-			Valid:  true,
-		},
+    ID:           sql.NullString{String: input.Token, Valid: true},
+    Status:       sql.NullString{String: input.Status.Description, Valid: true},
+    Time:         sql.NullString{String: input.Time.String(), Valid: true},
+    Memory:       sql.NullInt32{Int32: input.Memory, Valid: true},
 		SubmissionID: submissionID,
 		TestCaseID:   testCaseID,
-		Status_2:     "Submitted",
 	})
 }

@@ -1,12 +1,7 @@
 -- name: CreateSubmission :exec
 INSERT INTO submission 
-(id, src, problem_id, language_id, participation_id)
-SELECT ?, ?, problem.id, ?, participation.id
-FROM problem
-JOIN quiz ON problem.quiz_id = quiz.id
-JOIN participation ON quiz.id = participation.quiz_id
-WHERE problem.id = ? and participation.user_id = ? and participation.expires_at < NOW();
-
+(id, src, language_id, problem_id, participation_id)
+VALUES (?, ?, ?, ?, ?);
 
 -- name: LastSubmission :one
 SELECT submission.src

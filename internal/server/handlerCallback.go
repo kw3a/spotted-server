@@ -39,7 +39,7 @@ func NewCallbackUrlParams(r *http.Request) (CallbackUrlParams, error) {
 type CallbackInput struct {
 	Stdout        interface{}     `json:"stdout"`
 	Time          decimal.Decimal `json:"time"`
-	Memory        int             `json:"memory"`
+	Memory        int32             `json:"memory"`
 	Stderr        string          `json:"stderr"`
 	Token         string          `json:"token"`
 	CompileOutput interface{}     `json:"compile_output"`

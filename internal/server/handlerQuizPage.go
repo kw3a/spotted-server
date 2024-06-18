@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -44,6 +45,8 @@ type EditorData struct {
 }
 
 type QuizPageStorage interface {
+	ParticipationStatus(ctx context.Context, userID string, quizID string) (id string, inHour bool, err error)
+	Participate(ctx context.Context, userID string, quizID string) error
 	SelectProblemIDs(ctx context.Context, quizID string) ([]string, error)
 	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
 	SelectExamples(ctx context.Context, problemID string) ([]Example, error)
@@ -51,7 +54,24 @@ type QuizPageStorage interface {
 	LastSrc(ctx context.Context, userID string, problemID string, languageID int32) (string, error)
 }
 
-func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep AuthRep) http.HandlerFunc {
+func Participation(ctx context.Context, storage QuizPageStorage, userID, quizID string) error {
+	_, inHour, err := storage.ParticipationStatus(ctx, userID, quizID)
+	if err != nil {
+    if err != sql.ErrNoRows {
+      return fmt.Errorf("error different from sql.ErrNoRows %s", err.Error())
+    }
+		err = storage.Participate(ctx, userID, quizID)
+		if err != nil {
+      return fmt.Errorf("error in participate %s", err.Error())
+		}
+	}
+  if !inHour {
+    return fmt.Errorf("your participation is over")
+  }
+  return nil
+}
+
+func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep AuthRep, redirectPath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		quizID := chi.URLParam(r, "quizID")
 		if quizID == "" {
@@ -60,7 +80,7 @@ func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep Au
 		}
 		userID, err := authRep.GetUser(r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+      http.Redirect(w, r, redirectPath, http.StatusSeeOther)
 			return
 		}
 		problemIDs, err := storage.SelectProblemIDs(r.Context(), quizID)
@@ -68,6 +88,11 @@ func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep Au
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+    err = Participation(r.Context(), storage, userID, quizID)
+    if err != nil {
+      http.Error(w, err.Error(), http.StatusBadRequest)
+      return
+    }
 		problems := []ProblemSelector{}
 		for i, problemID := range problemIDs {
 			strName := strconv.Itoa(i + 1)
@@ -116,8 +141,9 @@ func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep Au
 
 func (DI *App) QuizPageHandler() http.HandlerFunc {
 	return createQuizPageHandler(
-    DI.Templ,
+		DI.Templ,
 		DI.Storage,
 		DI.AuthService,
+		"/",
 	)
 }

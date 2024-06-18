@@ -11,20 +11,16 @@ import (
 
 const createSubmission = `-- name: CreateSubmission :exec
 INSERT INTO submission 
-(id, src, problem_id, language_id, participation_id)
-SELECT ?, ?, problem.id, ?, participation.id
-FROM problem
-JOIN quiz ON problem.quiz_id = quiz.id
-JOIN participation ON quiz.id = participation.quiz_id
-WHERE problem.id = ? and participation.user_id = ? and participation.expires_at < NOW()
+(id, src, language_id, problem_id, participation_id)
+VALUES (?, ?, ?, ?, ?)
 `
 
 type CreateSubmissionParams struct {
-	ID         string
-	Src        string
-	LanguageID int32
-	ID_2       string
-	UserID     string
+	ID              string
+	Src             string
+	LanguageID      int32
+	ProblemID       string
+	ParticipationID string
 }
 
 func (q *Queries) CreateSubmission(ctx context.Context, arg CreateSubmissionParams) error {
@@ -32,8 +28,8 @@ func (q *Queries) CreateSubmission(ctx context.Context, arg CreateSubmissionPara
 		arg.ID,
 		arg.Src,
 		arg.LanguageID,
-		arg.ID_2,
-		arg.UserID,
+		arg.ProblemID,
+		arg.ParticipationID,
 	)
 	return err
 }

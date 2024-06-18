@@ -78,9 +78,9 @@ type TestCase struct {
 
 type TestCaseResult struct {
 	ID           sql.NullString
-	Status       string
-	Time         string
-	Memory       int32
+	Status       sql.NullString
+	Time         sql.NullString
+	Memory       sql.NullInt32
 	TestCaseID   string
 	SubmissionID string
 }

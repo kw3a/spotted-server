@@ -4,7 +4,7 @@ CREATE TRIGGER insert_test_case_result_submission
 AFTER INSERT ON submission
 FOR EACH ROW
 BEGIN
-    DECLARE test_case_id INT;
+    DECLARE test_case_id CHAR(36);
     DECLARE cursor_finished BOOLEAN DEFAULT FALSE;
 
     DECLARE cur_test_cases CURSOR FOR 
@@ -23,8 +23,8 @@ BEGIN
             LEAVE loop_test_cases;
         END IF; -- IF END
 
-        INSERT INTO test_case_result (problem_id, submission_id, test_case_id)
-        VALUES (NEW.problem_id, NEW.id, test_case_id);
+        INSERT INTO test_case_result (submission_id, test_case_id)
+        VALUES (NEW.id, test_case_id);
     END LOOP loop_test_cases; -- LOOP END
 
     CLOSE cur_test_cases; -- CURSOR END

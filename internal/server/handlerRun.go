@@ -12,6 +12,7 @@ import (
 )
 
 type RunInput struct {
+	QuizID     string
 	ProblemID  string
 	Src        string
 	LanguageID int32
@@ -22,24 +23,29 @@ type RunOutput struct {
 }
 
 func getRunInput(r *http.Request) (RunInput, error) {
+  quizID := r.FormValue("quizID")
 	problemID := r.FormValue("problemID")
 	src := r.FormValue("src")
 	languageID := r.FormValue("languageID")
+  if uuid.Validate(quizID) != nil {
+    return RunInput{}, fmt.Errorf("quiz_id is not a valid UUID")
+  }
 	if uuid.Validate(problemID) != nil {
 		return RunInput{}, fmt.Errorf("problem_id is not a valid UUID")
 	}
 	if src == "" {
 		return RunInput{}, fmt.Errorf("src is empty")
 	}
-  languageIDInt, err := strconv.ParseInt(languageID, 10, 32)
-  languageIDInt32 := int32(languageIDInt)
+	languageIDInt, err := strconv.ParseInt(languageID, 10, 32)
 	if err != nil {
 		return RunInput{}, fmt.Errorf("languageID is not a valid integer")
 	}
-	if languageIDInt32< 0 ||languageIDInt32> 100 {
+	languageIDInt32 := int32(languageIDInt)
+	if languageIDInt32 < 0 || languageIDInt32 > 100 {
 		return RunInput{}, fmt.Errorf("languageID is not in the valid range")
 	}
 	input := RunInput{
+    QuizID:     quizID,
 		ProblemID:  problemID,
 		Src:        src,
 		LanguageID: languageIDInt32,
@@ -49,8 +55,9 @@ func getRunInput(r *http.Request) (RunInput, error) {
 
 type RunStorage interface {
 	//Also handle logic for participationID and quizz time
-	CreateSubmission(ctx context.Context, submissionID, userID, problemID, src string, languageID int32) error
+	CreateSubmission(ctx context.Context, submissionID, participationID, problemID, src string, languageID int32) error
 
+	ParticipationStatus(ctx context.Context, userID string, quizID string) (id string, inHour bool, err error)
 	GetTestCases(ctx context.Context, problemID string) ([]codejudge.TestCase, error)
 }
 
@@ -66,6 +73,11 @@ func createRunHandler(templ *Templates, storage RunStorage, authService AuthRep,
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		participationID, inHour, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
+		if err != nil || !inHour {
+			http.Error(w, "error in getting status:"+err.Error(), http.StatusBadRequest)
+			return
+		}
 		//Select DB Test Cases
 		testCases, err := storage.GetTestCases(r.Context(), input.ProblemID)
 		if err != nil {
@@ -74,9 +86,9 @@ func createRunHandler(templ *Templates, storage RunStorage, authService AuthRep,
 		}
 		//DB INSERTS
 		submissionID := uuid.NewString()
-		err = storage.CreateSubmission(r.Context(), submissionID, userID, input.ProblemID, input.Src, input.LanguageID)
+		err = storage.CreateSubmission(r.Context(), submissionID, participationID, input.ProblemID, input.Src, input.LanguageID)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "error in create submission: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		//Judge request
@@ -100,7 +112,7 @@ func createRunHandler(templ *Templates, storage RunStorage, authService AuthRep,
 
 func (app *App) RunHandler() http.HandlerFunc {
 	return createRunHandler(
-    app.Templ,
+		app.Templ,
 		app.Storage,
 		app.AuthService,
 		app.Stream,

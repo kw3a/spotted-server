@@ -11,21 +11,6 @@ import (
 	"strings"
 )
 
-const createEmptyTestCaseResults = `-- name: CreateEmptyTestCaseResults :copyfrom
-INSERT INTO test_case_result
-(id, status, time, memory, test_case_id, submission_id)
-VALUES (?, ?, ?, ?, ?, ?)
-`
-
-type CreateEmptyTestCaseResultsParams struct {
-	ID           sql.NullString
-	Status       string
-	Time         string
-	Memory       int32
-	TestCaseID   string
-	SubmissionID string
-}
-
 const createTestCaseResult = `-- name: CreateTestCaseResult :exec
 INSERT INTO test_case_result
 (id, status, time, memory, test_case_id, submission_id)
@@ -34,9 +19,9 @@ VALUES (?, ?, ?, ?, ?, ?)
 
 type CreateTestCaseResultParams struct {
 	ID           sql.NullString
-	Status       string
-	Time         string
-	Memory       int32
+	Status       sql.NullString
+	Time         sql.NullString
+	Memory       sql.NullInt32
 	TestCaseID   string
 	SubmissionID string
 }
@@ -120,29 +105,27 @@ func (q *Queries) GetTestCaseResult(ctx context.Context, id sql.NullString) (Tes
 }
 
 const updateTestCaseResult = `-- name: UpdateTestCaseResult :exec
-UPDATE test_case_result SET status = ?, time = ?, memory = ?
-WHERE id =? and submission_id = ? and test_case_id = ? and status = ?
+UPDATE test_case_result SET id = ?, status = ?, time = ?, memory = ?
+WHERE submission_id = ? and test_case_id = ?
 `
 
 type UpdateTestCaseResultParams struct {
-	Status       string
-	Time         string
-	Memory       int32
 	ID           sql.NullString
+	Status       sql.NullString
+	Time         sql.NullString
+	Memory       sql.NullInt32
 	SubmissionID string
 	TestCaseID   string
-	Status_2     string
 }
 
 func (q *Queries) UpdateTestCaseResult(ctx context.Context, arg UpdateTestCaseResultParams) error {
 	_, err := q.db.ExecContext(ctx, updateTestCaseResult,
+		arg.ID,
 		arg.Status,
 		arg.Time,
 		arg.Memory,
-		arg.ID,
 		arg.SubmissionID,
 		arg.TestCaseID,
-		arg.Status_2,
 	)
 	return err
 }
