@@ -109,30 +109,6 @@ func viewRoutes(r *chi.Mux, dbURL, jwtSecret, judgeURL, judgeAuthToken, callback
   r.Put("/api/submissions/{submissionID}/tc/{testCaseID}", app.CallbackHandler())
 }
 
-/*
-func registerRoutes(r *chi.Mux, apiCfg *ApiConfig) {
-	//authService := auth.NewAuthService(apiCfg.jwtSecret, apiCfg.queries)
-	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
-	//r.Get("/quizzes/{quizID}/problems/{problemID}", apiCfg.handlerProblemGet)
-	r.Post("/problems", apiCfg.handlerProblemCreate)
-	r.Get("/quizzes", apiCfg.handlerQuizzesGet)
-
-	//authMiddleware := authService.Middleware
-	//r.Post("/login", login.LoginHandler(apiCfg.jwtSecret, apiCfg.queries))
-	//r.Post("/refresh", login.RefreshHandler(apiCfg.jwtSecret, apiCfg.queries))
-	//r.Post("/revoke", login.RevokeHandler(apiCfg.jwtSecret, apiCfg.queries))
-
-	//judgePackage := codejudge.NewCodeJudge(apiCfg.queries, apiCfg.db, )
-	//r.Post("/submissions/{problemID}", authMiddleware(judgePackage.RunHandler()))
-	//r.Put("/submissions/{submissionID}/tc/{testCaseID}", judgePackage.CallbackHandler())
-	//r.HandleFunc("/results/{submissionID}", judgePackage.JudgeResultsHandler())
-
-}
-*/
-
 func setupCors(r *chi.Mux) {
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
