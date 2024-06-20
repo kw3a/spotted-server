@@ -1,0 +1,16 @@
+{
+  "name": "spotted-server",
+  "version": "1.0.0",
+  "description": "```json [   {     \"id\": \"\",     \"description\": \"\",     \"title\": \"\",     \"memory_limit\": \"(integer)KB\",     \"time_limit\": \"(decimal)\",     \"quiz_id\": \"\",     \"number_of_test_cases\": \"0>(integer)<10\",   }, ] ```",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "npx tailwindcss -i ./internal/server/static/input.css -o ./internal/server/static/output.css",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^3.4.4"
+  }
+}
