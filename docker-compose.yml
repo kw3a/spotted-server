@@ -9,7 +9,6 @@ services:
     environment:
       MYSQL_DATABASE: spotted-db
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_ALLOW_LOCAL_INFILE: "1"
     ports:
       - 7778:3306
     #volumes:
