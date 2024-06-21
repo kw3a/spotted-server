@@ -37,8 +37,7 @@
         id="problem-selector"
         class="flex-none w-16 flex flex-col justify-evenly overflow-y-auto items-center bg-shark-950 border border-shark-900 rounded"
       >
-        {{ $first := true }}
-        {{range .Problems}}
+        {{ $first := true }} {{range .Problems}}
         <li class="w-full p-2 flex items-center justify-center">
           <input
             id="radio-{{.ID}}"
@@ -48,7 +47,14 @@
             class="hidden peer"
             data-problem_id="{{.ID}}"
             onclick="changeProblem(this.dataset.problem_id)"
-            {{ if $first }} checked {{ end }}
+            {{
+            if
+            $first
+            }}
+            checked
+            {{
+            end
+            }}
           />
           <label
             for="radio-{{.ID}}"
@@ -57,8 +63,7 @@
             {{.ProblemName}}
           </label>
         </li>
-        {{ $first = false }}
-        {{end}}
+        {{ $first = false }} {{end}}
       </ul>
       <section
         id="workspace"
@@ -124,10 +129,12 @@
             </button>
           </form>
           <div
-            id="results"
-            class="flex-1 mt-2 p-4 bg-shark-950 rounded text-shark-400 border border-shark-900 overflow-y-auto"
+            class="flex-1 mt-2 p-4 bg-shark-950 rounded border border-shark-900 overflow-y-auto"
           >
-            <p>The results will be shown here</p>
+            <p class="text-xl text-shark-400">Results:</p>
+            <div id="results" class="text-lg text-shark-400">
+              <p>The results will be shown here</p>
+            </div>
           </div>
         </section>
       </section>
@@ -195,7 +202,9 @@
 <p>{{.ResolvedProblems}} Of {{.NumberOfProblems}}</p>
 {{end}} {{block "sseResults" .}}
 <div hx-ext="sse" sse-connect="/results/{{.SubmissionID}}">
-  <div sse-swap="result"></div>
+  <span class="loader"></span>
+  <span class="text-lg text-shark-400">Running...</span>
+  <div sse-swap="result" class="text-lg text-shark-400">></div>
   <div sse-swap="finished" hx-target="#results"></div>
 </div>
 
