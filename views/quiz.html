@@ -17,36 +17,46 @@
 
   <body class="bg-black">
     <div class="flex flex-row h-screen p-2 gap-2">
-      <div
+      <script>
+        function changeProblem(id) {
+          htmx.trigger("#problem-info", "evtproblemchange", {
+            problem_id: id,
+          });
+          htmx.trigger("#examples", "evtproblemchange", {
+            problem_id: id,
+          });
+          htmx.trigger("#language-select", "evtproblemchange", {
+            problem_id: id,
+          });
+          htmx.trigger("#submit-button", "evtproblemchange", {
+            problem_id: id,
+          });
+        }
+      </script>
+      <ul
         id="problem-selector"
         class="flex-none w-16 flex flex-col justify-evenly overflow-y-auto items-center bg-shark-950 border border-shark-900 rounded"
       >
-        <script>
-          function changeProblem(id) {
-            htmx.trigger("#problem-info", "evtproblemchange", {
-              problem_id: id,
-            });
-            htmx.trigger("#examples", "evtproblemchange", {
-              problem_id: id,
-            });
-            htmx.trigger("#language-select", "evtproblemchange", {
-              problem_id: id,
-            });
-            htmx.trigger("#submit-button", "evtproblemchange", {
-              problem_id: id,
-            });
-          }
-        </script>
         {{range .Problems}}
-        <button
-          class="w-12 h-12 bg-shark-500 hover:bg-shark-600 text-white font-bold rounded"
-          data-problem_id="{{.ID}}"
-          onclick="changeProblem(this.dataset.problem_id)"
-        >
-          {{.ProblemName}}
-        </button>
+        <li class="w-full p-2 flex items-center justify-center">
+          <input
+            id="radio-{{.ID}}"
+            type="radio"
+            name="selected-problem"
+            value="{{.ID}}"
+            class="hidden peer"
+            data-problem_id="{{.ID}}"
+            onclick="changeProblem(this.dataset.problem_id)"
+          />
+          <label
+            for="radio-{{.ID}}"
+            class="w-full text-center flex flex-col justify-center h-12 bg-shark-500 hover:bg-shark-600 text-white font-bold cursor-pointer rounded peer-checked:text-blue-800"
+          >
+            {{.ProblemName}}
+          </label>
+        </li>
         {{end}}
-      </div>
+      </ul>
       <section
         id="workspace"
         class="flex-1 gap-2 overflow-y-auto xl:flex-row xl:flex"
