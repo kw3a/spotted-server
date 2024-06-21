@@ -37,6 +37,7 @@
         id="problem-selector"
         class="flex-none w-16 flex flex-col justify-evenly overflow-y-auto items-center bg-shark-950 border border-shark-900 rounded"
       >
+        {{ $first := true }}
         {{range .Problems}}
         <li class="w-full p-2 flex items-center justify-center">
           <input
@@ -47,14 +48,16 @@
             class="hidden peer"
             data-problem_id="{{.ID}}"
             onclick="changeProblem(this.dataset.problem_id)"
+            {{ if $first }} checked {{ end }}
           />
           <label
             for="radio-{{.ID}}"
-            class="w-full text-center flex flex-col justify-center h-12 bg-shark-500 hover:bg-shark-600 text-white font-bold cursor-pointer rounded peer-checked:text-blue-800"
+            class="w-full text-center flex flex-col justify-center h-12 bg-shark-500 hover:bg-shark-600 text-white font-bold cursor-pointer rounded peer-checked:bg-blue-400"
           >
             {{.ProblemName}}
           </label>
         </li>
+        {{ $first = false }}
         {{end}}
       </ul>
       <section
