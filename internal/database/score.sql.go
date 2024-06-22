@@ -9,39 +9,45 @@ import (
 	"context"
 )
 
-const getScores = `-- name: GetScores :many
-SELECT problem.id, MAX(submission.accepted_test_cases) AS accepted_test_cases
+const bestSubmission = `-- name: BestSubmission :one
+SELECT submission.id, submission.created_at, submission.updated_at, submission.src, submission.accepted_test_cases, submission.problem_id, submission.participation_id, submission.language_id
 FROM submission
-INNER JOIN participation ON submission.participation_id = participation.id
-INNER JOIN problem ON submission.problem_id = problem.id
-WHERE participation.id = ?
-GROUP BY problem.id
+JOIN participation ON submission.participation_id = participation.id
+WHERE submission.problem_id = ? and participation.user_id = ?
+ORDER BY submission.accepted_test_cases DESC, submission.created_at ASC
+LIMIT 1
 `
 
-type GetScoresRow struct {
-	ID                string
-	AcceptedTestCases interface{}
+type BestSubmissionParams struct {
+	ProblemID string
+	UserID    string
 }
 
-func (q *Queries) GetScores(ctx context.Context, id string) ([]GetScoresRow, error) {
-	rows, err := q.db.QueryContext(ctx, getScores, id)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetScoresRow
-	for rows.Next() {
-		var i GetScoresRow
-		if err := rows.Scan(&i.ID, &i.AcceptedTestCases); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) BestSubmission(ctx context.Context, arg BestSubmissionParams) (Submission, error) {
+	row := q.db.QueryRowContext(ctx, bestSubmission, arg.ProblemID, arg.UserID)
+	var i Submission
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Src,
+		&i.AcceptedTestCases,
+		&i.ProblemID,
+		&i.ParticipationID,
+		&i.LanguageID,
+	)
+	return i, err
+}
+
+const totalTestCases = `-- name: TotalTestCases :one
+SELECT COUNT(test_case.id) as total_test_cases
+FROM test_case
+WHERE test_case.problem_id = ?
+`
+
+func (q *Queries) TotalTestCases(ctx context.Context, problemID string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, totalTestCases, problemID)
+	var total_test_cases int64
+	err := row.Scan(&total_test_cases)
+	return total_test_cases, err
 }

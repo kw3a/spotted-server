@@ -10,3 +10,4 @@ JOIN participation ON submission.participation_id = participation.id
 WHERE submission.problem_id = ? and submission.language_id = ? and participation.user_id = ?
 ORDER BY submission.created_at DESC
 LIMIT 1;
+

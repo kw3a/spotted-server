@@ -13,6 +13,7 @@ import (
 type QuizPageData struct {
 	QuizID         string
 	Problems       []ProblemSelector
+	Score          ScoreData
 	ProblemContent ProblemContent
 	Examples       []Example
 	EditorData     EditorData
@@ -22,6 +23,11 @@ type QuizPageData struct {
 type ProblemSelector struct {
 	ID          string
 	ProblemName string
+}
+
+type ScoreData struct {
+	AcceptedTestCases int 
+	TotalTestCases   int 
 }
 
 type ProblemContent struct {
@@ -48,6 +54,7 @@ type QuizPageStorage interface {
 	ParticipationStatus(ctx context.Context, userID string, quizID string) (id string, inHour bool, err error)
 	Participate(ctx context.Context, userID string, quizID string) error
 	SelectProblemIDs(ctx context.Context, quizID string) ([]string, error)
+	SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error)
 	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
 	SelectExamples(ctx context.Context, problemID string) ([]Example, error)
 	SelectLanguages(ctx context.Context, quizID string) ([]LanguageSelector, error)
@@ -57,18 +64,18 @@ type QuizPageStorage interface {
 func Participation(ctx context.Context, storage QuizPageStorage, userID, quizID string) error {
 	_, inHour, err := storage.ParticipationStatus(ctx, userID, quizID)
 	if err != nil {
-    if err != sql.ErrNoRows {
-      return fmt.Errorf("error different from sql.ErrNoRows %s", err.Error())
-    }
+		if err != sql.ErrNoRows {
+			return fmt.Errorf("error different from sql.ErrNoRows %s", err.Error())
+		}
 		err = storage.Participate(ctx, userID, quizID)
 		if err != nil {
-      return fmt.Errorf("error in participate %s", err.Error())
+			return fmt.Errorf("error in participate %s", err.Error())
 		}
 	}
-  if !inHour {
-    return fmt.Errorf("your participation is over")
-  }
-  return nil
+	if !inHour {
+		return fmt.Errorf("your participation is over")
+	}
+	return nil
 }
 
 func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep AuthRep, redirectPath string) http.HandlerFunc {
@@ -80,7 +87,7 @@ func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep Au
 		}
 		userID, err := authRep.GetUser(r)
 		if err != nil {
-      http.Redirect(w, r, redirectPath, http.StatusSeeOther)
+			http.Redirect(w, r, redirectPath, http.StatusSeeOther)
 			return
 		}
 		problemIDs, err := storage.SelectProblemIDs(r.Context(), quizID)
@@ -88,11 +95,11 @@ func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep Au
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-    err = Participation(r.Context(), storage, userID, quizID)
-    if err != nil {
-      http.Error(w, err.Error(), http.StatusBadRequest)
-      return
-    }
+		err = Participation(r.Context(), storage, userID, quizID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		problems := []ProblemSelector{}
 		for i, problemID := range problemIDs {
 			strName := strconv.Itoa(i + 1)
@@ -103,6 +110,11 @@ func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep Au
 			problems = append(problems, current)
 		}
 		selectedProblem := problemIDs[0]
+		score, err := storage.SelectScore(r.Context(), userID, selectedProblem)
+		if err != nil {
+			http.Error(w,  err.Error(), http.StatusInternalServerError)
+			return
+		}
 		problemContent, err := storage.SelectProblem(r.Context(), selectedProblem)
 		if err != nil {
 			http.Error(w, "problem description not found", http.StatusInternalServerError)
@@ -127,6 +139,7 @@ func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep Au
 		quizPageData := QuizPageData{
 			QuizID:         quizID,
 			Problems:       problems,
+      Score:          score,
 			ProblemContent: problemContent,
 			Examples:       examples,
 			EditorData:     EditorData{SrcValue: lastSrc, Language: selectedLanguage.SimpleName},

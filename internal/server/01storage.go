@@ -100,6 +100,25 @@ func (mysql *MysqlStorage) SelectLanguages(ctx context.Context, quizID string) (
 	return res, nil
 }
 
+func (mysql *MysqlStorage) SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error) {
+  totalTestCases, err := mysql.Queries.TotalTestCases(ctx, problemID)
+  if err != nil {
+    return ScoreData{}, err
+  }
+  best, err := mysql.Queries.BestSubmission(ctx, database.BestSubmissionParams{
+    ProblemID: problemID,
+    UserID:    userID,
+  })
+  acceptedTestCases := int(best.AcceptedTestCases)
+  if err == sql.ErrNoRows {
+    acceptedTestCases = 0
+  }
+  return ScoreData{
+    AcceptedTestCases: acceptedTestCases,
+    TotalTestCases:    int(totalTestCases),
+  }, nil
+}
+
 func (mysql *MysqlStorage) SelectProblem(ctx context.Context, problemID string) (ProblemContent, error) {
 	dbProblem, err := mysql.Queries.SelectProblem(ctx, problemID)
 	if err != nil {

@@ -31,6 +31,9 @@
           htmx.trigger("#submit-button", "evtproblemchange", {
             problem_id: id,
           });
+          htmx.trigger("#score", "evtproblemchange", {
+            problem_id: id,
+          });
         }
       </script>
       <ul
@@ -73,6 +76,14 @@
           id="problem-content"
           class="flex-1 xl:w-1/2 p-8 bg-shark-950 border border-shark-900 rounded overflow-y-auto"
         >
+          <div
+            id="score"
+            hx-get="/score"
+            hx-trigger="evtproblemchange"
+            hx-vals="js:{problemID: event.detail.problem_id }"
+          >
+            {{template "score" .Score}}
+          </div>
           <div
             id="problem-info"
             hx-get="/problems"
@@ -141,6 +152,8 @@
     </div>
   </body>
 </html>
+{{end}} {{block "score" .}}
+<p class="text-white">Score: {{.AcceptedTestCases}}/{{.TotalTestCases}}</p>
 {{end}} {{block "problem" .}}
 <h1 class="text-white">{{.Title}}</h1>
 <hr />
