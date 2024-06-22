@@ -39,7 +39,7 @@ func (q *Queries) CreateTestCaseResult(ctx context.Context, arg CreateTestCaseRe
 }
 
 const getResults = `-- name: GetResults :many
-SELECT id, status, time, memory, test_case_id, submission_id 
+SELECT id, created_at, updated_at, status, time, memory, test_case_id, submission_id 
 FROM test_case_result
 WHERE id IN (/*SLICE:ids*/?)
 `
@@ -65,6 +65,8 @@ func (q *Queries) GetResults(ctx context.Context, ids []sql.NullString) ([]TestC
 		var i TestCaseResult
 		if err := rows.Scan(
 			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 			&i.Status,
 			&i.Time,
 			&i.Memory,
@@ -85,7 +87,7 @@ func (q *Queries) GetResults(ctx context.Context, ids []sql.NullString) ([]TestC
 }
 
 const getTestCaseResult = `-- name: GetTestCaseResult :one
-SELECT id, status, time, memory, test_case_id, submission_id
+SELECT id, created_at, updated_at, status, time, memory, test_case_id, submission_id
 FROM test_case_result
 WHERE id =?
 `
@@ -95,6 +97,8 @@ func (q *Queries) GetTestCaseResult(ctx context.Context, id sql.NullString) (Tes
 	var i TestCaseResult
 	err := row.Scan(
 		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 		&i.Status,
 		&i.Time,
 		&i.Memory,
