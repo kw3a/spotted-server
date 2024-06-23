@@ -71,6 +71,7 @@ func Participation(ctx context.Context, storage QuizPageStorage, userID, quizID 
 		if err != nil {
 			return fmt.Errorf("error in participate %s", err.Error())
 		}
+    return nil
 	}
 	if !inHour {
 		return fmt.Errorf("your participation is over")
