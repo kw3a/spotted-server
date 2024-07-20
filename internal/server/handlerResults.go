@@ -32,6 +32,7 @@ func EventStream(w http.ResponseWriter, listenerChannel chan string) {
     http.Error(w, "sse is not suppported", http.StatusInternalServerError)
 		return
 	}
+	SSEHeaders(w)
   last := ""
 	for msg := range listenerChannel {
     last = msg
@@ -51,7 +52,6 @@ func EventStream(w http.ResponseWriter, listenerChannel chan string) {
 
 // SSEWriter calls FormatServerSentEvent and adds \n on the end of all the events (event1\n\n\nevent2\n\n\n...)
 func SSEWriter(w http.ResponseWriter, event, data string) error {
-	SSEHeaders(w)
 	formatedEvent, err := FormatServerSentEvent(event, data)
 	if err != nil {
 		return err
@@ -61,8 +61,18 @@ func SSEWriter(w http.ResponseWriter, event, data string) error {
 }
 
 func FormatServerSentEvent(event string, data string) (string, error) {
-	return fmt.Sprintf("event: %s\ndata: %s\n\n", event, data), nil
+	formatData := formatData(event, data)
+	return fmt.Sprintf("event: %s\ndata: %s\n\n", event, formatData), nil
 }
+
+func formatData(event string, data string) string {
+	formatData := fmt.Sprintf("<p>%s</p>", data)
+	if event == "finished" {
+		formatData += `<div hx-on::load="htmx.trigger('#score', 'evtrunfinished')"></div>`
+	}
+	return formatData
+}
+		
 
 func SSEHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/event-stream")
