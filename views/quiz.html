@@ -87,9 +87,14 @@
                 hours + "h " + minutes + "m " + seconds + "s ";
               if (distance < 0) {
                 clearInterval(x);
-                document.getElementById("demo").innerHTML = "EXPIRED";
+                document.getElementById("timer").innerHTML = "EXPIRED";
+                showAlertAndRedirect();
               }
             }, 1000);
+            function showAlertAndRedirect() {
+              alert("Time is up!");
+              window.location.href = "/";
+            }
           </script>
           <div
             id="score"
