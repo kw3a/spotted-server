@@ -57,7 +57,7 @@ type RunStorage interface {
 	//Also handle logic for participationID and quizz time
 	CreateSubmission(ctx context.Context, submissionID, participationID, problemID, src string, languageID int32) error
 
-	ParticipationStatus(ctx context.Context, userID string, quizID string) (id string, inHour bool, err error)
+	ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error)
 	GetTestCases(ctx context.Context, problemID string) ([]codejudge.TestCase, error)
 }
 
@@ -73,7 +73,7 @@ func createRunHandler(templ *Templates, storage RunStorage, authService AuthRep,
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		participationID, inHour, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
+		participationID, inHour, _, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
 		if err != nil || !inHour {
 			http.Error(w, "error in getting status:"+err.Error(), http.StatusBadRequest)
 			return

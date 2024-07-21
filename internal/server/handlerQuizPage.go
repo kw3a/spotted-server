@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -13,6 +14,7 @@ import (
 type QuizPageData struct {
 	QuizID         string
 	Problems       []ProblemSelector
+	ExpiresAt      time.Time
 	Score          ScoreData
 	ProblemContent ProblemContent
 	Examples       []Example
@@ -26,8 +28,8 @@ type ProblemSelector struct {
 }
 
 type ScoreData struct {
-	AcceptedTestCases int 
-	TotalTestCases   int 
+	AcceptedTestCases int
+	TotalTestCases    int
 }
 
 type ProblemContent struct {
@@ -51,7 +53,7 @@ type EditorData struct {
 }
 
 type QuizPageStorage interface {
-	ParticipationStatus(ctx context.Context, userID string, quizID string) (id string, inHour bool, err error)
+	ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error)
 	Participate(ctx context.Context, userID string, quizID string) error
 	SelectProblemIDs(ctx context.Context, quizID string) ([]string, error)
 	SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error)
@@ -61,22 +63,22 @@ type QuizPageStorage interface {
 	LastSrc(ctx context.Context, userID string, problemID string, languageID int32) (string, error)
 }
 
-func Participation(ctx context.Context, storage QuizPageStorage, userID, quizID string) error {
-	_, inHour, err := storage.ParticipationStatus(ctx, userID, quizID)
+func Participation(ctx context.Context, storage QuizPageStorage, userID, quizID string) (time.Time, error) {
+	_, inHour, expiresAt, err := storage.ParticipationStatus(ctx, userID, quizID)
 	if err != nil {
 		if err != sql.ErrNoRows {
-			return fmt.Errorf("error different from sql.ErrNoRows %s", err.Error())
+			return time.Now(), fmt.Errorf("error different from sql.ErrNoRows %s", err.Error()) 
 		}
 		err = storage.Participate(ctx, userID, quizID)
 		if err != nil {
-			return fmt.Errorf("error in participate %s", err.Error())
+			return time.Now(), fmt.Errorf("error in participate %s", err.Error()) 
 		}
-    return nil
+		return time.Now(), nil
 	}
 	if !inHour {
-		return fmt.Errorf("your participation is over")
+		return time.Now(), fmt.Errorf("your participation is over") 
 	}
-	return nil
+	return expiresAt, nil 
 }
 
 func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep AuthRep, redirectPath string) http.HandlerFunc {
@@ -96,7 +98,7 @@ func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep Au
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		err = Participation(r.Context(), storage, userID, quizID)
+		expiresAt, err := Participation(r.Context(), storage, userID, quizID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -113,7 +115,7 @@ func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep Au
 		selectedProblem := problemIDs[0]
 		score, err := storage.SelectScore(r.Context(), userID, selectedProblem)
 		if err != nil {
-			http.Error(w,  err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		problemContent, err := storage.SelectProblem(r.Context(), selectedProblem)
@@ -140,7 +142,8 @@ func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep Au
 		quizPageData := QuizPageData{
 			QuizID:         quizID,
 			Problems:       problems,
-      Score:          score,
+			ExpiresAt:      expiresAt,
+			Score:          score,
 			ProblemContent: problemContent,
 			Examples:       examples,
 			EditorData:     EditorData{SrcValue: lastSrc, Language: selectedLanguage.SimpleName},

@@ -33,19 +33,19 @@ func NewMysqlStorage(dbURL string) (*MysqlStorage, error) {
 	return &MysqlStorage{Queries: queries}, nil
 }
 
-func (mysql *MysqlStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, error) {
+func (mysql *MysqlStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error) {
 	participation, err := mysql.Queries.ParticipationStatus(ctx, database.ParticipationStatusParams{
 		UserID: userID,
 		QuizID: quizID,
 	})
 	if err != nil {
-		return "", false, err
+		return "", false, time.Now(), err
 	}
 	inHour := false
 	if time.Now().Before(participation.ExpiresAt) {
 		inHour = true
 	}
-	return participation.ID, inHour, nil
+	return participation.ID, inHour, participation.ExpiresAt, nil
 }
 
 func (mysql *MysqlStorage) Participate(ctx context.Context, userID string, quizID string) error {
