@@ -75,7 +75,7 @@ func (mysql *MysqlStorage) SelectOffers(ctx context.Context) ([]Offer, error) {
 	offers := []Offer{}
 	for _, quiz := range quizzes {
 		offers = append(offers, Offer{
-			ID:          quiz.ID,
+			QuizID:      quiz.ID,
 			Title:       quiz.Title,
 			Description: quiz.Description,
 		})
@@ -101,22 +101,22 @@ func (mysql *MysqlStorage) SelectLanguages(ctx context.Context, quizID string) (
 }
 
 func (mysql *MysqlStorage) SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error) {
-  totalTestCases, err := mysql.Queries.TotalTestCases(ctx, problemID)
-  if err != nil {
-    return ScoreData{}, err
-  }
-  best, err := mysql.Queries.BestSubmission(ctx, database.BestSubmissionParams{
-    ProblemID: problemID,
-    UserID:    userID,
-  })
-  acceptedTestCases := int(best.AcceptedTestCases)
-  if err == sql.ErrNoRows {
-    acceptedTestCases = 0
-  }
-  return ScoreData{
-    AcceptedTestCases: acceptedTestCases,
-    TotalTestCases:    int(totalTestCases),
-  }, nil
+	totalTestCases, err := mysql.Queries.TotalTestCases(ctx, problemID)
+	if err != nil {
+		return ScoreData{}, err
+	}
+	best, err := mysql.Queries.BestSubmission(ctx, database.BestSubmissionParams{
+		ProblemID: problemID,
+		UserID:    userID,
+	})
+	acceptedTestCases := int(best.AcceptedTestCases)
+	if err == sql.ErrNoRows {
+		acceptedTestCases = 0
+	}
+	return ScoreData{
+		AcceptedTestCases: acceptedTestCases,
+		TotalTestCases:    int(totalTestCases),
+	}, nil
 }
 
 func (mysql *MysqlStorage) SelectProblem(ctx context.Context, problemID string) (ProblemContent, error) {
@@ -199,11 +199,19 @@ func ToTC(dbTestCases []database.GetTestCasesRow) ([]codejudge.TestCase, error) 
 // This method must work only when TCResult is empty
 func (s MysqlStorage) UpdateTestCaseResult(ctx context.Context, input CallbackInput, submissionID, testCaseID string) error {
 	return s.Queries.UpdateTestCaseResult(ctx, database.UpdateTestCaseResultParams{
-    ID:           sql.NullString{String: input.Token, Valid: true},
-    Status:       sql.NullString{String: input.Status.Description, Valid: true},
-    Time:         sql.NullString{String: input.Time.String(), Valid: true},
-    Memory:       sql.NullInt32{Int32: input.Memory, Valid: true},
+		ID:           sql.NullString{String: input.Token, Valid: true},
+		Status:       sql.NullString{String: input.Status.Description, Valid: true},
+		Time:         sql.NullString{String: input.Time.String(), Valid: true},
+		Memory:       sql.NullInt32{Int32: input.Memory, Valid: true},
 		SubmissionID: submissionID,
 		TestCaseID:   testCaseID,
 	})
+}
+func (s MysqlStorage) EndQuiz(ctx context.Context, userID, quizID string) error {
+	return s.Queries.EndParticipation(ctx, database.EndParticipationParams{
+		ExpiresAt: time.Now(),
+		UserID:    userID,
+		QuizID:    quizID,
+	})
+
 }

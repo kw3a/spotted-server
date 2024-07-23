@@ -1,5 +1,5 @@
 {{block "jobPage" .}}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -9,12 +9,14 @@
   </head>
 
   <body>
-    <div >
+    <div>
       {{range .Offers}}
       <div>
         <h1>{{.Title}}</h1>
         <p>{{.Description}}</p>
-        <a href="/quizzes/{{.ID}}">Take Quiz</a>
+        <button hx-post="/participate" hx-vals="js:{quizID: '{{.QuizID}}'}">
+          Take Quiz
+        </button>
       </div>
       {{end}}
     </div>

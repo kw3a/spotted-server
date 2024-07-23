@@ -104,6 +104,8 @@ func viewRoutes(r *chi.Mux, dbURL, jwtSecret, judgeURL, judgeAuthToken, callback
 	r.Get("/quizzes/{quizID}", devMiddleware(app.QuizPageHandler()))
 	r.Get("/source", devMiddleware(app.SourceHandler()))
   r.Get("/score", devMiddleware(app.ScoreHandler()))
+	r.Post("/participate", devMiddleware(app.ParticipateHandler()))
+	r.Post("/end", devMiddleware(app.EndHandler()))
 
   r.Post("/submissions", devMiddleware(app.RunHandler()))
   r.HandleFunc("/results/{submissionID}", devMiddleware(app.ResultsHandler()))

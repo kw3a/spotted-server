@@ -77,7 +77,7 @@ func CreateLoginHandler(authRep Authentication, storage AuthenticationStorage) h
 			HttpOnly: true,
 			SameSite: http.SameSiteLaxMode,
 		})
-		w.Header().Set("HX-Location", "/")
+		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusOK)
 	}
 }

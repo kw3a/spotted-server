@@ -108,7 +108,11 @@
             {{template "score" .Score}}
           </div>
           <div class="w-1/3 flex justify-center">
-            <button class="w-40 self-center h-6 bg-green-400 rounded">
+            <button class="w-40 self-center h-6 bg-green-400 rounded"
+              hx-post="/end"
+              hx-vals="js:{quizID: '{{.QuizID}}'}"
+              hx-confirm="Are you sure you want to end the quiz?"
+            >
               End
             </button>
           </div>

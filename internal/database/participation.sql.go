@@ -10,6 +10,23 @@ import (
 	"time"
 )
 
+const endParticipation = `-- name: EndParticipation :exec
+UPDATE participation
+SET expires_at = ?
+WHERE participation.user_id = ? AND participation.quiz_id = ?
+`
+
+type EndParticipationParams struct {
+	ExpiresAt time.Time
+	UserID    string
+	QuizID    string
+}
+
+func (q *Queries) EndParticipation(ctx context.Context, arg EndParticipationParams) error {
+	_, err := q.db.ExecContext(ctx, endParticipation, arg.ExpiresAt, arg.UserID, arg.QuizID)
+	return err
+}
+
 const participate = `-- name: Participate :exec
 INSERT INTO participation (id, user_id, quiz_id)
 VALUES (?, ?, ?)

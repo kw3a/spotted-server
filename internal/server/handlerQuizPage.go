@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -54,7 +53,6 @@ type EditorData struct {
 
 type QuizPageStorage interface {
 	ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error)
-	Participate(ctx context.Context, userID string, quizID string) error
 	SelectProblemIDs(ctx context.Context, quizID string) ([]string, error)
 	SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error)
 	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
@@ -66,13 +64,6 @@ type QuizPageStorage interface {
 func Participation(ctx context.Context, storage QuizPageStorage, userID, quizID string) (time.Time, error) {
 	_, inHour, expiresAt, err := storage.ParticipationStatus(ctx, userID, quizID)
 	if err != nil {
-		if err != sql.ErrNoRows {
-			return time.Now(), fmt.Errorf("error different from sql.ErrNoRows %s", err.Error()) 
-		}
-		err = storage.Participate(ctx, userID, quizID)
-		if err != nil {
-			return time.Now(), fmt.Errorf("error in participate %s", err.Error()) 
-		}
 		return time.Now(), nil
 	}
 	if !inHour {
