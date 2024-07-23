@@ -16,7 +16,7 @@ func (cfg *SeedersConfig) seedQuizes() ([]string, error) {
 		err := cfg.DB.SeedQuiz(cfg.Ctx, database.SeedQuizParams{
 			ID:          id,
 			Title:       fmt.Sprintf("Tech interview %v", i),
-			Description: "We are hiring",
+			Description: fmt.Sprintf("Description %v", i),
 			Duration:    120,
 		})
 		if err != nil {
