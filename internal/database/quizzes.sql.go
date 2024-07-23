@@ -12,6 +12,7 @@ import (
 const getQuizzes = `-- name: GetQuizzes :many
 SELECT id, created_at, updated_at, title, description, duration 
 FROM quiz
+ORDER BY quiz.created_at ASC
 LIMIT 10
 `
 

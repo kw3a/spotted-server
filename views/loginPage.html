@@ -1,20 +1,36 @@
 {{block "loginPage" .}}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <script src="static/htmx.min.js"></script>
-    <link href="/static/output.css" rel="stylesheet" />
-  </head>
 
-  <body>
-    <form hx-post="/login">
-      <input type="email" name="email" value="myemail@gmail.com" />
-      <input type="text" name="password" value="OhHellYes!" />
-      <button type="submit">Login</button>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <script src="static/htmx.min.js"></script>
+  <link href="/static/output.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div class="max-w-lg mx-auto my-10">
+    <form class="border border-black rounded p-4 space-y-4" hx-post="/login">
+      <h1 class="text-center font-bold text-lg">Login</h1>
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+        <input class="block w-full border border-gray-300 rounded p-2 mt-1" type="email" name="email" id="email"
+          value="myemail@gmail.com" />
+      </div>
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+        <input class="block w-full border border-gray-300 rounded p-2 mt-1" type="password" name="password"
+          id="password" value="OhHellYes!" />
+      </div>
+      <div class="flex justify-center">
+        <button class="bg-blue-500 rounded hover:bg-blue-700 text-white font-bold py-2 px-4" type="submit">
+          Login
+        </button>
+      </div>
     </form>
-  </body>
+</body>
+
 </html>
 {{end}}
