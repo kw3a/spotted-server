@@ -19,7 +19,7 @@ type JobOfferStorage interface {
 	SelectOffers(ctx context.Context) ([]Offer, error)
 }
 
-func createJobOffersHandler(templ *Templates, storage JobOfferStorage) http.HandlerFunc {
+func CreateJobOffersHandler(templ TemplatesRepo, storage JobOfferStorage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		offers, err := storage.SelectOffers(r.Context())
 		if err != nil {
@@ -35,5 +35,5 @@ func createJobOffersHandler(templ *Templates, storage JobOfferStorage) http.Hand
 }
 
 func (DI *App) JobOffersHandler() http.HandlerFunc {
-	return createJobOffersHandler(DI.Templ, DI.Storage)
+	return CreateJobOffersHandler(DI.Templ, DI.Storage)
 }

@@ -9,15 +9,29 @@ import (
 type ProblemsStorage interface {
 	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
 }
+type ProblemsInput struct {
+	ProblemID string
+}
 
-func createProblemHandler(templ *Templates, storage ProblemsStorage) http.HandlerFunc {
+func GetProblemsInput(r *http.Request) (ProblemsInput, error) {
+	problemID := r.FormValue("problemID")
+	if err := ValidateUUID(problemID); err != nil {
+		return ProblemsInput{}, err
+	}
+	return ProblemsInput{
+		ProblemID: problemID,
+	}, nil
+}
+
+type problemsInputFn func(r *http.Request) (ProblemsInput, error)
+func CreateProblemHandler(templ TemplatesRepo, storage ProblemsStorage, inputFn problemsInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		problemID := r.FormValue("problemID")
-		if problemID == "" {
-			http.Error(w, "invalid problemID", http.StatusBadRequest)
+		input, err := inputFn(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		problem, err := storage.SelectProblem(r.Context(), problemID)
+		problem, err := storage.SelectProblem(r.Context(), input.ProblemID)
 		if err != nil {
 			http.Error(w, "problem not found", http.StatusBadRequest)
 			return
@@ -31,5 +45,5 @@ func createProblemHandler(templ *Templates, storage ProblemsStorage) http.Handle
 }
 
 func (app *App) ProblemsHandler() http.HandlerFunc {
-	return createProblemHandler(app.Templ, app.Storage)
+	return CreateProblemHandler(app.Templ, app.Storage, GetProblemsInput)
 }

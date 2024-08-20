@@ -50,6 +50,19 @@ type EditorData struct {
 	SrcValue string
 	Language string
 }
+type QuizPageInput struct {
+	QuizID string
+}
+
+func GetQuizPageInput(r *http.Request) (QuizPageInput, error) {
+	quizID := chi.URLParam(r, "quizID")
+	if err := ValidateUUID(quizID); err != nil {
+		return QuizPageInput{}, err
+	}
+	return QuizPageInput{
+		QuizID: quizID,
+	}, nil
+}
 
 type QuizPageStorage interface {
 	ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error)
@@ -67,43 +80,67 @@ func Participation(ctx context.Context, storage QuizPageStorage, userID, quizID 
 		return time.Now(), nil
 	}
 	if !inHour {
-		return time.Now(), fmt.Errorf("your participation is over") 
+		return time.Now(), fmt.Errorf("your participation is over")
 	}
-	return expiresAt, nil 
+	return expiresAt, nil
 }
-
-func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep AuthRep, redirectPath string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		quizID := chi.URLParam(r, "quizID")
-		if quizID == "" {
-			http.Error(w, "invalid quiz id", http.StatusBadRequest)
-			return
+func EnumerateProblems(problemIDs []string) []ProblemSelector {
+	problems := []ProblemSelector{}
+	for i, problemID := range problemIDs {
+		strName := strconv.Itoa(i + 1)
+		current := ProblemSelector{
+			ID:          problemID,
+			ProblemName: strName,
 		}
+		problems = append(problems, current)
+	}
+	return problems
+}
+func SelectFirstProblem(problemIDs []string) string {
+	return problemIDs[0]
+}
+func SelectFirstLanguage(languages []LanguageSelector) LanguageSelector {
+	return languages[0]
+}
+type quizPageInputFunc = func(r *http.Request) (QuizPageInput, error)
+type participationFn = func(ctx context.Context, storage QuizPageStorage, userID, quizID string) (time.Time, error)
+type enumProblemsFn = func([]string) []ProblemSelector
+type selectProblemFn = func([]string) string
+type selectLanguageFn = func([]LanguageSelector) LanguageSelector
+
+func CreateQuizPageHandler(
+	templ TemplatesRepo,
+	storage QuizPageStorage,
+	authRep AuthRep,
+	redirectPath string,
+	inputFn quizPageInputFunc,
+	partFn participationFn,
+	selectProblFn selectProblemFn,
+	selectLangFn selectLanguageFn,
+	enumerateProblemsFn enumProblemsFn,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		userID, err := authRep.GetUser(r)
 		if err != nil {
 			http.Redirect(w, r, redirectPath, http.StatusSeeOther)
 			return
 		}
-		problemIDs, err := storage.SelectProblemIDs(r.Context(), quizID)
+		input, err := inputFn(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		expiresAt, err := Participation(r.Context(), storage, userID, quizID)
+		problemIDs, err := storage.SelectProblemIDs(r.Context(), input.QuizID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		problems := []ProblemSelector{}
-		for i, problemID := range problemIDs {
-			strName := strconv.Itoa(i + 1)
-			current := ProblemSelector{
-				ID:          problemID,
-				ProblemName: strName,
-			}
-			problems = append(problems, current)
+		expiresAt, err := partFn(r.Context(), storage, userID, input.QuizID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
-		selectedProblem := problemIDs[0]
+		selectedProblem := selectProblFn(problemIDs)
 		score, err := storage.SelectScore(r.Context(), userID, selectedProblem)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -119,20 +156,20 @@ func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep Au
 			http.Error(w, "error in find examples", http.StatusInternalServerError)
 			return
 		}
-		languages, err := storage.SelectLanguages(r.Context(), quizID)
+		languages, err := storage.SelectLanguages(r.Context(), input.QuizID)
 		if err != nil {
 			http.Error(w, "languages not found", http.StatusInternalServerError)
 			return
 		}
-		selectedLanguage := languages[0]
+		selectedLanguage := selectLangFn(languages)
 		lastSrc, err := storage.LastSrc(r.Context(), userID, selectedProblem, selectedLanguage.LanguageID)
 		if err != nil {
 			http.Error(w, "src not found", http.StatusInternalServerError)
 			return
 		}
 		quizPageData := QuizPageData{
-			QuizID:         quizID,
-			Problems:       problems,
+			QuizID:         input.QuizID,
+			Problems:       enumerateProblemsFn(problemIDs),
 			ExpiresAt:      expiresAt,
 			Score:          score,
 			ProblemContent: problemContent,
@@ -148,10 +185,15 @@ func createQuizPageHandler(templ *Templates, storage QuizPageStorage, authRep Au
 }
 
 func (DI *App) QuizPageHandler() http.HandlerFunc {
-	return createQuizPageHandler(
+	return CreateQuizPageHandler(
 		DI.Templ,
 		DI.Storage,
 		DI.AuthService,
 		"/",
+		GetQuizPageInput,
+		Participation,
+		SelectFirstProblem,
+		SelectFirstLanguage,
+		EnumerateProblems,
 	)
 }

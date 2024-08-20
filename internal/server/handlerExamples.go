@@ -10,14 +10,28 @@ type ExamplesStorage interface {
 	SelectExamples(ctx context.Context, problemID string) ([]Example, error)
 }
 
-func createExamplesHandler(templ *Templates, storage ExamplesStorage) http.HandlerFunc {
+type ExamplesInput struct {
+	ProblemID string
+}
+
+func GetExamplesInput(r *http.Request) (ExamplesInput, error) {
+	problemID := r.FormValue("problemID")
+	if err:= ValidateUUID(problemID); err != nil {
+		return ExamplesInput{}, fmt.Errorf("problemID is not a valid UUID")
+	}
+	return ExamplesInput{
+		ProblemID: problemID,
+	}, nil
+}
+type examplesInputFunc = func(r *http.Request) (ExamplesInput, error)
+func CreateExamplesHandler(templ TemplatesRepo, storage ExamplesStorage, inputFn examplesInputFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		problemID := r.FormValue("problemID")
-		if problemID == "" {
-			http.Error(w, "invalid exampleID", http.StatusBadRequest)
+		input, err := inputFn(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		examples, err := storage.SelectExamples(r.Context(), problemID)
+		examples, err := storage.SelectExamples(r.Context(), input.ProblemID)
 		if err != nil {
 			http.Error(w, "example not found", http.StatusBadRequest)
 			return
@@ -31,5 +45,5 @@ func createExamplesHandler(templ *Templates, storage ExamplesStorage) http.Handl
 }
 
 func (app *App) ExamplesHandler() http.HandlerFunc {
-	return createExamplesHandler(app.Templ, app.Storage)
+	return CreateExamplesHandler(app.Templ, app.Storage, GetExamplesInput)
 }

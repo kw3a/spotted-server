@@ -31,7 +31,7 @@ func main() {
    fmt.Print(output)
 }`,
 
- 54: `// Este es un código de ejemplo en C++ que resuelve el siguiente problema:
+ 54: `// Código de ejemplo en C++ que resuelve el siguiente problema:
 // Recibir una palabra (stdin) e imprimir la palabra invertida (stdout).
 
 #include <iostream>
@@ -49,7 +49,7 @@ int main() {
    return 0;
 }`,
 
-	62: `// Este es un código de ejemplo en Java que resuelve el siguiente problema:
+	62: `// Código de ejemplo en Java que resuelve el siguiente problema:
 // Recibir una palabra (stdin) e imprimir la palabra invertida (stdout).
 import java.util.Scanner;
 
@@ -66,14 +66,14 @@ public class Main {
    }
 }`,
 
-	71: `# Este es un código de ejemplo en Python que resuelve el siguiente problema:
+	71: `# Código de ejemplo en Python que resuelve el siguiente problema:
 # Recibir una palabra a través de la entrada estándar (stdin) e imprimir la palabra invertida en la salida estándar (stdout), sin mostrar ningún otro mensaje adicional.
 
 input_value = input()
 output_value = input_value[::-1]
 print(output_value, end='')`,
 
-	63: `// Este es un código de ejemplo en JavaScript que resuelve el siguiente problema:
+	63: `//Código de ejemplo en JavaScript que resuelve el siguiente problema:
 // Recibir una palabra (stdin) e imprimir la palabra invertida (stdout).
 const readline = require('readline').createInterface({
  input: process.stdin,

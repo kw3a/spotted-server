@@ -9,29 +9,42 @@ type ParticipationStorage interface {
 	Participate(ctx context.Context, userID string, quizID string) error
 }
 
-func createParticipateHandler(storage ParticipationStorage, authService AuthRep) http.HandlerFunc {
+type ParticipateInput struct {
+	QuizID string
+}
+
+func GetParticipateInput(r *http.Request) (ParticipateInput, error) {
+	quizID := r.FormValue("quizID")
+	if err := ValidateUUID(quizID); err != nil {
+		return ParticipateInput{}, err
+	}
+	return ParticipateInput{
+		QuizID: quizID,
+	}, nil
+}
+type participateInputFn func(r *http.Request) (ParticipateInput, error)
+func CreateParticipateHandler(storage ParticipationStorage, authService AuthRep, inputFn participateInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, err := authService.GetUser(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		quizID := r.FormValue("quizID")
-
-		if userID == "" || quizID == "" {
-			http.Error(w, "invalid user id or quiz id", http.StatusBadRequest)
-			return
-		}
-		err = storage.Participate(r.Context(), userID, quizID)
+		input, err := inputFn(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		w.Header().Set("HX-Redirect", "/quizzes/"+quizID)
+		err = storage.Participate(r.Context(), userID, input.QuizID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("HX-Redirect", "/quizzes/"+input.QuizID)
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
 func (DI *App) ParticipateHandler() http.HandlerFunc {
-	return createParticipateHandler(DI.Storage, DI.AuthService)
+	return CreateParticipateHandler(DI.Storage, DI.AuthService, GetParticipateInput)
 }

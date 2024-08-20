@@ -24,23 +24,45 @@ func TestSSEHeaders(t *testing.T) {
 	}
 }
 
-func TestFormatServerSentEvent(t *testing.T) {
+func TestFormatSSEventEmpty(t *testing.T) {
 	msg := "msg1"
 	event := "result"
-	str, err := server.FormatServerSentEvent(event, msg)
+	_, err := server.FormatSSEvent("", msg)
+	if err == nil {
+		t.Error(err)
+	}
+	_, err = server.FormatSSEvent(event, "")
+	if err == nil {
+		t.Error(err)
+	}
+}
+
+func TestFormatSSE(t *testing.T) {
+	msg := "msg1"
+	event1 := "result"
+	event2 := "finished"
+	formatedEvent, err := server.FormatSSEvent(event1, msg)
 	if err != nil {
 		t.Error(err)
 	}
-	expected := "event: result\ndata: msg1\n\n"
-	if str != expected {
-		t.Errorf("got: %v \nwant: %v", str, expected)
+	expected := "event: result\ndata: <p>msg1</p>\n\n"
+	if formatedEvent != expected {
+		t.Errorf("expected: %v \nobtained: %v", expected, formatedEvent)
+	}
+
+	formatedEvent, err = server.FormatSSEvent(event2, msg)
+	if err != nil {
+		t.Error(err)
+	}
+	expected = "event: finished\ndata: <p>msg1</p><div hx-on::load=\"htmx.trigger('#score', 'evtrunfinished')\"></div>\n\n"
+	if formatedEvent != expected {
+		t.Errorf("expected: %v \nobtained: %v", expected, formatedEvent)
 	}
 }
 
 func TestEventStream(t *testing.T) {
 	msg := "msg1"
 	msg2 := "msg2"
-	expected := "event: result\ndata: msg1\n\nevent: result\ndata: msg2\n\nevent: finished\ndata: msg2\n\n"
 	testChannel := make(chan string)
 	go func() {
 		testChannel <- msg
@@ -48,8 +70,13 @@ func TestEventStream(t *testing.T) {
 		close(testChannel)
 	}()
 	rr := httptest.NewRecorder()
-	server.EventStream(rr, testChannel)
+	formatter := func(event string, data string) (string, error) {
+		formated := event + ":" + data
+		return formated, nil
+	}
+	server.EventStream(rr, testChannel, formatter)
 	res := rr.Body.String()
+	expected := "result:msg1result:msg2finished:msg2"
 	if res != expected {
 		t.Errorf("expected: \n%s\nobtained: \n%s", expected, res)
 	}

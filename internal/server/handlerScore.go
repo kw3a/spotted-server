@@ -8,20 +8,32 @@ import (
 type ScoreStorage interface {
 	SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error)
 }
-
-func createScoreHandler(templ *Templates, storage ScoreStorage, authService AuthRep) http.HandlerFunc {
+type ScoreInput struct {
+	ProblemID string
+}
+func GetScoreInput(r *http.Request) (ScoreInput, error) {
+	problemID := r.FormValue("problemID")
+	if err := ValidateUUID(problemID); err != nil {
+		return ScoreInput{}, err
+	}
+	return ScoreInput{
+		ProblemID: problemID,
+	}, nil
+}
+type scoreInputFn func(r *http.Request) (ScoreInput, error)
+func CreateScoreHandler(templ TemplatesRepo, storage ScoreStorage, authService AuthRep, inputFn scoreInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, err := authService.GetUser(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		problemID := r.FormValue("problemID")
-		if problemID == "" {
-			http.Error(w, "problemID is empty", http.StatusBadRequest)
+		input, err := inputFn(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		score, err := storage.SelectScore(r.Context(), userID, problemID)
+		score, err := storage.SelectScore(r.Context(), userID, input.ProblemID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -35,9 +47,10 @@ func createScoreHandler(templ *Templates, storage ScoreStorage, authService Auth
 }
 
 func (app *App) ScoreHandler() http.HandlerFunc {
-	return createScoreHandler(
+	return CreateScoreHandler(
 		app.Templ,
 		app.Storage, 
     app.AuthService,
+		GetScoreInput,
     )
 }

@@ -6,7 +6,7 @@ import (
 )
 
 type App struct {
-  Templ *Templates
+	Templ       *Templates
 	Storage     *MysqlStorage
 	AuthService *auth.AuthService
 	Stream      *codejudge.Stream
@@ -14,7 +14,11 @@ type App struct {
 }
 
 func NewApp(dbURL, jwtSecret, judgeURL, judgeAuthToken, callbackURL string) (*App, error) {
-  templ := newTemplates()
+	views, err := viewsPath()
+	if err != nil {
+		return nil, err
+	}
+	templ := newTemplates(views)
 	mysqlStorage, err := NewMysqlStorage(dbURL)
 	if err != nil {
 		return nil, err
@@ -30,7 +34,7 @@ func NewApp(dbURL, jwtSecret, judgeURL, judgeAuthToken, callbackURL string) (*Ap
 		callbackURL,
 	)
 	return &App{
-    Templ: templ,
+		Templ:       templ,
 		Storage:     mysqlStorage,
 		AuthService: authService,
 		Stream:      stream,

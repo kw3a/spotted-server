@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"net/http"
-	"strconv"
 )
 
 type SourceStorage interface {
@@ -13,48 +12,57 @@ type SourceStorage interface {
 type AuthRep interface {
 	GetUser(r *http.Request) (userID string, err error)
 }
+type SourceInput struct {
+	ProblemID  string
+	LanguageID int32
+}
 
-func createSourceHandler(storage SourceStorage, authServ AuthRep) http.HandlerFunc {
+func GetSourceInput(r *http.Request) (SourceInput, error) {
+	problemID := r.FormValue("problemID")
+	if err := ValidateUUID(problemID); err != nil {
+		return SourceInput{}, err
+	}
+	languageID := r.FormValue("languageID")
+	languageIDInt32, err := ValidateLanguageID(languageID)
+	if err != nil {
+		return SourceInput{}, err
+	}
+	return SourceInput{
+		ProblemID:  problemID,
+		LanguageID: languageIDInt32,
+	}, nil
+}
+
+type sourceInputFunc func(r *http.Request) (SourceInput, error)
+func CreateSourceHandler(storage SourceStorage, authServ AuthRep, inputFn sourceInputFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, err := authServ.GetUser(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		problemID := r.FormValue("problemID")
-		if problemID == "" {
-			http.Error(w, "invalid problemID", http.StatusBadRequest)
-			return
-		}
-		languageID := r.FormValue("languageID")
-		if languageID == "" {
-			http.Error(w, "invalid languageID", http.StatusBadRequest)
-			return
-		}
-    languageIDInt, err := strconv.ParseInt(languageID, 10, 32)
-    languageIDInt32 := int32(languageIDInt)
-		//languageIDInt, err := strconv.Atoi(languageID)
-		if err != nil {
-			http.Error(w, "invalid languageID", http.StatusBadRequest)
-			return
-		}
-		src, err := storage.LastSrc(r.Context(), userID, problemID, languageIDInt32)
+		input, err := inputFn(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
+		src, err := storage.LastSrc(r.Context(), userID, input.ProblemID, input.LanguageID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		w.Header().Set("Content-Type", "text/plain")
 		_, err = w.Write([]byte(src))
-    if err != nil {
-      http.Error(w, err.Error(), http.StatusInternalServerError)
-    }
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
 }
 
 func (DI *App) SourceHandler() http.HandlerFunc {
-	return createSourceHandler(
+	return CreateSourceHandler(
 		DI.Storage,
 		DI.AuthService,
+		GetSourceInput,
 	)
 }

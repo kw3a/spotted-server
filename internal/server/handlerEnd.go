@@ -8,22 +8,33 @@ import (
 type EndStorage interface {
 	EndQuiz(ctx context.Context, userID, quizID string) error
 }
+type EndInput struct {
+	QuizID string
+}
 
-	
-func createEndHandler(endStorage EndStorage, authService AuthRep) http.HandlerFunc {
+func GetEndInput(r *http.Request) (EndInput, error) {
+	quizID := r.FormValue("quizID")
+	if err := ValidateUUID(quizID); err != nil {
+		return EndInput{}, err
+	}
+	return EndInput{
+		QuizID: quizID,
+	}, nil
+}
+type endInputFn func(r *http.Request) (EndInput, error)
+func CreateEndHandler(endStorage EndStorage, authService AuthRep, inputFn endInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := authService.GetUser(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		quizID := r.FormValue("quizID")
-
-		if quizID == "" {
-			http.Error(w, "invalid quiz id", http.StatusBadRequest)
+		input, err := inputFn(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		err = endStorage.EndQuiz(r.Context(), user, quizID)
+		err = endStorage.EndQuiz(r.Context(), user, input.QuizID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -34,5 +45,5 @@ func createEndHandler(endStorage EndStorage, authService AuthRep) http.HandlerFu
 }
 
 func (DI *App) EndHandler() http.HandlerFunc {
-	return createEndHandler(DI.Storage, DI.AuthService)
+	return CreateEndHandler(DI.Storage, DI.AuthService, GetEndInput)
 }

@@ -5,14 +5,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/kw3a/spotted-server/internal/server"
 )
-
-
-
-type Params map[string]string
 
 func TestCallbackUrlParams(t *testing.T) {
 	submissionID := uuid.NewString()
@@ -44,20 +39,4 @@ func TestCallbackInputValid(t *testing.T) {
 	if len(problems) != 0 {
 		t.Error(problems)
 	}
-}
-
-func WithUrlParam(r *http.Request, key, value string) *http.Request {
-	chiCtx := chi.NewRouteContext()
-	req := r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, chiCtx))
-	chiCtx.URLParams.Add(key, value)
-	return req
-}
-
-func WithUrlParams(r *http.Request, params Params) *http.Request {
-	chiCtx := chi.NewRouteContext()
-	req := r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, chiCtx))
-	for key, value := range params {
-		chiCtx.URLParams.Add(key, value)
-	}
-	return req
 }

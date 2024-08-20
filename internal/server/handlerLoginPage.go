@@ -5,7 +5,7 @@ import "net/http"
 type LoginPageStorage interface {
 }
 
-func createLoginPageHandler(templ *Templates) http.HandlerFunc {
+func CreateLoginPageHandler(templ TemplatesRepo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := templ.Render(w, "loginPage", "")
 		if err != nil {
@@ -15,5 +15,5 @@ func createLoginPageHandler(templ *Templates) http.HandlerFunc {
 }
 
 func (DI *App) LoginPageHandler() http.HandlerFunc {
-		return createLoginPageHandler(DI.Templ)
+		return CreateLoginPageHandler(DI.Templ)
 }

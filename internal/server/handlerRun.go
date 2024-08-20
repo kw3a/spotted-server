@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,30 +21,26 @@ type RunOutput struct {
 	SubmissionID string
 }
 
-func getRunInput(r *http.Request) (RunInput, error) {
-  quizID := r.FormValue("quizID")
-	problemID := r.FormValue("problemID")
-	src := r.FormValue("src")
-	languageID := r.FormValue("languageID")
-  if uuid.Validate(quizID) != nil {
-    return RunInput{}, fmt.Errorf("quiz_id is not a valid UUID")
-  }
-	if uuid.Validate(problemID) != nil {
-		return RunInput{}, fmt.Errorf("problem_id is not a valid UUID")
+func GetRunInput(r *http.Request) (RunInput, error) {
+	quizID := r.FormValue("quizID")
+	if err := ValidateUUID(quizID); err != nil {
+		return RunInput{}, fmt.Errorf("quiz_id: %s", err.Error())
 	}
+	problemID := r.FormValue("problemID")
+	if err := ValidateUUID(problemID); err != nil {
+		return RunInput{}, fmt.Errorf("problem_id: %s", err.Error())
+	}
+	src := r.FormValue("src")
 	if src == "" {
 		return RunInput{}, fmt.Errorf("src is empty")
 	}
-	languageIDInt, err := strconv.ParseInt(languageID, 10, 32)
+	languageID := r.FormValue("languageID")
+	languageIDInt32, err := ValidateLanguageID(languageID)
 	if err != nil {
-		return RunInput{}, fmt.Errorf("languageID is not a valid integer")
-	}
-	languageIDInt32 := int32(languageIDInt)
-	if languageIDInt32 < 0 || languageIDInt32 > 100 {
-		return RunInput{}, fmt.Errorf("languageID is not in the valid range")
+		return RunInput{}, err
 	}
 	input := RunInput{
-    QuizID:     quizID,
+		QuizID:     quizID,
 		ProblemID:  problemID,
 		Src:        src,
 		LanguageID: languageIDInt32,
@@ -60,15 +55,31 @@ type RunStorage interface {
 	ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error)
 	GetTestCases(ctx context.Context, problemID string) ([]codejudge.TestCase, error)
 }
+type JudgeService interface {
+	Send(dbTestCases []codejudge.TestCase, submissionID, src string, languageID int32) ([]string, error)
+}
+type StreamService interface {
+	Register(name string, tokens []string, duration time.Duration) error
+}
 
-func createRunHandler(templ *Templates, storage RunStorage, authService AuthRep, st *codejudge.Stream, judge codejudge.Judge0, topicCleanup time.Duration) http.HandlerFunc {
+type runInputFn func(r *http.Request) (RunInput, error)
+
+func CreateRunHandler(
+	templ TemplatesRepo,
+	storage RunStorage,
+	authService AuthRep,
+	st StreamService,
+	judge JudgeService,
+	topicCleanup time.Duration,
+	inputFn runInputFn,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, err := authService.GetUser(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		input, err := getRunInput(r)
+		input, err := inputFn(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -111,12 +122,13 @@ func createRunHandler(templ *Templates, storage RunStorage, authService AuthRep,
 }
 
 func (app *App) RunHandler() http.HandlerFunc {
-	return createRunHandler(
+	return CreateRunHandler(
 		app.Templ,
 		app.Storage,
 		app.AuthService,
 		app.Stream,
-		app.Judge,
+		&app.Judge,
 		60*time.Second,
+		GetRunInput,
 	)
 }

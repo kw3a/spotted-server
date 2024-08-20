@@ -33,7 +33,6 @@ func Run() error {
 	}
 	r := chi.NewRouter()
 	setupCors(r)
-	//registerRoutes(apiRouter, &apiCfg)
 	callbackPath := "/api/submissions/"
 	callbackURL := envVars.myURL + callbackPath
 	viewRoutes(r, envVars.dbURL, envVars.jwtSecret, envVars.judgeURL, envVars.judgeAuthToken, callbackURL)

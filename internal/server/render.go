@@ -1,27 +1,29 @@
 package server
 
 import (
-	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"path/filepath"
 )
 
+type TemplatesRepo interface {
+	Render(w io.Writer, name string, data interface{}) error
+}
 
 type Templates struct {
 	templates *template.Template
 }
 
-func newTemplates() *Templates {
+func viewsPath() (string, error) {
 	absPath, err := filepath.Abs(".")
 	if err != nil {
-		log.Fatalf("Failed to get absolute path: %v", err)
+		return "", err
 	}
-	fmt.Println("Current Directory:", absPath)
-	fmt.Println("Looking for templates in:", filepath.Join("views", "*.html"))
+	return filepath.Join(absPath, "views", "*.html"), nil
+}
 
-	templates := template.Must(template.ParseGlob(filepath.Join("views", "*.html")))
+func newTemplates(views string) *Templates {
+	templates := template.Must(template.ParseGlob(views))
 	return &Templates{templates: templates}
 }
 
