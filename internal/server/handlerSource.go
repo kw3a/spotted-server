@@ -9,9 +9,6 @@ type SourceStorage interface {
 	LastSrc(ctx context.Context, userID, problemID string, languageID int32) (string, error)
 }
 
-type AuthRep interface {
-	GetUser(r *http.Request) (userID string, err error)
-}
 type SourceInput struct {
 	ProblemID  string
 	LanguageID int32
@@ -34,6 +31,7 @@ func GetSourceInput(r *http.Request) (SourceInput, error) {
 }
 
 type sourceInputFunc func(r *http.Request) (SourceInput, error)
+
 func CreateSourceHandler(storage SourceStorage, authServ AuthRep, inputFn sourceInputFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, err := authServ.GetUser(r)

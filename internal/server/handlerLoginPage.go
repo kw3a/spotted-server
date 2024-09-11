@@ -15,5 +15,5 @@ func CreateLoginPageHandler(templ TemplatesRepo) http.HandlerFunc {
 }
 
 func (DI *App) LoginPageHandler() http.HandlerFunc {
-		return CreateLoginPageHandler(DI.Templ)
+	return CreateLoginPageHandler(DI.Templ)
 }

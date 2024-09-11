@@ -2,11 +2,15 @@ package server
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/google/uuid"
 )
 
+type AuthRep interface {
+	GetUser(r *http.Request) (userID string, err error)
+}
 func ValidateUUID(id string) error {
 	return uuid.Validate(id)
 }

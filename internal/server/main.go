@@ -12,9 +12,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/kw3a/spotted-server/internal/auth"
 )
 
-//go:embed "static"
+//go:embed static
 var Files embed.FS
 
 type EnvVariables struct {
@@ -75,7 +76,7 @@ func envVariables() (EnvVariables, error) {
 		return EnvVariables{}, fmt.Errorf("MY_URL environment variable is not set")
 	}
 	return EnvVariables{
-    port:           port,
+		port:           port,
 		dbURL:          dbURL,
 		jwtSecret:      jwtSecret,
 		judgeURL:       judgeURL,
@@ -90,25 +91,31 @@ func viewRoutes(r *chi.Mux, dbURL, jwtSecret, judgeURL, judgeAuthToken, callback
 	if err != nil {
 		log.Println(err)
 	}
-	devMiddleware := app.AuthService.DevMiddleware
+	devMiddleware := func(next http.Handler) http.Handler {
+		return auth.CreateMiddleware(app.Storage, app.AuthType, "/login", "dev", next)
+	}
 	fileServer := http.FileServer(http.FS(Files))
 	r.Get("/", app.JobOffersHandler())
 	r.Handle("/public/*", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
 	r.Handle("/static/*", fileServer)
 	r.Get("/login", app.LoginPageHandler())
-	r.Post("/login", app.AuthService.LoginHandler())
+	r.Post("/login", app.LoginHandler())
 	r.Get("/languages/{quizID}", app.LanguagesHandler())
 	r.Get("/problems", app.ProblemsHandler())
 	r.Get("/examples", app.ExamplesHandler())
-	r.Get("/quizzes/{quizID}", devMiddleware(app.QuizPageHandler()))
-	r.Get("/source", devMiddleware(app.SourceHandler()))
-  r.Get("/score", devMiddleware(app.ScoreHandler()))
-	r.Post("/participate", devMiddleware(app.ParticipateHandler()))
-	r.Post("/end", devMiddleware(app.EndHandler()))
+	securedRouter := chi.NewRouter()
+	securedRouter.Use(devMiddleware)
+	securedRouter.Get("/quizzes/{quizID}", app.QuizPageHandler())
+	securedRouter.Get("/source", app.SourceHandler())
+	securedRouter.Get("/score", app.ScoreHandler())
+	securedRouter.Post("/participate", app.ParticipateHandler())
+	securedRouter.Post("/end", app.EndHandler())
 
-  r.Post("/submissions", devMiddleware(app.RunHandler()))
-  r.HandleFunc("/results/{submissionID}", devMiddleware(app.ResultsHandler()))
-  r.Put("/api/submissions/{submissionID}/tc/{testCaseID}", app.CallbackHandler())
+	securedRouter.Post("/submissions", app.RunHandler())
+	securedRouter.HandleFunc("/results/{submissionID}", app.ResultsHandler())
+
+	r.Mount("/", securedRouter)
+	r.Put("/api/submissions/{submissionID}/tc/{testCaseID}", app.CallbackHandler())
 }
 
 func setupCors(r *chi.Mux) {
