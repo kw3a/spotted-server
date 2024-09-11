@@ -10,7 +10,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/kw3a/spotted-server/internal/server/codejudge"
-	"github.com/kw3a/spotted-server/internal/server/utils"
 	"github.com/shopspring/decimal"
 )
 
@@ -67,7 +66,7 @@ func createCallbackHandler(storage CallbackStorage, st *codejudge.Stream) http.H
       http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		decoded, problems, err := utils.DecodeValid[CallbackInput](r)
+		decoded, problems, err := DecodeValid[CallbackInput](r)
 		if err != nil {
       http.Error(w, fmt.Sprintf("problems:\n%v", problems), http.StatusBadRequest)
 			return
