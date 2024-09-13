@@ -44,7 +44,7 @@ func (q *Queries) Participate(ctx context.Context, arg ParticipateParams) error 
 }
 
 const participationStatus = `-- name: ParticipationStatus :one
-SELECT participation.id, participation.expires_at
+SELECT participation.id, participation.created_at, participation.updated_at, participation.expires_at, participation.user_id, participation.quiz_id
 FROM participation
 WHERE participation.user_id = ? AND participation.quiz_id = ?
 `
@@ -54,14 +54,16 @@ type ParticipationStatusParams struct {
 	QuizID string
 }
 
-type ParticipationStatusRow struct {
-	ID        string
-	ExpiresAt time.Time
-}
-
-func (q *Queries) ParticipationStatus(ctx context.Context, arg ParticipationStatusParams) (ParticipationStatusRow, error) {
+func (q *Queries) ParticipationStatus(ctx context.Context, arg ParticipationStatusParams) (Participation, error) {
 	row := q.db.QueryRowContext(ctx, participationStatus, arg.UserID, arg.QuizID)
-	var i ParticipationStatusRow
-	err := row.Scan(&i.ID, &i.ExpiresAt)
+	var i Participation
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ExpiresAt,
+		&i.UserID,
+		&i.QuizID,
+	)
 	return i, err
 }

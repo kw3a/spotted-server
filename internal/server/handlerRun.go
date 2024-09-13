@@ -52,7 +52,7 @@ type RunStorage interface {
 	//Also handle logic for participationID and quizz time
 	CreateSubmission(ctx context.Context, submissionID, participationID, problemID, src string, languageID int32) error
 
-	ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error)
+	ParticipationStatus(ctx context.Context, userID string, quizID string) (ParticipationData, error)
 	GetTestCases(ctx context.Context, problemID string) ([]codejudge.TestCase, error)
 }
 type JudgeService interface {
@@ -84,8 +84,8 @@ func CreateRunHandler(
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		participationID, inHour, _, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
-		if err != nil || !inHour {
+		participation, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
+		if err != nil || participation.ExpiresAt.Before(time.Now()) {
 			http.Error(w, "error in getting status:"+err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -97,7 +97,7 @@ func CreateRunHandler(
 		}
 		//DB INSERTS
 		submissionID := uuid.NewString()
-		err = storage.CreateSubmission(r.Context(), submissionID, participationID, input.ProblemID, input.Src, input.LanguageID)
+		err = storage.CreateSubmission(r.Context(), submissionID, participation.ID, input.ProblemID, input.Src, input.LanguageID)
 		if err != nil {
 			http.Error(w, "error in create submission: "+err.Error(), http.StatusInternalServerError)
 			return

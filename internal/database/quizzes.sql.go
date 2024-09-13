@@ -9,10 +9,30 @@ import (
 	"context"
 )
 
+const getQuiz = `-- name: GetQuiz :one
+SELECT id, created_at, updated_at, title, description, duration
+FROM quiz
+WHERE quiz.id = ?
+`
+
+func (q *Queries) GetQuiz(ctx context.Context, id string) (Quiz, error) {
+	row := q.db.QueryRowContext(ctx, getQuiz, id)
+	var i Quiz
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Title,
+		&i.Description,
+		&i.Duration,
+	)
+	return i, err
+}
+
 const getQuizzes = `-- name: GetQuizzes :many
 SELECT id, created_at, updated_at, title, description, duration 
 FROM quiz
-ORDER BY quiz.created_at ASC
+ORDER BY quiz.created_at DESC
 LIMIT 10
 `
 

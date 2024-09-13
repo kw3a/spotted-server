@@ -10,7 +10,7 @@ type JobPageData struct {
 }
 
 type Offer struct {
-	QuizID string
+	QuizID      string
 	Title       string
 	Description string
 }

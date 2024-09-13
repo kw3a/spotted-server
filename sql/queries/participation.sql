@@ -1,5 +1,5 @@
 -- name: ParticipationStatus :one
-SELECT participation.id, participation.expires_at
+SELECT participation.*
 FROM participation
 WHERE participation.user_id = ? AND participation.quiz_id = ?;
 

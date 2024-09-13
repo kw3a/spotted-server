@@ -39,7 +39,7 @@ func CreateEndHandler(endStorage EndStorage, authService AuthRep, inputFn endInp
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		w.Header().Set("HX-Redirect", "/")
+		w.Header().Set("HX-Redirect", "/preamble/"+input.QuizID)
 		w.WriteHeader(http.StatusOK)
 	}
 }

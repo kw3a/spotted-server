@@ -1,0 +1,67 @@
+{{block "preamble" .}}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="/static/htmx.min.js"></script>
+    <link href="/static/output.css" rel="stylesheet" />
+    <title></title>
+  </head>
+
+  <body>
+    <div class="flex justify-center">
+      <div class="flex flex-col sm:w-full xl:w-1/2 rounded bg-gray-100 justify-center p-4">
+        <p class="text-center font-bold">{{.Quiz.Title}}</p>
+        <p>{{.Quiz.Description}}</p>
+        <p>{{.Quiz.Duration}} Minutes</p>
+        <p>Created by: example user1234</p>
+        {{if not .PreambleProblems}}
+        <div class="flex justify-around">
+          {{template "homeButton" .}}
+          <button
+            class="bg-blue-500 w-32 rounded hover:bg-blue-700 text-white font-bold py-2 px-4"
+            hx-post="/participate"
+            hx-vals="js:{quizID: '{{.Quiz.ID}}'}"
+            hx-confirm="Are you sure you want to take this quiz?"
+          >
+            Take Quiz
+          </button>
+        </div>
+        {{else}}
+        <div class="bg-gray-200 p-2">
+          <p class="text-center">It has already performed this test on</p>
+          <div class="flex flex-row">
+            <p class="text-center w-1/2 truncate">{{.Participation.CreatedAt}}</p>
+            <p class="text-center w-1/2 truncate">{{.Participation.ExpiresAt}}</p>
+          </div>
+          <hr class="border-gray-500" />
+          <p class="text-center">My results:</p>
+          <div class="flex flex-col basis-1">
+            {{range .PreambleProblems}} {{template "preambleProblem" .}} {{end}}
+          </div>
+        </div>
+        <div class="flex justify-center">{{template "homeButton" .}}</div>
+        {{end}}
+      </div>
+    </div>
+  </body>
+</html>
+{{end}} {{block "preambleProblem" .}}
+<div class="flex flex-row">
+  <div class="w-1/2">
+    <p class="text-center truncate">{{.Title}}</p>
+  </div>
+  <div class="basis-1/2">
+    <p class="text-center truncate">{{.AcceptedTestCases}}/{{.NumberOfTestCases}}</p>
+  </div>
+</div>
+{{end}} {{block "homeButton" .}}
+<a
+  class="bg-blue-500 w-32 text-center rounded hover:bg-blue-700 text-white font-bold py-2 px-4"
+  href="/"
+  hx-boost="true"
+>
+  Back
+</a>
+{{end}}

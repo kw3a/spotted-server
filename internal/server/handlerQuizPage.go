@@ -65,7 +65,7 @@ func GetQuizPageInput(r *http.Request) (QuizPageInput, error) {
 }
 
 type QuizPageStorage interface {
-	ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error)
+	ParticipationStatus(ctx context.Context, userID string, quizID string) (ParticipationData, error)
 	SelectProblemIDs(ctx context.Context, quizID string) ([]string, error)
 	SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error)
 	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
@@ -74,16 +74,6 @@ type QuizPageStorage interface {
 	LastSrc(ctx context.Context, userID string, problemID string, languageID int32) (string, error)
 }
 
-func Participation(ctx context.Context, storage QuizPageStorage, userID, quizID string) (time.Time, error) {
-	_, inHour, expiresAt, err := storage.ParticipationStatus(ctx, userID, quizID)
-	if err != nil {
-		return time.Now(), nil
-	}
-	if !inHour {
-		return time.Now(), fmt.Errorf("your participation is over")
-	}
-	return expiresAt, nil
-}
 func EnumerateProblems(problemIDs []string) []ProblemSelector {
 	problems := []ProblemSelector{}
 	for i, problemID := range problemIDs {
@@ -103,7 +93,6 @@ func SelectFirstLanguage(languages []LanguageSelector) LanguageSelector {
 	return languages[0]
 }
 type quizPageInputFunc = func(r *http.Request) (QuizPageInput, error)
-type participationFn = func(ctx context.Context, storage QuizPageStorage, userID, quizID string) (time.Time, error)
 type enumProblemsFn = func([]string) []ProblemSelector
 type selectProblemFn = func([]string) string
 type selectLanguageFn = func([]LanguageSelector) LanguageSelector
@@ -114,7 +103,6 @@ func CreateQuizPageHandler(
 	authRep AuthRep,
 	redirectPath string,
 	inputFn quizPageInputFunc,
-	partFn participationFn,
 	selectProblFn selectProblemFn,
 	selectLangFn selectLanguageFn,
 	enumerateProblemsFn enumProblemsFn,
@@ -135,8 +123,8 @@ func CreateQuizPageHandler(
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		expiresAt, err := partFn(r.Context(), storage, userID, input.QuizID)
-		if err != nil {
+		partiData, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
+		if err != nil || partiData.ExpiresAt.Before(time.Now()) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -170,7 +158,7 @@ func CreateQuizPageHandler(
 		quizPageData := QuizPageData{
 			QuizID:         input.QuizID,
 			Problems:       enumerateProblemsFn(problemIDs),
-			ExpiresAt:      expiresAt,
+			ExpiresAt:      partiData.ExpiresAt,
 			Score:          score,
 			ProblemContent: problemContent,
 			Examples:       examples,
@@ -191,7 +179,6 @@ func (DI *App) QuizPageHandler() http.HandlerFunc {
 		DI.AuthService,
 		"/",
 		GetQuizPageInput,
-		Participation,
 		SelectFirstProblem,
 		SelectFirstLanguage,
 		EnumerateProblems,

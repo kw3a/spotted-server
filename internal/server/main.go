@@ -110,6 +110,7 @@ func viewRoutes(r *chi.Mux, dbURL, jwtSecret, judgeURL, judgeAuthToken, callback
 	securedRouter.Get("/score", app.ScoreHandler())
 	securedRouter.Post("/participate", app.ParticipateHandler())
 	securedRouter.Post("/end", app.EndHandler())
+	securedRouter.Get("/preamble/{quizID}", app.PreambleHandler())
 
 	securedRouter.Post("/submissions", app.RunHandler())
 	securedRouter.HandleFunc("/results/{submissionID}", app.ResultsHandler())

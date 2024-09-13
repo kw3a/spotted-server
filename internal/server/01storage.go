@@ -34,19 +34,19 @@ func NewMysqlStorage(dbURL string) (*MysqlStorage, error) {
 	return &MysqlStorage{Queries: queries}, nil
 }
 
-func (mysql *MysqlStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error) {
+func (mysql *MysqlStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (ParticipationData, error) {
 	participation, err := mysql.Queries.ParticipationStatus(ctx, database.ParticipationStatusParams{
 		UserID: userID,
 		QuizID: quizID,
 	})
 	if err != nil {
-		return "", false, time.Now(), err
+		return ParticipationData{}, err
 	}
-	inHour := false
-	if time.Now().Before(participation.ExpiresAt) {
-		inHour = true
-	}
-	return participation.ID, inHour, participation.ExpiresAt, nil
+	return ParticipationData{
+		ID:        participation.ID,
+		CreatedAt: participation.CreatedAt.Time,
+		ExpiresAt: participation.ExpiresAt,
+	}, nil
 }
 
 func (mysql *MysqlStorage) Participate(ctx context.Context, userID string, quizID string) error {
@@ -66,6 +66,19 @@ func (mysql *MysqlStorage) SelectProblemIDs(ctx context.Context, QuizID string) 
 		return nil, errors.New("zero results")
 	}
 	return IDs, nil
+}
+
+func (mysql *MysqlStorage) SelectQuiz(ctx context.Context, quizID string) (Quiz, error) {
+	dbQuiz, err := mysql.Queries.GetQuiz(ctx, quizID)
+	if err != nil {
+		return Quiz{}, err
+	}
+	return Quiz{
+		ID:          dbQuiz.ID,
+		Title:       dbQuiz.Title,
+		Description: dbQuiz.Description,
+		Duration:    dbQuiz.Duration,
+	}, nil
 }
 
 func (mysql *MysqlStorage) SelectOffers(ctx context.Context) ([]Offer, error) {
