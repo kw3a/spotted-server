@@ -15,12 +15,6 @@ import (
 func quizPageInputFn(r *http.Request) (server.QuizPageInput, error) {
 	return server.QuizPageInput{}, nil
 }
-func participationFn(ctx context.Context, storage server.QuizPageStorage, userID, quizID string) (time.Time, error) {
-	return time.Time{}, nil
-}
-func invalidParticipationFn(ctx context.Context, storage server.QuizPageStorage, userID, quizID string) (time.Time, error) {
-	return time.Time{}, errors.New("error")
-}
 func selectProblemsFn(problems []string) string {
 	return ""
 }
@@ -35,8 +29,9 @@ type quizPageStorage struct{}
 func (q *quizPageStorage) LastSrc(ctx context.Context, userID string, problemID string, languageID int32) (string, error) {
 	return "", nil
 }
-func (q *quizPageStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error) {
-	return "", false, time.Time{}, nil
+func (q *quizPageStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (server.ParticipationData, error) {
+	expiresAt := time.Now().Add(time.Hour)
+	return server.ParticipationData{ExpiresAt: expiresAt}, nil
 }
 func (q *quizPageStorage) SelectExamples(ctx context.Context, problemID string) ([]server.Example, error) {
 	return nil, nil
@@ -59,8 +54,9 @@ type invalidQuizPageStorage struct{}
 func (i *invalidQuizPageStorage) LastSrc(ctx context.Context, userID string, problemID string, languageID int32) (string, error) {
 	return "", errors.New("error")
 }
-func (i *invalidQuizPageStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error) {
-	return "", false, time.Time{}, errors.New("error")
+func (i *invalidQuizPageStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (server.ParticipationData, error) {
+	expired := time.Now().Add(-time.Hour)
+	return server.ParticipationData{ExpiresAt: expired}, errors.New("error")
 }
 func (i *invalidQuizPageStorage) SelectExamples(ctx context.Context, problemID string) ([]server.Example, error) {
 	return nil, errors.New("error")
@@ -126,29 +122,6 @@ func TestQuizPageHandlerBadInput(t *testing.T) {
 		&authRepo{}, 
 		"/", 
 		invalidInputFn, 
-		participationFn,
-		selectProblemsFn, 
-		selectLanguagesFn, 
-		enumerateFn,
-	)
-	if handler == nil {
-		t.Error("expected nil")
-	}
-	req, _ := http.NewRequest("GET", "/", nil)
-	w := httptest.NewRecorder()
-	handler(w, req)
-	if w.Code != http.StatusBadRequest {
-		t.Error("expected bad request")
-	}
-}
-func TestQuizPageHandlerBadParticipation(t *testing.T) {
-	handler := server.CreateQuizPageHandler(
-		&templates{},
-		&quizPageStorage{}, 
-		&authRepo{}, 
-		"/", 
-		quizPageInputFn,
-		invalidParticipationFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
 		enumerateFn,
@@ -171,7 +144,6 @@ func TestQuizPageHandlerBadAuth(t *testing.T) {
 		&invalidAuthRepo{}, 
 		"/", 
 		quizPageInputFn,
-		participationFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
 		enumerateFn,
@@ -193,7 +165,6 @@ func TestQuizPageHandlerBadStorage(t *testing.T) {
 		&authRepo{}, 
 		"/", 
 		quizPageInputFn,
-		participationFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
 		enumerateFn,
@@ -211,13 +182,12 @@ func TestQuizPageHandlerBadStorage(t *testing.T) {
 func TestQuizPageHandlerBadTemplate(t *testing.T) {
 	handler := server.CreateQuizPageHandler(
 		&invalidTemplates{},
-		&quizPageStorage{}, 
-		&authRepo{}, 
-		"/", 
+		&quizPageStorage{},
+		&authRepo{},
+		"/",
 		quizPageInputFn,
-		participationFn,
-		selectProblemsFn, 
-		selectLanguagesFn, 
+		selectProblemsFn,
+		selectLanguagesFn,
 		enumerateFn,
 	)
 	if handler == nil {
@@ -237,7 +207,6 @@ func TestQuizPageHandler(t *testing.T) {
 		&authRepo{}, 
 		"/", 
 		quizPageInputFn,
-		participationFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
 		enumerateFn,

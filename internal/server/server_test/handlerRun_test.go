@@ -43,8 +43,9 @@ func (r *runStorage) CreateSubmission(ctx context.Context, submissionID string, 
 func (r *runStorage) GetTestCases(ctx context.Context, problemID string) ([]codejudge.TestCase, error) {
 	return nil, nil
 }
-func (r *runStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error) {
-	return "", true, time.Time{}, nil
+func (r *runStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (server.ParticipationData, error) {
+	expiresAt := time.Now().Add(time.Hour)
+	return server.ParticipationData{ExpiresAt: expiresAt}, nil
 }
 
 type invalidRunStorage struct{}
@@ -54,8 +55,9 @@ func (i *invalidRunStorage) CreateSubmission(ctx context.Context, submissionID s
 func (i *invalidRunStorage) GetTestCases(ctx context.Context, problemID string) ([]codejudge.TestCase, error) {
 	return nil, errors.New("error")
 }
-func (i *invalidRunStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (string, bool, time.Time, error) {
-	return "", false, time.Time{}, errors.New("error")
+func (i *invalidRunStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (server.ParticipationData, error) {
+	expired := time.Now().Add(-time.Hour)
+	return server.ParticipationData{ExpiresAt: expired}, errors.New("error")
 }
 
 func ValidFormValues() map[string][]string {
@@ -154,6 +156,7 @@ func TestRunHandlerBadInput(t *testing.T) {
 		t.Error("expected status bad request")
 	}
 }
+
 func TestRunHandlerBadStorage(t *testing.T) {
 	handler := server.CreateRunHandler(
 		&templates{},
@@ -174,6 +177,7 @@ func TestRunHandlerBadStorage(t *testing.T) {
 		t.Error("expected status bad request")
 	}
 }
+
 func TestRunHandlerBadAuth(t *testing.T) {
 	handler := server.CreateRunHandler(
 		&templates{},
@@ -194,6 +198,7 @@ func TestRunHandlerBadAuth(t *testing.T) {
 		t.Error("expected status unauthorized")
 	}
 }
+
 func TestRunHandlerBadStream(t *testing.T) {
 	handler := server.CreateRunHandler(
 		&templates{},
@@ -214,6 +219,7 @@ func TestRunHandlerBadStream(t *testing.T) {
 		t.Error("expected status bad request")
 	}
 }
+
 func TestRunHandlerBadJudge(t *testing.T) {
 	handler := server.CreateRunHandler(
 		&templates{},
@@ -234,6 +240,7 @@ func TestRunHandlerBadJudge(t *testing.T) {
 		t.Error("expected status bad request")
 	}
 }
+
 func TestRunHandlerBadTemplate(t *testing.T) {
 	handler := server.CreateRunHandler(
 		&invalidTemplates{},

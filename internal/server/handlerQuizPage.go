@@ -118,13 +118,13 @@ func CreateQuizPageHandler(
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		problemIDs, err := storage.SelectProblemIDs(r.Context(), input.QuizID)
-		if err != nil {
+		partiData, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
+		if err != nil || partiData.ExpiresAt.Before(time.Now()) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		partiData, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
-		if err != nil || partiData.ExpiresAt.Before(time.Now()) {
+		problemIDs, err := storage.SelectProblemIDs(r.Context(), input.QuizID)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
