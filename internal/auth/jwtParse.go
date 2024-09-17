@@ -82,6 +82,7 @@ func (t *JWToken) isValid(objective tokenType) error {
 	}
 	return nil
 }
+
 func validateUserID(userID string) error {
 	return uuid.Validate(userID)
 }
