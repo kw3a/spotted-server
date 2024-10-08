@@ -9,6 +9,49 @@ import (
 	"github.com/kw3a/spotted-server/internal/server"
 )
 
+func TestCallbackUrlParamsEmpty(t *testing.T) {
+	req, err := http.NewRequest("PUT", "/", nil)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = server.NewCallbackUrlParams(req)
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestCallbackUrlParamsInvalidSubmissionID(t *testing.T) {
+	req, err := http.NewRequest("PUT", "/", nil)
+	if err != nil {
+		t.Error(err)
+	}
+	urlParams := map[string]string{
+		"submissionID": "invalid",
+		"testCaseID":   uuid.NewString(),
+	}
+	reqWithUrlParam := WithUrlParams(req, urlParams)
+	_, err = server.NewCallbackUrlParams(reqWithUrlParam)
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestCallbackUrlParamsInvalidTestCaseID(t *testing.T) {
+	req, err := http.NewRequest("PUT", "/", nil)
+	if err != nil {
+		t.Error(err)
+	}
+	urlParams := map[string]string{
+		"submissionID": uuid.NewString(),
+		"testCaseID":   "invalid",
+	}
+	reqWithUrlParam := WithUrlParams(req, urlParams)
+	_, err = server.NewCallbackUrlParams(reqWithUrlParam)
+	if err == nil {
+		t.Error("expected error")
+	}
+}
+
 func TestCallbackUrlParams(t *testing.T) {
 	submissionID := uuid.NewString()
 	tcID := uuid.NewString()
@@ -33,10 +76,11 @@ func TestCallbackUrlParams(t *testing.T) {
 	}
 }
 
-func TestCallbackInputValid(t *testing.T) {
+func TestCallbackInputValidEmpty(t *testing.T) {
 	input := server.CallbackInput{}
 	problems := input.Valid(context.Background())
 	if len(problems) != 0 {
 		t.Error(problems)
 	}
 }
+

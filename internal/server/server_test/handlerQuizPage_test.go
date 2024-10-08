@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kw3a/spotted-server/internal/server"
+	"github.com/stretchr/testify/mock"
 )
 
 func quizPageInputFn(r *http.Request) (server.QuizPageInput, error) {
@@ -24,54 +25,37 @@ func selectLanguagesFn(languages []server.LanguageSelector) server.LanguageSelec
 func enumerateFn([]string) []server.ProblemSelector{
 	return []server.ProblemSelector{}
 }
-type quizPageStorage struct{}
+type quizPageStorage struct{
+	mock.Mock
+}
 
 func (q *quizPageStorage) LastSrc(ctx context.Context, userID string, problemID string, languageID int32) (string, error) {
-	return "", nil
+	args := q.Called(ctx, userID, problemID, languageID)
+	return args.String(0), args.Error(1)
 }
 func (q *quizPageStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (server.ParticipationData, error) {
-	expiresAt := time.Now().Add(time.Hour)
-	return server.ParticipationData{ExpiresAt: expiresAt}, nil
+	args := q.Called(ctx, userID, quizID)
+	return args.Get(0).(server.ParticipationData), args.Error(1)
 }
 func (q *quizPageStorage) SelectExamples(ctx context.Context, problemID string) ([]server.Example, error) {
-	return nil, nil
+	args := q.Called(ctx, problemID)
+	return args.Get(0).([]server.Example), args.Error(1)
 }
 func (q *quizPageStorage) SelectLanguages(ctx context.Context, quizID string) ([]server.LanguageSelector, error) {
-	return nil, nil
+	args := q.Called(ctx, quizID)
+	return args.Get(0).([]server.LanguageSelector), args.Error(1)
 }
 func (q *quizPageStorage) SelectProblem(ctx context.Context, problemID string) (server.ProblemContent, error) {
-	return server.ProblemContent{}, nil
+	args := q.Called(ctx, problemID)
+	return args.Get(0).(server.ProblemContent), args.Error(1)
 }
 func (q *quizPageStorage) SelectProblemIDs(ctx context.Context, quizID string) ([]string, error) {
-	return nil, nil
+	args := q.Called(ctx, quizID)
+	return args.Get(0).([]string), args.Error(1)
 }
 func (q *quizPageStorage) SelectScore(ctx context.Context, userID string, problemID string) (server.ScoreData, error) {
-	return server.ScoreData{}, nil
-}
-
-type invalidQuizPageStorage struct{}
-
-func (i *invalidQuizPageStorage) LastSrc(ctx context.Context, userID string, problemID string, languageID int32) (string, error) {
-	return "", errors.New("error")
-}
-func (i *invalidQuizPageStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (server.ParticipationData, error) {
-	expired := time.Now().Add(-time.Hour)
-	return server.ParticipationData{ExpiresAt: expired}, errors.New("error")
-}
-func (i *invalidQuizPageStorage) SelectExamples(ctx context.Context, problemID string) ([]server.Example, error) {
-	return nil, errors.New("error")
-}
-func (i *invalidQuizPageStorage) SelectLanguages(ctx context.Context, quizID string) ([]server.LanguageSelector, error) {
-	return nil, errors.New("error")
-}
-func (i *invalidQuizPageStorage) SelectProblem(ctx context.Context, problemID string) (server.ProblemContent, error) {
-	return server.ProblemContent{}, errors.New("error")
-}
-func (i *invalidQuizPageStorage) SelectProblemIDs(ctx context.Context, quizID string) ([]string, error) {
-	return nil, errors.New("error")
-}
-func (i *invalidQuizPageStorage) SelectScore(ctx context.Context, userID string, problemID string) (server.ScoreData, error) {
-	return server.ScoreData{}, errors.New("error")
+	args := q.Called(ctx, userID, problemID)
+	return args.Get(0).(server.ScoreData), args.Error(1)
 }
 
 func TestGetQuizPageInputEmpty(t *testing.T) {
@@ -157,11 +141,17 @@ func TestQuizPageHandlerBadAuth(t *testing.T) {
 	if w.Code != http.StatusSeeOther{
 		t.Error("expected see other")
 	}
+	if w.Header().Get("Location") != "/" {
+		t.Error("expected redirect to /")
+	}
 }
-func TestQuizPageHandlerBadStorage(t *testing.T) {
+
+func TestQuizPageHandlerBadStorageParticipationStatus(t *testing.T) {
+	storage := new(quizPageStorage)
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(server.ParticipationData{}, errors.New("error"))
 	handler := server.CreateQuizPageHandler(
 		&templates{},
-		&invalidQuizPageStorage{}, 
+		storage,
 		&authRepo{}, 
 		"/", 
 		quizPageInputFn,
@@ -179,10 +169,216 @@ func TestQuizPageHandlerBadStorage(t *testing.T) {
 		t.Error("expected bad request")
 	}
 }
+
+func TestQuizPageHandlerBadStorageParticipationStatusExpired(t *testing.T) {
+	storage := new(quizPageStorage)
+	expired := server.ParticipationData{ExpiresAt: time.Now().Add(-time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(expired, nil)
+	handler := server.CreateQuizPageHandler(
+		&templates{},
+		storage,
+		&authRepo{}, 
+		"/", 
+		quizPageInputFn,
+		selectProblemsFn, 
+		selectLanguagesFn, 
+		enumerateFn,
+	)
+	if handler == nil {
+		t.Error("expected nil")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusUnauthorized{
+		t.Error("expected unauthorized")
+	}
+}
+
+func TestQuizPageHandlerBadStorageSelectProblemIDs(t *testing.T) {
+	storage := new(quizPageStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, errors.New("error"))
+	handler := server.CreateQuizPageHandler(
+		&templates{},
+		storage,
+		&authRepo{}, 
+		"/", 
+		quizPageInputFn,
+		selectProblemsFn, 
+		selectLanguagesFn, 
+		enumerateFn,
+	)
+	if handler == nil {
+		t.Error("expected nil")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Error("expected bad request")
+	}
+}
+
+func TestQuizPageHandlerBadStorageSelectScore(t *testing.T) {
+	storage := new(quizPageStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
+	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, errors.New("error"))
+	handler := server.CreateQuizPageHandler(
+		&templates{},
+		storage,
+		&authRepo{}, 
+		"/", 
+		quizPageInputFn,
+		selectProblemsFn, 
+		selectLanguagesFn, 
+		enumerateFn,
+	)
+	if handler == nil {
+		t.Error("expected nil")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError{
+		t.Error("expected internal server error")
+	}
+}
+
+func TestQuizPageHandlerBadStorageSelectProblem(t *testing.T) {
+	storage := new(quizPageStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
+	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil) 
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, errors.New("error"))
+	handler := server.CreateQuizPageHandler(
+		&templates{},
+		storage,
+		&authRepo{}, 
+		"/", 
+		quizPageInputFn,
+		selectProblemsFn, 
+		selectLanguagesFn, 
+		enumerateFn,
+	)
+	if handler == nil {
+		t.Error("expected nil")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError{
+		t.Error("expected internal server error")
+	}
+}
+
+func TestQuizPageHandlerBadStorageSelectExamples(t *testing.T) {
+	storage := new(quizPageStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
+	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil) 
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil) 
+	storage.On("SelectExamples", mock.Anything, mock.Anything).Return([]server.Example{}, errors.New("error"))
+	handler := server.CreateQuizPageHandler(
+		&templates{},
+		storage,
+		&authRepo{}, 
+		"/", 
+		quizPageInputFn,
+		selectProblemsFn, 
+		selectLanguagesFn, 
+		enumerateFn,
+	)
+	if handler == nil {
+		t.Error("expected nil")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError{
+		t.Error("expected internal server error")
+	}
+}
+
+func TestQuizPageHandlerBadStorageSelectLanguages(t *testing.T) {
+	storage := new(quizPageStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
+	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil) 
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil) 
+	storage.On("SelectExamples", mock.Anything, mock.Anything).Return([]server.Example{}, nil)
+	storage.On("SelectLanguages", mock.Anything, mock.Anything).Return([]server.LanguageSelector{}, errors.New("error"))
+	handler := server.CreateQuizPageHandler(
+		&templates{},
+		storage,
+		&authRepo{}, 
+		"/", 
+		quizPageInputFn,
+		selectProblemsFn, 
+		selectLanguagesFn, 
+		enumerateFn,
+	)
+	if handler == nil {
+		t.Error("expected nil")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError{
+		t.Error("expected internal server error")
+	}
+}
+
+func TestQuizPageHandlerBadStorageLastSource(t *testing.T) {
+	storage := new(quizPageStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
+	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil) 
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil) 
+	storage.On("SelectExamples", mock.Anything, mock.Anything).Return([]server.Example{}, nil)
+	storage.On("SelectLanguages", mock.Anything, mock.Anything).Return([]server.LanguageSelector{}, nil) 
+	storage.On("LastSrc", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", errors.New("error"))
+	handler := server.CreateQuizPageHandler(
+		&templates{},
+		storage,
+		&authRepo{}, 
+		"/", 
+		quizPageInputFn,
+		selectProblemsFn, 
+		selectLanguagesFn, 
+		enumerateFn,
+	)
+	if handler == nil {
+		t.Error("expected nil")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError{
+		t.Error("expected internal server error")
+	}
+}
+
 func TestQuizPageHandlerBadTemplate(t *testing.T) {
+	storage := new(quizPageStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
+	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil) 
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil) 
+	storage.On("SelectExamples", mock.Anything, mock.Anything).Return([]server.Example{}, nil)
+	storage.On("SelectLanguages", mock.Anything, mock.Anything).Return([]server.LanguageSelector{}, nil) 
+	storage.On("LastSrc", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 	handler := server.CreateQuizPageHandler(
 		&invalidTemplates{},
-		&quizPageStorage{},
+		storage,
 		&authRepo{},
 		"/",
 		quizPageInputFn,
@@ -200,10 +396,20 @@ func TestQuizPageHandlerBadTemplate(t *testing.T) {
 		t.Error("expected internal server error")
 	}
 }
+
 func TestQuizPageHandler(t *testing.T) {
+	storage := new(quizPageStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
+	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil) 
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil) 
+	storage.On("SelectExamples", mock.Anything, mock.Anything).Return([]server.Example{}, nil)
+	storage.On("SelectLanguages", mock.Anything, mock.Anything).Return([]server.LanguageSelector{}, nil) 
+	storage.On("LastSrc", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 	handler := server.CreateQuizPageHandler(
 		&templates{},
-		&quizPageStorage{}, 
+		storage,
 		&authRepo{}, 
 		"/", 
 		quizPageInputFn,

@@ -52,7 +52,7 @@ func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, au
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID, err := authService.GetUser(r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		input, err := inputFn(r)
@@ -62,7 +62,7 @@ func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, au
 		}
 		quiz, err := storage.SelectQuiz(r.Context(), input.QuizID)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		data := PreambleData{

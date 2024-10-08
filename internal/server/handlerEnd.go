@@ -26,7 +26,7 @@ func CreateEndHandler(endStorage EndStorage, authService AuthRep, inputFn endInp
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := authService.GetUser(r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		input, err := inputFn(r)

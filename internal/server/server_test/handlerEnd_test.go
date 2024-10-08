@@ -24,7 +24,7 @@ func (i invalidEndStorage) EndQuiz(ctx context.Context, userID string, quizID st
 }
 
 func endInputFn(r *http.Request) (server.EndInput, error) {
-	return server.EndInput{}, nil
+	return server.EndInput{QuizID: "1"}, nil
 }
 
 func TestGetEndInputEmptyQuizID(t *testing.T) {
@@ -32,7 +32,6 @@ func TestGetEndInputEmptyQuizID(t *testing.T) {
 		"quizID": {""},
 	}
 	req := formRequest("GET", "/", formValues)
-
 	_, err := server.GetEndInput(req)
 	if err == nil {
 		t.Error("expected error")
@@ -86,14 +85,13 @@ func TestEndHandlerInvalidAuth(t *testing.T) {
 	if handler == nil {
 		t.Error("handler is nil")
 	}
-
 	if handler == nil {
 		t.Error("handler is nil")
 	}
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
-	if w.Code != http.StatusBadRequest {
+	if w.Code != http.StatusUnauthorized {
 		t.Error("invalid status code")
 	}
 }
@@ -121,5 +119,8 @@ func TestEndHandler(t *testing.T) {
 	handler(w, req)
 	if w.Code != http.StatusOK {
 		t.Error("invalid status code")
+	}
+	if w.Header().Get("HX-Redirect") != "/preamble/1" {
+		t.Error("invalid redirect")
 	}
 }

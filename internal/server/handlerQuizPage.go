@@ -119,8 +119,12 @@ func CreateQuizPageHandler(
 			return
 		}
 		partiData, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
-		if err != nil || partiData.ExpiresAt.Before(time.Now()) {
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if partiData.ExpiresAt.Before(time.Now()) {
+			http.Error(w, "your participation is over", http.StatusUnauthorized)
 			return
 		}
 		problemIDs, err := storage.SelectProblemIDs(r.Context(), input.QuizID)

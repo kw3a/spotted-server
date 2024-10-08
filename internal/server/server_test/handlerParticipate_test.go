@@ -24,7 +24,7 @@ func (i *invalidParticipateStorage) Participate(ctx context.Context, userID stri
 }
 
 func participateInputFn(r *http.Request) (server.ParticipateInput, error) {
-	return server.ParticipateInput{}, nil
+	return server.ParticipateInput{QuizID: "1"}, nil
 }
 func TestGetParticipateInputEmpty(t *testing.T) {
 	formValues := map[string][]string{
@@ -113,5 +113,8 @@ func TestParticipateHandler(t *testing.T) {
 	handler(w, req)
 	if w.Code != http.StatusOK {
 		t.Error("expected ok")
+	}
+	if w.Header().Get("HX-Redirect") != "/quizzes/1" {
+		t.Error("invalid redirect")
 	}
 }

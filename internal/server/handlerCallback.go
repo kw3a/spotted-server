@@ -13,7 +13,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-
 type CallbackUrlParams struct {
 	SubmissionID string
 	TestCaseID   string
@@ -38,7 +37,7 @@ func NewCallbackUrlParams(r *http.Request) (CallbackUrlParams, error) {
 type CallbackInput struct {
 	Stdout        interface{}     `json:"stdout"`
 	Time          decimal.Decimal `json:"time"`
-	Memory        int32             `json:"memory"`
+	Memory        int32           `json:"memory"`
 	Stderr        string          `json:"stderr"`
 	Token         string          `json:"token"`
 	CompileOutput interface{}     `json:"compile_output"`
@@ -56,19 +55,19 @@ func (input CallbackInput) Valid(ctx context.Context) map[string]string {
 }
 
 type CallbackStorage interface {
-  UpdateTestCaseResult(ctx context.Context, input CallbackInput, submissionID string, tcID string) error
+	UpdateTestCaseResult(ctx context.Context, input CallbackInput, submissionID string, tcID string) error
 }
 
 func createCallbackHandler(storage CallbackStorage, st *codejudge.Stream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		urlParams, err := NewCallbackUrlParams(r)
 		if err != nil {
-      http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		decoded, problems, err := DecodeValid[CallbackInput](r)
 		if err != nil {
-      http.Error(w, fmt.Sprintf("problems:\n%v", problems), http.StatusBadRequest)
+			http.Error(w, fmt.Sprintf("problems:\n%v", problems), http.StatusBadRequest)
 			return
 		}
 		w.WriteHeader(200)
@@ -85,15 +84,15 @@ func createCallbackHandler(storage CallbackStorage, st *codejudge.Stream) http.H
 			return
 		}
 		err = topic.Update(decoded.Token, decoded.Status.Description)
-    if err != nil {
-      log.Println(err)
-    }
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
 func (app *App) CallbackHandler() http.HandlerFunc {
-  return createCallbackHandler(
-    app.Storage,
-    app.Stream,
-  )
+	return createCallbackHandler(
+		app.Storage,
+		app.Stream,
+	)
 }

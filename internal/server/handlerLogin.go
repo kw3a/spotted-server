@@ -52,7 +52,7 @@ func CreateLoginHandler(authType LoginAuthType, storage LoginStorage, inputFn lo
 		}
 		userID, err := storage.GetUserID(r.Context(), input.Email, input.Password)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		refreshToken, accessToken, err := authType.CreateTokens(userID)

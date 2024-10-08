@@ -26,12 +26,16 @@ func TestSSEHeaders(t *testing.T) {
 
 func TestFormatSSEventEmpty(t *testing.T) {
 	msg := "msg1"
-	event := "result"
 	_, err := server.FormatSSEvent("", msg)
 	if err == nil {
 		t.Error(err)
 	}
-	_, err = server.FormatSSEvent(event, "")
+}
+
+func TestFormatSSEMsgEmpty(t *testing.T) {
+	msg := ""
+	event := "result"
+	_, err := server.FormatSSEvent(event, msg)
 	if err == nil {
 		t.Error(err)
 	}
@@ -49,7 +53,6 @@ func TestFormatSSE(t *testing.T) {
 	if formatedEvent != expected {
 		t.Errorf("expected: %v \nobtained: %v", expected, formatedEvent)
 	}
-
 	formatedEvent, err = server.FormatSSEvent(event2, msg)
 	if err != nil {
 		t.Error(err)

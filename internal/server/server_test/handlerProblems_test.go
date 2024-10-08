@@ -13,14 +13,12 @@ import (
 
 type problemsStorage struct{}
 
-// SelectProblem implements server.ProblemsStorage.
 func (p *problemsStorage) SelectProblem(ctx context.Context, problemID string) (server.ProblemContent, error) {
 	return server.ProblemContent{}, nil
 }
 
 type invalidProblemsStorage struct{}
 
-// SelectProblem implements server.ProblemsStorage.
 func (i *invalidProblemsStorage) SelectProblem(ctx context.Context, problemID string) (server.ProblemContent, error) {
 	return server.ProblemContent{}, errors.New("error")
 }
@@ -28,6 +26,7 @@ func (i *invalidProblemsStorage) SelectProblem(ctx context.Context, problemID st
 func problemsInputFn(r *http.Request) (server.ProblemsInput, error) {
 	return server.ProblemsInput{}, nil
 }
+
 func TestGetProblemsInputEmpty(t *testing.T) {
 	formValues := map[string][]string{
 		"problemID": {""},

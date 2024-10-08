@@ -9,8 +9,8 @@
   <link href="/static/output.css" rel="stylesheet" />
 </head>
 
-<body>
-  <h1 class="text-center">Job Offers</h1>
+<body class="bg-black">
+  <h1 class="text-white text-center font-bold">Ofertas</h1>
   <div class="grid grid-cols-2 gap-4 m-4">
     {{range .Offers}} {{template "jobCard" .}} {{end}}
   </div>
@@ -18,14 +18,10 @@
 
 </html>
 {{end}} {{block "jobCard" .}}
-<div class="bg-shark-50 rounded p-2 hover:bg-shark-100"
-  hx-get="/preamble/{{.QuizID}}" 
-  hx-trigger="click"
-  hx-push-url="true"
-  hx-target="body"
->
-  <h1 class="font-bold">{{.Title}}</h1>
-  <p>{{.Description}}</p>
+<div class="bg-shark-950 border border-shark-900 rounded p-2 hover:border-shark-700" hx-get="/preamble/{{.QuizID}}"
+  hx-trigger="click" hx-push-url="true" hx-target="body">
+  <h1 class="text-shark-200 font-bold">{{.Title}}</h1>
+  <p class="text-shark-200 ">{{.Description}}</p>
 </div>
 {{end}}
 </div>

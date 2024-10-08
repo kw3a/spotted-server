@@ -12,55 +12,55 @@ import (
 	"github.com/google/uuid"
 	"github.com/kw3a/spotted-server/internal/server"
 	"github.com/kw3a/spotted-server/internal/server/codejudge"
+	"github.com/stretchr/testify/mock"
 )
 
 func runInputFn(r *http.Request) (server.RunInput, error) {
 	return server.RunInput{}, nil
 }
 
-type judgeService struct {}
+type judgeService struct{}
+
 func (j *judgeService) Send(dbTestCases []codejudge.TestCase, submissionID, src string, languageID int32) ([]string, error) {
 	return nil, nil
 }
-type invalidJudgeService struct {}
+
+type invalidJudgeService struct{}
+
 func (i *invalidJudgeService) Send(dbTestCases []codejudge.TestCase, submissionID, src string, languageID int32) ([]string, error) {
 	return nil, errors.New("error")
 }
 
-type streamService struct {}
+type streamService struct{}
+
 func (s *streamService) Register(name string, tokens []string, duration time.Duration) error {
 	return nil
 }
-type invalidStreamService struct {}
+
+type invalidStreamService struct{}
+
 func (i *invalidStreamService) Register(name string, tokens []string, duration time.Duration) error {
 	return errors.New("error")
 }
 
-type runStorage struct{}
+type runStorage struct {
+	mock.Mock
+}
+
 func (r *runStorage) CreateSubmission(ctx context.Context, submissionID string, participationID string, problemID string, src string, languageID int32) error {
-	return nil
+	args := r.Called(ctx, submissionID, participationID, problemID, src, languageID)
+	return args.Error(0)
 }
 func (r *runStorage) GetTestCases(ctx context.Context, problemID string) ([]codejudge.TestCase, error) {
-	return nil, nil
+	args := r.Called(ctx, problemID)
+	return args.Get(0).([]codejudge.TestCase), args.Error(1)
 }
 func (r *runStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (server.ParticipationData, error) {
-	expiresAt := time.Now().Add(time.Hour)
-	return server.ParticipationData{ExpiresAt: expiresAt}, nil
+	args := r.Called(ctx, userID, quizID)
+	return args.Get(0).(server.ParticipationData), args.Error(1)
 }
 
-type invalidRunStorage struct{}
-func (i *invalidRunStorage) CreateSubmission(ctx context.Context, submissionID string, participationID string, problemID string, src string, languageID int32) error {
-	return errors.New("error")
-}
-func (i *invalidRunStorage) GetTestCases(ctx context.Context, problemID string) ([]codejudge.TestCase, error) {
-	return nil, errors.New("error")
-}
-func (i *invalidRunStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (server.ParticipationData, error) {
-	expired := time.Now().Add(-time.Hour)
-	return server.ParticipationData{ExpiresAt: expired}, errors.New("error")
-}
-
-func ValidFormValues() map[string][]string {
+func validRunFormValues() map[string][]string {
 	quizID := uuid.NewString()
 	problemID := uuid.NewString()
 	src := "src"
@@ -75,7 +75,7 @@ func ValidFormValues() map[string][]string {
 }
 
 func TestGetRunInputBadQuizID(t *testing.T) {
-	formValues := ValidFormValues()
+	formValues := validRunFormValues()
 	formValues["quizID"][0] = "invalid"
 	req := formRequest("GET", "/", formValues)
 	_, err := server.GetRunInput(req)
@@ -83,8 +83,9 @@ func TestGetRunInputBadQuizID(t *testing.T) {
 		t.Error("expected error")
 	}
 }
+
 func TestGetRunInputBadProblemID(t *testing.T) {
-	formValues := ValidFormValues()
+	formValues := validRunFormValues()
 	formValues["problemID"][0] = "invalid"
 	req := formRequest("GET", "/", formValues)
 	_, err := server.GetRunInput(req)
@@ -92,8 +93,9 @@ func TestGetRunInputBadProblemID(t *testing.T) {
 		t.Error("expected error")
 	}
 }
+
 func TestGetRunInputBadSrc(t *testing.T) {
-	formValues := ValidFormValues()
+	formValues := validRunFormValues()
 	formValues["src"][0] = ""
 	req := formRequest("GET", "/", formValues)
 	_, err := server.GetRunInput(req)
@@ -101,8 +103,9 @@ func TestGetRunInputBadSrc(t *testing.T) {
 		t.Error("expected error")
 	}
 }
+
 func TestGetRunInputBadLanguageID(t *testing.T) {
-	formValues := ValidFormValues()
+	formValues := validRunFormValues()
 	formValues["languageID"][0] = "invalid"
 	req := formRequest("GET", "/", formValues)
 	_, err := server.GetRunInput(req)
@@ -110,8 +113,9 @@ func TestGetRunInputBadLanguageID(t *testing.T) {
 		t.Error("expected error")
 	}
 }
+
 func TestGetRunInput(t *testing.T) {
-	formValues := ValidFormValues()
+	formValues := validRunFormValues()
 	req := formRequest("GET", "/", formValues)
 	input, err := server.GetRunInput(req)
 	if err != nil {
@@ -157,10 +161,12 @@ func TestRunHandlerBadInput(t *testing.T) {
 	}
 }
 
-func TestRunHandlerBadStorage(t *testing.T) {
+func TestRunHandlerBadStorageParticipationStatus(t *testing.T) {
+	storage := new(runStorage)
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(server.ParticipationData{}, errors.New("error"))
 	handler := server.CreateRunHandler(
 		&templates{},
-		&invalidRunStorage{},
+		storage,
 		&authRepo{},
 		&streamService{},
 		&judgeService{},
@@ -178,10 +184,90 @@ func TestRunHandlerBadStorage(t *testing.T) {
 	}
 }
 
-func TestRunHandlerBadAuth(t *testing.T) {
+func TestRunHandlerBadStorageParticipationExpired(t *testing.T) {
+	storage := new(runStorage)
+	expired := server.ParticipationData{ExpiresAt: time.Now().Add(-time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(expired, nil)
 	handler := server.CreateRunHandler(
 		&templates{},
-		&runStorage{},
+		storage,
+		&authRepo{},
+		&streamService{},
+		&judgeService{},
+		60*time.Second,
+		runInputFn,
+	)
+	if handler == nil {
+		t.Error("handler is nil")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusUnauthorized {
+		t.Error("expected status unauthorized")
+	}
+}
+
+func TestRunHandlerBadStorageGetTestCases(t *testing.T) {
+	storage := new(runStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("GetTestCases", mock.Anything, mock.Anything).Return([]codejudge.TestCase{}, errors.New("error"))
+	handler := server.CreateRunHandler(
+		&templates{},
+		storage,
+		&authRepo{},
+		&streamService{},
+		&judgeService{},
+		60*time.Second,
+		runInputFn,
+	)
+	if handler == nil {
+		t.Error("handler is nil")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Error("expected status bad request")
+	}
+}
+
+func TestRunHandlerBadStorageCreateSubmission(t *testing.T) {
+	storage := new(runStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("GetTestCases", mock.Anything, mock.Anything).Return([]codejudge.TestCase{}, nil)
+	storage.On("CreateSubmission", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("error"))
+	handler := server.CreateRunHandler(
+		&templates{},
+		storage,
+		&authRepo{},
+		&streamService{},
+		&judgeService{},
+		60*time.Second,
+		runInputFn,
+	)
+	if handler == nil {
+		t.Error("handler is nil")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError {
+		t.Error("expected status internal server error")
+	}
+}
+
+func TestRunHandlerBadAuth(t *testing.T) {
+	storage := new(runStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("GetTestCases", mock.Anything, mock.Anything).Return([]codejudge.TestCase{}, nil)
+	storage.On("CreateSubmission", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	handler := server.CreateRunHandler(
+		&templates{},
+		storage,
 		&invalidAuthRepo{},
 		&streamService{},
 		&judgeService{},
@@ -200,9 +286,14 @@ func TestRunHandlerBadAuth(t *testing.T) {
 }
 
 func TestRunHandlerBadStream(t *testing.T) {
+	storage := new(runStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("GetTestCases", mock.Anything, mock.Anything).Return([]codejudge.TestCase{}, nil)
+	storage.On("CreateSubmission", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	handler := server.CreateRunHandler(
 		&templates{},
-		&runStorage{},
+		storage,
 		&authRepo{},
 		&invalidStreamService{},
 		&judgeService{},
@@ -215,15 +306,20 @@ func TestRunHandlerBadStream(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
-	if w.Code != http.StatusInternalServerError{
+	if w.Code != http.StatusInternalServerError {
 		t.Error("expected status bad request")
 	}
 }
 
 func TestRunHandlerBadJudge(t *testing.T) {
+	storage := new(runStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("GetTestCases", mock.Anything, mock.Anything).Return([]codejudge.TestCase{}, nil)
+	storage.On("CreateSubmission", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	handler := server.CreateRunHandler(
 		&templates{},
-		&runStorage{},
+		storage,
 		&authRepo{},
 		&streamService{},
 		&invalidJudgeService{},
@@ -236,15 +332,20 @@ func TestRunHandlerBadJudge(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
-	if w.Code != http.StatusBadRequest {
+	if w.Code != http.StatusInternalServerError {
 		t.Error("expected status bad request")
 	}
 }
 
 func TestRunHandlerBadTemplate(t *testing.T) {
+	storage := new(runStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("GetTestCases", mock.Anything, mock.Anything).Return([]codejudge.TestCase{}, nil)
+	storage.On("CreateSubmission", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	handler := server.CreateRunHandler(
 		&invalidTemplates{},
-		&runStorage{},
+		storage,
 		&authRepo{},
 		&streamService{},
 		&judgeService{},
@@ -257,7 +358,33 @@ func TestRunHandlerBadTemplate(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
-	if w.Code != http.StatusInternalServerError{
+	if w.Code != http.StatusInternalServerError {
 		t.Error("expected status internal server error")
+	}
+}
+
+func TestRunHandler(t *testing.T) {
+	storage := new(runStorage)
+	inTime := server.ParticipationData{ExpiresAt: time.Now().Add(time.Hour)}
+	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
+	storage.On("GetTestCases", mock.Anything, mock.Anything).Return([]codejudge.TestCase{}, nil)
+	storage.On("CreateSubmission", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	handler := server.CreateRunHandler(
+		&templates{},
+		storage,
+		&authRepo{},
+		&streamService{},
+		&judgeService{},
+		60*time.Second,
+		runInputFn,
+	)
+	if handler == nil {
+		t.Error("handler is nil")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusOK {
+		t.Error("expected status ok")
 	}
 }

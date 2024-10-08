@@ -17,18 +17,18 @@ type Result struct {
 }
 
 func (r *Result) ToString() string {
-	res := fmt.Sprintf("Pending: %d", r.Pending)
+	res := fmt.Sprintf("En cola: %d", r.Pending)
 	if r.Accepted > 0 {
-		res += fmt.Sprintf(", Accepted: %d", r.Accepted)
+		res += fmt.Sprintf(", Aceptado: %d", r.Accepted)
 	}
 	if r.WrongAnswer > 0 {
-		res += fmt.Sprintf(", Wrong Answer: %d", r.WrongAnswer)
+		res += fmt.Sprintf(", Respuesta equivocada: %d", r.WrongAnswer)
 	}
 	if r.RuntimeErrors > 0 {
-		res += fmt.Sprintf(", Runtime Errors: %d", r.RuntimeErrors)
+		res += fmt.Sprintf(", Error: %d", r.RuntimeErrors)
 	}
 	if r.TimeLimitExceeded > 0 {
-		res += fmt.Sprintf(", Time Limit Exceeded: %d", r.TimeLimitExceeded)
+		res += fmt.Sprintf(", Tiempo límite excedido: %d", r.TimeLimitExceeded)
 	}
 	return res
 }

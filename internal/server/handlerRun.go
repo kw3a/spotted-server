@@ -85,8 +85,12 @@ func CreateRunHandler(
 			return
 		}
 		participation, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
-		if err != nil || participation.ExpiresAt.Before(time.Now()) {
+		if err != nil {
 			http.Error(w, "error in getting status:"+err.Error(), http.StatusBadRequest)
+			return
+		}
+		if participation.ExpiresAt.Before(time.Now()) {
+			http.Error(w, "your participation is over", http.StatusUnauthorized)
 			return
 		}
 		//Select DB Test Cases
@@ -105,7 +109,7 @@ func CreateRunHandler(
 		//Judge request
 		tokens, err := judge.Send(testCases, submissionID, input.Src, input.LanguageID)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		//STREAM
