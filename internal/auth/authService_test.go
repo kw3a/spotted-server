@@ -7,16 +7,18 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/kw3a/spotted-server/internal/database"
 )
 
 type middlewareStorage struct{}
-func (m *middlewareStorage) GetRole(ctx context.Context, userID string) (string, error) {
-	return "admin", nil
+func (m *middlewareStorage) GetUser(ctx context.Context, userID string) (database.User, error) {
+	return database.User{Role: "admin"}, nil
 }
 
 type invalidMiddlewareStorage struct{}
-func (i *invalidMiddlewareStorage) GetRole(ctx context.Context, userID string) (string, error) {
-	return "", errors.New("error")
+func (i *invalidMiddlewareStorage) GetUser(ctx context.Context, userID string) (database.User, error) {
+	return database.User{}, errors.New("error")
 }
 
 type middlewareAuthType struct{}
@@ -54,7 +56,7 @@ func TestGetUser(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
-	if user != "123" {
+	if user.ID != "123" {
 		t.Errorf("expected 123, got %v", user)
 	}
 }

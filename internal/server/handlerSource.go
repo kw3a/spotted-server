@@ -34,7 +34,7 @@ type sourceInputFunc func(r *http.Request) (SourceInput, error)
 
 func CreateSourceHandler(storage SourceStorage, authServ AuthRep, inputFn sourceInputFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, err := authServ.GetUser(r)
+		user, err := authServ.GetUser(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
@@ -44,7 +44,7 @@ func CreateSourceHandler(storage SourceStorage, authServ AuthRep, inputFn source
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		src, err := storage.LastSrc(r.Context(), userID, input.ProblemID, input.LanguageID)
+		src, err := storage.LastSrc(r.Context(), user.ID, input.ProblemID, input.LanguageID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

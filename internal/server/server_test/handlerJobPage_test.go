@@ -21,7 +21,7 @@ func (i *invalidJobPageStorage) SelectOffers(ctx context.Context) ([]server.Offe
 }
 
 func TestJobPageHandlerBadStorage(t *testing.T) {
-	handler := server.CreateJobOffersHandler(&templates{}, &invalidJobPageStorage{})
+	handler := server.CreateJobOffersHandler(&authRepo{}, &templates{}, &invalidJobPageStorage{})
 	if handler == nil {
 		t.Error("expected handler")
 	}
@@ -34,7 +34,7 @@ func TestJobPageHandlerBadStorage(t *testing.T) {
 }
 
 func TestJobPageHandlerBadTemplates(t *testing.T) {
-	handler := server.CreateJobOffersHandler(&invalidTemplates{}, &jobPageStorage{})
+	handler := server.CreateJobOffersHandler(&authRepo{}, &invalidTemplates{}, &jobPageStorage{})
 	if handler == nil {
 		t.Error("expected handler")
 	}
@@ -43,5 +43,31 @@ func TestJobPageHandlerBadTemplates(t *testing.T) {
 	handler(w, req)
 	if w.Code != http.StatusInternalServerError {
 		t.Error("expected internal server error")
+	}
+}
+
+func TestJobPageHandlerBadAuth(t *testing.T) {
+	handler := server.CreateJobOffersHandler(&invalidAuthRepo{}, &templates{}, &jobPageStorage{})
+	if handler == nil {
+		t.Error("expected handler")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusUnauthorized {
+		t.Error("expected unauthorized")
+	}
+}
+
+func TestJobPageHandler(t *testing.T) {
+	handler := server.CreateJobOffersHandler(&authRepo{}, &templates{}, &jobPageStorage{})
+	if handler == nil {
+		t.Error("expected handler")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusOK {
+		t.Error("expected ok")
 	}
 }

@@ -10,6 +10,7 @@
 </head>
 
 <body class="bg-black">
+  {{template "navBar" .User}}
   <h1 class="text-white text-center font-bold">Ofertas</h1>
   <div class="grid grid-cols-2 gap-4 m-4">
     {{range .Offers}} {{template "jobCard" .}} {{end}}

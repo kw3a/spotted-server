@@ -5,20 +5,24 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/kw3a/spotted-server/internal/database"
 )
 
 type AuthUser struct {
 	ID   string
 	Role string
+	Name string
 }
-type AuthService struct {}
-func (a *AuthService) GetUser(r *http.Request) (string, error) {
+type AuthService struct{}
+
+func (a *AuthService) GetUser(r *http.Request) (AuthUser, error) {
 	ctx := r.Context()
 	user, ok := ctx.Value(AuthUser{}).(AuthUser)
 	if !ok {
-		return "", fmt.Errorf("no user in context")
+		return AuthUser{}, fmt.Errorf("no user in context")
 	}
-	return user.ID, nil
+	return user, nil
 }
 
 func getCookies(r *http.Request) (string, string, error) {
@@ -61,14 +65,14 @@ func DeleteCookies(w http.ResponseWriter) {
 }
 
 type MiddlewareStorage interface {
-	GetRole(ctx context.Context, userID string) (string, error)
+	GetUser(ctx context.Context, userID string) (database.User, error)
 }
 type MiddlewareAuthType interface {
 	WhoAmI(accessToken string) (userID string, err error)
 	CreateAccess(refreshToken string) (string, error)
 }
 
-func CreateMiddleware(storage MiddlewareStorage, authType MiddlewareAuthType, loginPath, role string, next http.Handler) http.Handler{
+func CreateMiddleware(storage MiddlewareStorage, authType MiddlewareAuthType, loginPath, role string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		refresh_token, access_token, err := getCookies(r)
 		if err != nil {
@@ -83,19 +87,77 @@ func CreateMiddleware(storage MiddlewareStorage, authType MiddlewareAuthType, lo
 				return
 			}
 			SetTokenCookie(w, "access_token", access_token)
-		} else {
-			dbRole, err := storage.GetRole(r.Context(), userID)
-			if err != nil || role != dbRole {
-				DeleteCookies(w)
+			userID, err = authType.WhoAmI(access_token)
+			if err != nil {
 				http.Redirect(w, r, loginPath, http.StatusSeeOther)
 				return
 			}
 		}
+		dbUser, err := storage.GetUser(r.Context(), userID)
+		if err != nil || role != dbUser.Role {
+			DeleteCookies(w)
+			http.Redirect(w, r, loginPath, http.StatusSeeOther)
+			return
+		}
 		ctx := context.WithValue(r.Context(), AuthUser{}, AuthUser{
 			ID:   userID,
 			Role: role,
+			Name: dbUser.Name,
 		})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
+func AuthNMiddleware(storage MiddlewareStorage, authType MiddlewareAuthType, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		setContext := func(user AuthUser) {
+			ctx := context.WithValue(r.Context(), AuthUser{}, user)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		}
+		refresh_token, access_token, err := getCookies(r)
+		if err != nil {
+			setContext(AuthUser{Role: "visitor"})
+			return
+		}
+		userID, err := authType.WhoAmI(access_token)
+		if err != nil {
+			access_token, err = authType.CreateAccess(refresh_token)
+			if err != nil {
+				setContext(AuthUser{Role: "visitor"})
+				return
+			}
+			SetTokenCookie(w, "access_token", access_token)
+			userID, err = authType.WhoAmI(access_token)
+			if err != nil {
+				setContext(AuthUser{Role: "visitor"})
+				return
+			}
+		}
+		dbUser, err := storage.GetUser(r.Context(), userID)
+		if err != nil {
+			setContext(AuthUser{Role: "visitor"})
+			return
+		}
+		setContext(AuthUser{
+			ID:   dbUser.ID,
+			Role: dbUser.Role,
+			Name: dbUser.Name,
+		})
+	})
+}
+
+func AuthRMiddleware(loginPath, role string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		user, ok := ctx.Value(AuthUser{}).(AuthUser)
+		if !ok {
+			http.Redirect(w, r, loginPath, http.StatusSeeOther)
+			return
+		}
+		if role != user.Role {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}

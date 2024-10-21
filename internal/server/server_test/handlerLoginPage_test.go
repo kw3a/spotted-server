@@ -8,8 +8,21 @@ import (
 	"github.com/kw3a/spotted-server/internal/server"
 )
 
+func TestLoginPageHandlerBadAuth(t *testing.T) {
+	handler := server.CreateLoginPageHandler(&invalidAuthRepo{}, &templates{})
+	if handler == nil {
+		t.Error("expected handler")
+	}
+	req, _ := http.NewRequest("GET", "/login", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusUnauthorized {
+		t.Error("expected unauthorized")
+	}
+}
+
 func TestLoginPageHandlerBadTemplate(t *testing.T) {
-	handler := server.CreateLoginPageHandler(&invalidTemplates{})
+	handler := server.CreateLoginPageHandler(&authRepo{}, &invalidTemplates{})
 	if handler == nil {
 		t.Error("expected nil")
 	}
@@ -22,7 +35,7 @@ func TestLoginPageHandlerBadTemplate(t *testing.T) {
 }
 
 func TestLoginPageHandler(t *testing.T) {
-	handler := server.CreateLoginPageHandler(&templates{})
+	handler := server.CreateLoginPageHandler(&authRepo{} ,&templates{})
 	if handler == nil {
 		t.Error("expected handler")
 	}

@@ -4,9 +4,12 @@ import (
 	"context"
 	"net/http"
 	"time"
+
+	"github.com/kw3a/spotted-server/internal/auth"
 )
 
 type PreambleData struct {
+	User             auth.AuthUser
 	Quiz             Quiz
 	Participation    PreambleParticipation
 	PreambleProblems []PreambleProblem
@@ -50,7 +53,7 @@ type PreambleStorage interface {
 
 func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, authService AuthRep, inputFn quizPageInputFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, err := authService.GetUser(r)
+		user, err := authService.GetUser(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
@@ -67,8 +70,9 @@ func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, au
 		}
 		data := PreambleData{
 			Quiz: quiz,
+			User: user,
 		}
-		participation, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
+		participation, err := storage.ParticipationStatus(r.Context(), user.ID, input.QuizID)
 		if err == nil {
 			problemIDs, err := storage.SelectProblemIDs(r.Context(), input.QuizID)
 			if err != nil {
@@ -82,7 +86,7 @@ func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, au
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
-				score, err := storage.SelectScore(r.Context(), userID, problemID)
+				score, err := storage.SelectScore(r.Context(), user.ID, problemID)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return

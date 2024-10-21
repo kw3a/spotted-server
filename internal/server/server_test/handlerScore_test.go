@@ -28,7 +28,7 @@ func (i *invalidScoreStorage) SelectScore(ctx context.Context, userID string, pr
 
 func TestGetScoreInputEmpty(t *testing.T) {
 	formValues := map[string][]string{
-		"quizID": {""},
+		"problemID": {""},
 	}
 	req := formRequest("GET", "/", formValues)
 	_, err := server.GetScoreInput(req)
@@ -38,7 +38,7 @@ func TestGetScoreInputEmpty(t *testing.T) {
 }
 func TestGetScoreInputBadQuizID(t *testing.T) {
 	formValues := map[string][]string{
-		"quizID": {"invalid"},
+		"problemID": {"invalid"},
 	}
 	req := formRequest("GET", "/", formValues)
 	_, err := server.GetScoreInput(req)
@@ -90,6 +90,7 @@ func TestScoreHandlerBadStorage(t *testing.T) {
 		t.Error("expected bad request")
 	}
 }
+
 func TestScoreHandlerBadAuth(t *testing.T) {
 	handler := server.CreateScoreHandler(&templates{}, scoreStorage{}, &invalidAuthRepo{}, scoreInputFn)
 	if handler == nil {

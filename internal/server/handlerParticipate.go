@@ -25,7 +25,7 @@ func GetParticipateInput(r *http.Request) (ParticipateInput, error) {
 type participateInputFn func(r *http.Request) (ParticipateInput, error)
 func CreateParticipateHandler(storage ParticipationStorage, authService AuthRep, inputFn participateInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, err := authService.GetUser(r)
+		user, err := authService.GetUser(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -35,7 +35,7 @@ func CreateParticipateHandler(storage ParticipationStorage, authService AuthRep,
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		err = storage.Participate(r.Context(), userID, input.QuizID)
+		err = storage.Participate(r.Context(), user.ID, input.QuizID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

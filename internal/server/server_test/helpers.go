@@ -7,18 +7,19 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/kw3a/spotted-server/internal/auth"
 )
 
 type authRepo struct{}
 
-func (a authRepo) GetUser(r *http.Request) (userID string, err error) {
-	return "userID", nil
+func (a authRepo) GetUser(r *http.Request) (userID auth.AuthUser, err error) {
+	return auth.AuthUser{},nil
 }
 
 type invalidAuthRepo struct{}
 
-func (i invalidAuthRepo) GetUser(r *http.Request) (userID string, err error) {
-	return "", errors.New("error")
+func (i invalidAuthRepo) GetUser(r *http.Request) (userID auth.AuthUser, err error) {
+	return auth.AuthUser{}, errors.New("error")
 }
 
 type templates struct{}

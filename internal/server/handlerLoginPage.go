@@ -1,13 +1,28 @@
 package server
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/kw3a/spotted-server/internal/auth"
+)
 
 type LoginPageStorage interface {
 }
 
-func CreateLoginPageHandler(templ TemplatesRepo) http.HandlerFunc {
+type LoginPageData struct {
+	User auth.AuthUser
+}
+
+func CreateLoginPageHandler(authService AuthRep, templ TemplatesRepo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := templ.Render(w, "loginPage", "")
+		user, err := authService.GetUser(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		err = templ.Render(w, "loginPage", LoginPageData{
+			User: user,
+		})
 		if err != nil {
 			http.Error(w, "can't render login page", http.StatusInternalServerError)
 		}
@@ -15,5 +30,5 @@ func CreateLoginPageHandler(templ TemplatesRepo) http.HandlerFunc {
 }
 
 func (DI *App) LoginPageHandler() http.HandlerFunc {
-	return CreateLoginPageHandler(DI.Templ)
+	return CreateLoginPageHandler(DI.AuthService, DI.Templ)
 }

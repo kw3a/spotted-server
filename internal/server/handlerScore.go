@@ -23,7 +23,7 @@ func GetScoreInput(r *http.Request) (ScoreInput, error) {
 type scoreInputFn func(r *http.Request) (ScoreInput, error)
 func CreateScoreHandler(templ TemplatesRepo, storage ScoreStorage, authService AuthRep, inputFn scoreInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, err := authService.GetUser(r)
+		user, err := authService.GetUser(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
@@ -33,7 +33,7 @@ func CreateScoreHandler(templ TemplatesRepo, storage ScoreStorage, authService A
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		score, err := storage.SelectScore(r.Context(), userID, input.ProblemID)
+		score, err := storage.SelectScore(r.Context(), user.ID, input.ProblemID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

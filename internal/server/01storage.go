@@ -268,10 +268,6 @@ func (s *MysqlStorage) Revoke(ctx context.Context, refreshToken string) error {
 	return s.Queries.RevokeRefreshJWT(ctx, refreshToken)
 }
 
-func (s *MysqlStorage) GetRole(ctx context.Context, userID string) (string, error) {
-	user, err := s.Queries.GetUser(ctx, userID)
-	if err != nil {
-		return "", err
-	}
-	return user.Role, nil
+func (s *MysqlStorage) GetUser(ctx context.Context, userID string) (database.User, error) {
+	return  s.Queries.GetUser(ctx, userID)
 }

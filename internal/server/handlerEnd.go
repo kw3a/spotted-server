@@ -34,7 +34,7 @@ func CreateEndHandler(endStorage EndStorage, authService AuthRep, inputFn endInp
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		err = endStorage.EndQuiz(r.Context(), user, input.QuizID)
+		err = endStorage.EndQuiz(r.Context(), user.ID, input.QuizID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

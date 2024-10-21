@@ -108,7 +108,7 @@ func CreateQuizPageHandler(
 	enumerateProblemsFn enumProblemsFn,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, err := authRep.GetUser(r)
+		user, err := authRep.GetUser(r)
 		if err != nil {
 			http.Redirect(w, r, redirectPath, http.StatusSeeOther)
 			return
@@ -118,7 +118,7 @@ func CreateQuizPageHandler(
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		partiData, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
+		partiData, err := storage.ParticipationStatus(r.Context(), user.ID, input.QuizID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -133,7 +133,7 @@ func CreateQuizPageHandler(
 			return
 		}
 		selectedProblem := selectProblFn(problemIDs)
-		score, err := storage.SelectScore(r.Context(), userID, selectedProblem)
+		score, err := storage.SelectScore(r.Context(), user.ID, selectedProblem)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -154,7 +154,7 @@ func CreateQuizPageHandler(
 			return
 		}
 		selectedLanguage := selectLangFn(languages)
-		lastSrc, err := storage.LastSrc(r.Context(), userID, selectedProblem, selectedLanguage.LanguageID)
+		lastSrc, err := storage.LastSrc(r.Context(), user.ID, selectedProblem, selectedLanguage.LanguageID)
 		if err != nil {
 			http.Error(w, "src not found", http.StatusInternalServerError)
 			return

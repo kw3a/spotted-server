@@ -9,10 +9,11 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
+	"github.com/kw3a/spotted-server/internal/auth"
 )
 
 type AuthRep interface {
-	GetUser(r *http.Request) (userID string, err error)
+	GetUser(r *http.Request) (userID auth.AuthUser, err error)
 }
 func ValidateUUID(id string) error {
 	return uuid.Validate(id)

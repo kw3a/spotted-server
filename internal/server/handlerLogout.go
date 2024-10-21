@@ -22,7 +22,7 @@ func CreateLogoutHandler(storage logoutStorage, redirectPath string) http.Handle
 			log.Println(err)
 		}
 		auth.DeleteCookies(w)
-		http.Redirect(w, r, redirectPath, http.StatusSeeOther)
+		w.Header().Set("HX-Redirect", redirectPath)
 	}
 }
 

@@ -74,7 +74,7 @@ func CreateRunHandler(
 	inputFn runInputFn,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, err := authService.GetUser(r)
+		user, err := authService.GetUser(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
@@ -84,7 +84,7 @@ func CreateRunHandler(
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		participation, err := storage.ParticipationStatus(r.Context(), userID, input.QuizID)
+		participation, err := storage.ParticipationStatus(r.Context(), user.ID, input.QuizID)
 		if err != nil {
 			http.Error(w, "error in getting status:"+err.Error(), http.StatusBadRequest)
 			return

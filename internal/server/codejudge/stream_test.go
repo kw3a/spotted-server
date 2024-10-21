@@ -1,4 +1,4 @@
-package codejudgetest
+package codejudge
 
 import (
 	"fmt"
@@ -6,18 +6,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kw3a/spotted-server/internal/server/codejudge"
 )
 
 func TestToString(t *testing.T) {
-	res := codejudge.Result{
+	res := Result{
 		Pending:           5,
 		Accepted:          1,
 		WrongAnswer:       2,
 		TimeLimitExceeded: 0,
 		RuntimeErrors:     4,
 	}
-	expected := "Pending: 5, Accepted: 1, Wrong Answer: 2, Runtime Errors: 4"
+	expected := "En cola: 5, Aceptado: 1, Respuesta equivocada: 2, Error: 4"
 	if res.ToString() != expected {
 		t.Errorf("expected: \n%s\ngot: \n%s", expected, res.ToString())
 	}
@@ -32,7 +31,7 @@ func getTestTokens(length int) []string{
 }
 
 func TestRegister(t *testing.T) {
-	s := codejudge.NewStream()
+	s := NewStream()
 	tokens := getTestTokens(3)
 	err := s.Register("abcde", tokens, 1*time.Second)
 	if err != nil {
@@ -53,7 +52,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestGetTopic(t *testing.T) {
-	s := codejudge.NewStream()
+	s := NewStream()
 	tokens := getTestTokens(3)
 	err := s.Register("abcde", tokens, 50*time.Millisecond)
 	if err != nil {
@@ -85,7 +84,7 @@ func TestGetTopic(t *testing.T) {
 
 func TestUpdateInvalidToken(t *testing.T) {
 	tokens := getTestTokens(1)
-	topic := codejudge.NewTopic(tokens)
+	topic := NewTopic(tokens)
 	err := topic.Update("invalid token", "Accepted")
 	if err == nil {
 		t.Error(err)
@@ -94,7 +93,7 @@ func TestUpdateInvalidToken(t *testing.T) {
 
 func TestUpdateUsedToken(t *testing.T) {
 	token := getTestTokens(2)
-	topic := codejudge.NewTopic(token)
+	topic := NewTopic(token)
 	err := topic.Update("token1", "Accepted")
 	if err != nil {
 		t.Error(err)
@@ -107,7 +106,7 @@ func TestUpdateUsedToken(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	tokens := getTestTokens(2)
-	topic := codejudge.NewTopic(tokens)
+	topic := NewTopic(tokens)
 	err := topic.Update("token1", "Accepted")
 	if err != nil {
 		t.Error(err)
@@ -129,7 +128,7 @@ func TestUpdate(t *testing.T) {
 func TestListenBeforeEmit(t *testing.T) {
 	tokens := getTestTokens(2)
 	log.Println("lenght of tokens: ", len(tokens))
-	topic := codejudge.NewTopic(tokens)
+	topic := NewTopic(tokens)
 	ch := topic.Listen()
 	go func() {
 		<-time.After(10 * time.Millisecond)
@@ -158,7 +157,7 @@ func TestListenBeforeEmit(t *testing.T) {
 
 func TestListenAfterEmit(t *testing.T) {
 	tokens := getTestTokens(2)
-	topic := codejudge.NewTopic(tokens)
+	topic := NewTopic(tokens)
 	err := topic.Update("token2", "Accepted")
 	if err != nil {
 		t.Error(err)
@@ -182,7 +181,7 @@ func TestListenAfterEmit(t *testing.T) {
 func TestListenInTheMiddle(t *testing.T) {
 	tokens := getTestTokens(3)
 	log.Println("lenght of tokens: ", len(tokens))
-	topic := codejudge.NewTopic(tokens)
+	topic := NewTopic(tokens)
 	err := topic.Update("token2", "Valid Error")
 	if err != nil {
 		t.Error(err)
@@ -220,7 +219,7 @@ func TestListenInTheMiddle(t *testing.T) {
 func TestListenTwiceAfterEmit(t *testing.T) {
 	// listening starts later than transmission
 	tokens := getTestTokens(1)
-	topic := codejudge.NewTopic(tokens)
+	topic := NewTopic(tokens)
 	err := topic.Update("token1", "Accepted")
 	if err != nil {
 		t.Error(err)
@@ -247,7 +246,7 @@ func TestListenTwiceAfterEmit(t *testing.T) {
 
 func TestEmit(t *testing.T) {
 	tokens := getTestTokens(0)
-	topic := codejudge.NewTopic(tokens)
+	topic := NewTopic(tokens)
 	go func() {
 		topic.Emit()
 	}()
