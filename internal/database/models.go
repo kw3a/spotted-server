@@ -66,6 +66,7 @@ type Quiz struct {
 	Title       string
 	Description string
 	Duration    int32
+	UserID      string
 }
 
 type Submission struct {

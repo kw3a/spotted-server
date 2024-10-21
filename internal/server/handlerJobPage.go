@@ -15,7 +15,7 @@ type JobPageData struct {
 type Offer struct {
 	QuizID      string
 	Title       string
-	Description string
+	Author      string
 }
 
 type JobOfferStorage interface {

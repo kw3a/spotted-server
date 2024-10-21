@@ -44,10 +44,11 @@ func main() {
 	if err := seedCfg.CleanDatabase(); err != nil {
 		log.Fatal(err)
 	}
-	if _, err := seedCfg.seedUsers(); err != nil {
+	users, err := seedCfg.seedUsers()
+	if err != nil {
 		log.Fatal(err)
 	}
-	quizesID, err := seedCfg.seedQuizes()
+	quizesID, err := seedCfg.seedQuizes(users[:2])
 	if err != nil {
 		log.Fatal(err)
 	}

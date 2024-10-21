@@ -11,6 +11,8 @@ import (
 
 type Example struct {
 	ID        string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	Input     string
 	Output    string
 	ProblemID string
@@ -22,13 +24,17 @@ type Jwt struct {
 }
 
 type Language struct {
-	ID      int32
-	Name    string
-	Version int32
+	ID        int32
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
+	Version   int32
 }
 
 type LanguageQuiz struct {
 	ID         string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 	LanguageID int32
 	QuizID     string
 }
@@ -44,6 +50,8 @@ type Participation struct {
 
 type Problem struct {
 	ID          string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 	Description string
 	Title       string
 	MemoryLimit int32
@@ -53,9 +61,12 @@ type Problem struct {
 
 type Quiz struct {
 	ID          string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 	Title       string
 	Description string
 	Duration    int32
+	UserID      string
 }
 
 type Submission struct {
@@ -63,7 +74,6 @@ type Submission struct {
 	CreatedAt         sql.NullTime
 	UpdatedAt         sql.NullTime
 	Src               string
-	Time              time.Time
 	AcceptedTestCases uint32
 	ProblemID         string
 	ParticipationID   string
@@ -72,6 +82,8 @@ type Submission struct {
 
 type TestCase struct {
 	ID        string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	Input     string
 	Output    string
 	ProblemID string
@@ -79,15 +91,19 @@ type TestCase struct {
 
 type TestCaseResult struct {
 	ID           sql.NullString
-	Status       string
-	Time         string
-	Memory       int32
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Status       sql.NullString
+	Time         sql.NullString
+	Memory       sql.NullInt32
 	TestCaseID   string
 	SubmissionID string
 }
 
 type User struct {
 	ID          string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 	Name        string
 	Email       string
 	Password    string

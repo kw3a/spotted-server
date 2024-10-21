@@ -15,9 +15,9 @@
   <div class="flex justify-center text-shark-200 my-10">
     <div class="flex flex-col bg-shark-950 border border-shark-900 rounded sm:w-full xl:w-1/2 justify-center p-4">
       <p class="text-blue-300 text-center font-semibold">{{.Quiz.Title}}</p>
-      <p class="text-shark-400">Creado por: example user1234</p>
-      <p>Duración: {{.Quiz.Duration}} minutos</p>
+      <p class="text-shark-400">{{.Quiz.Author}}</p>
       <p>{{.Quiz.Description}}</p>
+      <p>Duración: {{.Quiz.Duration}} minutos</p>
       {{if not .PreambleProblems}}
       <div class="flex justify-around">
         <button
@@ -71,4 +71,4 @@
     </p>
   </div>
 </div>
-{{end}} 
+{{end}}

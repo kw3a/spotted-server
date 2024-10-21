@@ -7,17 +7,30 @@ package database
 
 import (
 	"context"
+	"time"
 )
 
 const getQuiz = `-- name: GetQuiz :one
-SELECT id, created_at, updated_at, title, description, duration
+SELECT quiz.id, quiz.created_at, quiz.updated_at, quiz.title, quiz.description, quiz.duration, quiz.user_id, user.name as author
 FROM quiz
+JOIN user ON quiz.user_id = user.id
 WHERE quiz.id = ?
 `
 
-func (q *Queries) GetQuiz(ctx context.Context, id string) (Quiz, error) {
+type GetQuizRow struct {
+	ID          string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Title       string
+	Description string
+	Duration    int32
+	UserID      string
+	Author      string
+}
+
+func (q *Queries) GetQuiz(ctx context.Context, id string) (GetQuizRow, error) {
 	row := q.db.QueryRowContext(ctx, getQuiz, id)
-	var i Quiz
+	var i GetQuizRow
 	err := row.Scan(
 		&i.ID,
 		&i.CreatedAt,
@@ -25,34 +38,36 @@ func (q *Queries) GetQuiz(ctx context.Context, id string) (Quiz, error) {
 		&i.Title,
 		&i.Description,
 		&i.Duration,
+		&i.UserID,
+		&i.Author,
 	)
 	return i, err
 }
 
 const getQuizzes = `-- name: GetQuizzes :many
-SELECT id, created_at, updated_at, title, description, duration 
+SELECT quiz.id, quiz.title, user.name as author
 FROM quiz
+JOIN user ON quiz.user_id = user.id
 ORDER BY quiz.created_at DESC
 LIMIT 10
 `
 
-func (q *Queries) GetQuizzes(ctx context.Context) ([]Quiz, error) {
+type GetQuizzesRow struct {
+	ID     string
+	Title  string
+	Author string
+}
+
+func (q *Queries) GetQuizzes(ctx context.Context) ([]GetQuizzesRow, error) {
 	rows, err := q.db.QueryContext(ctx, getQuizzes)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Quiz
+	var items []GetQuizzesRow
 	for rows.Next() {
-		var i Quiz
-		if err := rows.Scan(
-			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.Title,
-			&i.Description,
-			&i.Duration,
-		); err != nil {
+		var i GetQuizzesRow
+		if err := rows.Scan(&i.ID, &i.Title, &i.Author); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

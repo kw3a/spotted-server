@@ -35,6 +35,7 @@ type Quiz struct {
 	Title       string
 	Description string
 	Duration    int32
+	Author      string
 }
 
 type ParticipationData struct {

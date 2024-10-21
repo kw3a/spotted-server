@@ -78,6 +78,7 @@ func (mysql *MysqlStorage) SelectQuiz(ctx context.Context, quizID string) (Quiz,
 		Title:       dbQuiz.Title,
 		Description: dbQuiz.Description,
 		Duration:    dbQuiz.Duration,
+		Author:      dbQuiz.Author,
 	}, nil
 }
 
@@ -89,9 +90,9 @@ func (mysql *MysqlStorage) SelectOffers(ctx context.Context) ([]Offer, error) {
 	offers := []Offer{}
 	for _, quiz := range quizzes {
 		offers = append(offers, Offer{
-			QuizID:      quiz.ID,
-			Title:       quiz.Title,
-			Description: quiz.Description,
+			QuizID: quiz.ID,
+			Title:  quiz.Title,
+			Author: quiz.Author,
 		})
 	}
 	return offers, nil
@@ -269,5 +270,5 @@ func (s *MysqlStorage) Revoke(ctx context.Context, refreshToken string) error {
 }
 
 func (s *MysqlStorage) GetUser(ctx context.Context, userID string) (database.User, error) {
-	return  s.Queries.GetUser(ctx, userID)
+	return s.Queries.GetUser(ctx, userID)
 }
