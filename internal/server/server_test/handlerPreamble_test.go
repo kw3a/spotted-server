@@ -32,9 +32,9 @@ func (s *preambleStorage) SelectScore(ctx context.Context, userID string, proble
 	args := s.Called(ctx, userID, problemID)
 	return args.Get(0).(server.ScoreData), args.Error(1)
 }
-func (s *preambleStorage) SelectQuiz(ctx context.Context, id string) (server.Quiz, error) {
+func (s *preambleStorage) SelectQuiz(ctx context.Context, id string) (server.Offer, error) {
 	args := s.Called(ctx, id)
-	return args.Get(0).(server.Quiz), args.Error(1)
+	return args.Get(0).(server.Offer), args.Error(1)
 }
 
 func TestPreambleHandlerBadAuth(t *testing.T) {
@@ -64,7 +64,7 @@ func TestPreambleHandlerBadInput(t *testing.T) {
 
 func TestPreambleHandlerBadStorageSelectQuiz(t *testing.T) {
 	storage := new(preambleStorage)
-	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Quiz{}, errors.New("error"))
+	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Offer{}, errors.New("error"))
 	handler := server.CreateParticipationHandler(&templates{}, storage, authRepo{}, quizPageInputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
@@ -76,7 +76,7 @@ func TestPreambleHandlerBadStorageSelectQuiz(t *testing.T) {
 
 func TestPreambleHandlerBadStorageParticipationStatus(t *testing.T) {
 	storage := new(preambleStorage)
-	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Quiz{}, nil)
+	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Offer{}, nil)
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(server.ParticipationData{}, errors.New("error"))
 	handler := server.CreateParticipationHandler(&templates{}, storage, authRepo{}, quizPageInputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
@@ -89,7 +89,7 @@ func TestPreambleHandlerBadStorageParticipationStatus(t *testing.T) {
 
 func TestPreambleHandlerBadStorageSelectProblemIDs(t *testing.T) {
 	storage := new(preambleStorage)
-	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Quiz{}, nil)
+	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Offer{}, nil)
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(server.ParticipationData{}, nil)
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, errors.New("error"))
 	handler := server.CreateParticipationHandler(&templates{}, storage, authRepo{}, quizPageInputFn)
@@ -103,7 +103,7 @@ func TestPreambleHandlerBadStorageSelectProblemIDs(t *testing.T) {
 
 func TestPreambleHandlerBadStorageSelectProblem(t *testing.T) {
 	storage := new(preambleStorage)
-	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Quiz{}, nil)
+	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Offer{}, nil)
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(server.ParticipationData{}, nil)
 	ids := []string{"1", "2"}
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return(ids, nil)
@@ -119,7 +119,7 @@ func TestPreambleHandlerBadStorageSelectProblem(t *testing.T) {
 
 func TestPreambleHandlerBadStorageSelectScore(t *testing.T) {
 	storage := new(preambleStorage)
-	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Quiz{}, nil)
+	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Offer{}, nil)
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(server.ParticipationData{}, nil)
 	ids := []string{"1", "2"}
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return(ids, nil)
@@ -136,7 +136,7 @@ func TestPreambleHandlerBadStorageSelectScore(t *testing.T) {
 
 func TestPreambleHandlerBadTemplate(t *testing.T) {
 	storage := new(preambleStorage)
-	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Quiz{}, nil)
+	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Offer{}, nil)
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(server.ParticipationData{}, nil)
 	ids := []string{"1", "2"}
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return(ids, nil)
@@ -153,7 +153,7 @@ func TestPreambleHandlerBadTemplate(t *testing.T) {
 
 func TestPreambleHandler(t *testing.T) {
 	storage := new(preambleStorage)
-	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Quiz{}, nil)
+	storage.On("SelectQuiz", mock.Anything, mock.Anything).Return(server.Offer{}, nil)
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(server.ParticipationData{}, nil)
 	ids := []string{"1", "2"}
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return(ids, nil)

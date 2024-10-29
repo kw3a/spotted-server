@@ -7,14 +7,18 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
 const getQuiz = `-- name: GetQuiz :one
-SELECT quiz.id, quiz.created_at, quiz.updated_at, quiz.title, quiz.description, quiz.duration, quiz.user_id, user.name as author
+SELECT quiz.id, quiz.created_at, quiz.updated_at, quiz.title, quiz.description, quiz.duration, quiz.min_wage, quiz.max_wage, quiz.user_id, user.name as author, GROUP_CONCAT(language.name) AS languages 
 FROM quiz
 JOIN user ON quiz.user_id = user.id
+LEFT JOIN language_quiz ON quiz.id = language_quiz.quiz_id
+LEFT JOIN language ON language_quiz.language_id = language.id
 WHERE quiz.id = ?
+GROUP BY quiz.id, user.name
 `
 
 type GetQuizRow struct {
@@ -24,8 +28,11 @@ type GetQuizRow struct {
 	Title       string
 	Description string
 	Duration    int32
+	MinWage     int32
+	MaxWage     int32
 	UserID      string
 	Author      string
+	Languages   sql.NullString
 }
 
 func (q *Queries) GetQuiz(ctx context.Context, id string) (GetQuizRow, error) {
@@ -38,14 +45,17 @@ func (q *Queries) GetQuiz(ctx context.Context, id string) (GetQuizRow, error) {
 		&i.Title,
 		&i.Description,
 		&i.Duration,
+		&i.MinWage,
+		&i.MaxWage,
 		&i.UserID,
 		&i.Author,
+		&i.Languages,
 	)
 	return i, err
 }
 
 const getQuizzes = `-- name: GetQuizzes :many
-SELECT quiz.id, quiz.title, user.name as author
+SELECT quiz.id, quiz.created_at, quiz.updated_at, quiz.title, quiz.description, quiz.duration, quiz.min_wage, quiz.max_wage, quiz.user_id, user.name as author
 FROM quiz
 JOIN user ON quiz.user_id = user.id
 ORDER BY quiz.created_at DESC
@@ -53,9 +63,16 @@ LIMIT 10
 `
 
 type GetQuizzesRow struct {
-	ID     string
-	Title  string
-	Author string
+	ID          string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Title       string
+	Description string
+	Duration    int32
+	MinWage     int32
+	MaxWage     int32
+	UserID      string
+	Author      string
 }
 
 func (q *Queries) GetQuizzes(ctx context.Context) ([]GetQuizzesRow, error) {
@@ -67,7 +84,18 @@ func (q *Queries) GetQuizzes(ctx context.Context) ([]GetQuizzesRow, error) {
 	var items []GetQuizzesRow
 	for rows.Next() {
 		var i GetQuizzesRow
-		if err := rows.Scan(&i.ID, &i.Title, &i.Author); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
+			&i.Description,
+			&i.Duration,
+			&i.MinWage,
+			&i.MaxWage,
+			&i.UserID,
+			&i.Author,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

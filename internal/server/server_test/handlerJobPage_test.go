@@ -11,12 +11,12 @@ import (
 )
 
 type jobPageStorage struct{}
-func (j *jobPageStorage) SelectOffers(ctx context.Context) ([]server.Offer, error) {
-	return []server.Offer{}, nil
+func (j *jobPageStorage) SelectOffers(ctx context.Context) ([]server.PartialOffer, error) {
+	return []server.PartialOffer{}, nil
 }
 
 type invalidJobPageStorage struct{}
-func (i *invalidJobPageStorage) SelectOffers(ctx context.Context) ([]server.Offer, error) {
+func (i *invalidJobPageStorage) SelectOffers(ctx context.Context) ([]server.PartialOffer, error) {
 	return nil, errors.New("error")
 }
 

@@ -10,8 +10,8 @@ import (
 
 type PreambleData struct {
 	User             auth.AuthUser
-	Quiz             Quiz
-	Participation    PreambleParticipation
+	Quiz             Offer
+	Participation    ParticipationData
 	PreambleProblems []PreambleProblem
 }
 
@@ -21,27 +21,27 @@ type PreambleProblem struct {
 	AcceptedTestCases int
 }
 
-type PreambleParticipation struct {
-	CreatedAt string
-	ExpiresAt string
-}
-
 type PreambleInput struct {
 	QuizID string
 }
 
-type Quiz struct {
-	ID          string
-	Title       string
-	Description string
-	Duration    int32
-	Author      string
+type Offer struct {
+	ID           string
+	Title        string
+	Description  string
+	Duration     int32
+	Author       string
+	MinWage      int32
+	MaxWage      int32
+	RelativeTime string
+	Languages    []string
 }
 
 type ParticipationData struct {
-	ID        string
-	CreatedAt time.Time
-	ExpiresAt time.Time
+	ID           string
+	CreatedAt    time.Time
+	ExpiresAt    time.Time
+	RelativeTime string
 }
 
 type PreambleStorage interface {
@@ -49,7 +49,7 @@ type PreambleStorage interface {
 	SelectProblemIDs(ctx context.Context, QuizID string) ([]string, error)
 	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
 	SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error)
-	SelectQuiz(ctx context.Context, id string) (Quiz, error)
+	SelectQuiz(ctx context.Context, id string) (Offer, error)
 }
 
 func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, authService AuthRep, inputFn quizPageInputFunc) http.HandlerFunc {
@@ -100,10 +100,7 @@ func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, au
 				preambleProblems = append(preambleProblems, problem)
 			}
 			data.PreambleProblems = preambleProblems
-			data.Participation = PreambleParticipation{
-				CreatedAt: participation.CreatedAt.Format("02-Jan-2006 15:04"),
-				ExpiresAt: participation.ExpiresAt.Format("02-Jan-2006 15:04"),
-			}
+			data.Participation = participation
 		}
 		if err := templ.Render(w, "preamble", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

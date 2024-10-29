@@ -6,6 +6,8 @@ CREATE TABLE quiz (
   title VARCHAR(255) NOT NULL,
   description VARCHAR(8191) NOT NULL,
   duration INT NOT NULL,
+  min_wage INT NOT NULL,
+  max_wage INT NOT NULL,
   user_id CHAR(36) NOT NULL,
   FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 );

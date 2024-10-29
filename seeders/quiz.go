@@ -103,6 +103,8 @@ func (cfg *SeedersConfig) seedQuizes(authors []string) ([]string, error) {
 			Title:       "Junior Golang developer",
 			Description: description1,
 			Duration:    120,
+			MinWage:     15000,
+			MaxWage:     20000,
 			UserID:      authors[0],
 		},
 		{
@@ -110,6 +112,8 @@ func (cfg *SeedersConfig) seedQuizes(authors []string) ([]string, error) {
 			Title:       "Intermediate Data Engineer",
 			Description: description2,
 			Duration:    60,
+			MinWage:     20000,
+			MaxWage:     25000,
 			UserID:      authors[1],
 		},
 	}

@@ -32,8 +32,8 @@ func (q *Queries) DeleteQuizes(ctx context.Context, ids []string) error {
 
 const seedQuiz = `-- name: SeedQuiz :exec
 INSERT INTO quiz 
-(id, title, description, duration, user_id) VALUES
-(?, ?, ?, ?, ?)
+(id, title, description, duration, min_wage, max_wage, user_id) VALUES
+(?, ?, ?, ?, ?, ?, ?)
 `
 
 type SeedQuizParams struct {
@@ -41,6 +41,8 @@ type SeedQuizParams struct {
 	Title       string
 	Description string
 	Duration    int32
+	MinWage     int32
+	MaxWage     int32
 	UserID      string
 }
 
@@ -50,6 +52,8 @@ func (q *Queries) SeedQuiz(ctx context.Context, arg SeedQuizParams) error {
 		arg.Title,
 		arg.Description,
 		arg.Duration,
+		arg.MinWage,
+		arg.MaxWage,
 		arg.UserID,
 	)
 	return err

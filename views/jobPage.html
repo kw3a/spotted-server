@@ -9,20 +9,26 @@
   <link href="/static/output.css" rel="stylesheet" />
 </head>
 
-<body class="bg-black">
+<body class="bg-shark-950">
   {{template "navBar" .User}}
   <h1 class="text-white text-center font-bold">Ofertas</h1>
-  <div class="grid grid-cols-2 gap-4 m-4">
-    {{range .Offers}} {{template "jobCard" .}} {{end}}
+  <div class="flex flex-row justify-center">
+    <div class="w-3/4 grid grid-cols-2 gap-4 m-4">
+      {{range .Offers}} {{template "jobCard" .}} {{end}}
+    </div>
   </div>
 </body>
 
 </html>
 {{end}} {{block "jobCard" .}}
-<div class="bg-shark-950 border border-shark-900 rounded p-2 hover:border-shark-700" hx-get="/preamble/{{.QuizID}}"
-  hx-trigger="click" hx-push-url="true" hx-target="body">
-  <h1 class="text-shark-200 font-bold">{{.Title}}</h1>
-  <p class="text-shark-200 ">{{.Author}}</p>
+<div class="flex flex-col gap-2 border border-shark-900 rounded p-8 hover:border-shark-700 cursor-pointer"
+  hx-get="/preamble/{{.QuizID}}" hx-trigger="click" hx-push-url="true" hx-target="body">
+  <div>
+    <span class="text-shark-200 font-semibold text-xl">{{.Title}}</span>
+    <span class="text-shark-300 font-light">{{.RelativeTime}}</span>
+  </div>
+  <span class="text-shark-200 ">{{.Author}}</span>
+  <span class="text-shark-200">{{.MinWage}}$ - {{.MaxWage}}$</span>
 </div>
 {{end}}
 </div>

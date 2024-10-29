@@ -71,6 +71,11 @@ func main() {
 			LanguageID: int32(languageIDs[1]),
 			QuizID:     quizesID[0],
 		},
+		{
+			ID:         uuid.New().String(),
+			LanguageID: int32(languageIDs[0]),
+			QuizID:     quizesID[1],
+		},
 	}
 	_, err = seedCfg.seedLanguageProblem(languageProblems)
 	if err != nil {

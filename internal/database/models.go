@@ -66,6 +66,8 @@ type Quiz struct {
 	Title       string
 	Description string
 	Duration    int32
+	MinWage     int32
+	MaxWage     int32
 	UserID      string
 }
 

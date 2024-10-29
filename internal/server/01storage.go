@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -42,10 +44,12 @@ func (mysql *MysqlStorage) ParticipationStatus(ctx context.Context, userID strin
 	if err != nil {
 		return ParticipationData{}, err
 	}
+	relativeTime := RelativeTime(participation.ExpiresAt)
 	return ParticipationData{
-		ID:        participation.ID,
-		CreatedAt: participation.CreatedAt.Time,
-		ExpiresAt: participation.ExpiresAt,
+		ID:           participation.ID,
+		CreatedAt:    participation.CreatedAt.Time,
+		ExpiresAt:    participation.ExpiresAt,
+		RelativeTime: relativeTime,
 	}, nil
 }
 
@@ -68,34 +72,87 @@ func (mysql *MysqlStorage) SelectProblemIDs(ctx context.Context, QuizID string) 
 	return IDs, nil
 }
 
-func (mysql *MysqlStorage) SelectQuiz(ctx context.Context, quizID string) (Quiz, error) {
+func (mysql *MysqlStorage) SelectQuiz(ctx context.Context, quizID string) (Offer, error) {
 	dbQuiz, err := mysql.Queries.GetQuiz(ctx, quizID)
 	if err != nil {
-		return Quiz{}, err
+		return Offer{}, err
 	}
-	return Quiz{
-		ID:          dbQuiz.ID,
-		Title:       dbQuiz.Title,
-		Description: dbQuiz.Description,
-		Duration:    dbQuiz.Duration,
-		Author:      dbQuiz.Author,
+	languages, err := ConvertLanguages(dbQuiz.Languages)
+	if err != nil {
+		return Offer{}, err
+	}
+	relativeTime:= RelativeTime(dbQuiz.CreatedAt)
+	return Offer{
+		ID:           dbQuiz.ID,
+		Title:        dbQuiz.Title,
+		Description:  dbQuiz.Description,
+		Duration:     dbQuiz.Duration,
+		Author:       dbQuiz.Author,
+		MinWage:      dbQuiz.MinWage,
+		MaxWage:      dbQuiz.MaxWage,
+		RelativeTime: relativeTime,
+		Languages:    languages,
 	}, nil
 }
 
-func (mysql *MysqlStorage) SelectOffers(ctx context.Context) ([]Offer, error) {
+func ConvertLanguages(languages sql.NullString) ([]string, error) {
+	if !languages.Valid {
+		return nil, errors.New("languages is NULL")
+	}
+	result := strings.Split(languages.String, ",")
+	if len(result) == 0 {
+		return nil, errors.New("no languages found")
+	}
+	return result, nil
+}
+
+func (mysql *MysqlStorage) SelectOffers(ctx context.Context) ([]PartialOffer, error) {
 	quizzes, err := mysql.Queries.GetQuizzes(ctx)
 	if err != nil {
 		return nil, err
 	}
-	offers := []Offer{}
+	offers := []PartialOffer{}
 	for _, quiz := range quizzes {
-		offers = append(offers, Offer{
-			QuizID: quiz.ID,
-			Title:  quiz.Title,
-			Author: quiz.Author,
+		relativeTime := RelativeTime(quiz.CreatedAt)
+		offers = append(offers, PartialOffer{
+			QuizID:       quiz.ID,
+			Title:        quiz.Title,
+			Author:       quiz.Author,
+			MinWage:      quiz.MinWage,
+			MaxWage:      quiz.MaxWage,
+			RelativeTime: relativeTime,
 		})
 	}
 	return offers, nil
+}
+
+func RelativeTime(t time.Time) string {
+	now := time.Now()
+	duration := now.Sub(t)
+
+	if duration < 0 {
+		duration = -duration
+		if duration < time.Minute {
+			return "in a few seconds"
+		} else if duration < time.Hour {
+			return fmt.Sprintf("in %d minutes", int(duration.Minutes()))
+		} else if duration < 24*time.Hour {
+			return fmt.Sprintf("in %d hours", int(duration.Hours()))
+		} else {
+			days := int(duration.Hours() / 24)
+			return fmt.Sprintf("in %d days", days)
+		}
+	}
+	if duration < time.Minute {
+		return "justo ahora" 
+	} else if duration < time.Hour {
+		return fmt.Sprintf("hace %d minutos", int(duration.Minutes()))
+	} else if duration < 24*time.Hour {
+		return fmt.Sprintf("hace %d horas", int(duration.Hours()))
+	} else {
+		days := int(duration.Hours() / 24)
+		return fmt.Sprintf("hace %d días", days)
+	}
 }
 
 func (mysql *MysqlStorage) SelectLanguages(ctx context.Context, quizID string) ([]LanguageSelector, error) {

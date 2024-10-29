@@ -9,17 +9,20 @@ import (
 
 type JobPageData struct {
 	User   auth.AuthUser
-	Offers []Offer
+	Offers []PartialOffer
 }
 
-type Offer struct {
-	QuizID      string
-	Title       string
-	Author      string
+type PartialOffer struct {
+	QuizID       string
+	Title        string
+	Author       string
+	MinWage      int32
+	MaxWage      int32
+	RelativeTime string
 }
 
 type JobOfferStorage interface {
-	SelectOffers(ctx context.Context) ([]Offer, error)
+	SelectOffers(ctx context.Context) ([]PartialOffer, error)
 }
 
 func CreateJobOffersHandler(authService AuthRep, templ TemplatesRepo, storage JobOfferStorage) http.HandlerFunc {

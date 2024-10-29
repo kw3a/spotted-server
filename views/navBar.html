@@ -1,15 +1,24 @@
 {{block "navBar" .}}
-<nav class="flex flex-row text-white p-4 border border-shark-900 border-b-white">
-  <div class="w-1/2 text-center">
-    <a class="hover:text-blue-600" href="/"> Inicio </a>
+<nav class="flex flex-row text-white p-4">
+  <div class="w-1/2 flex justify-center">
+    <a class="border border-transparent rounded hover:border-white p-2" href="/">
+      <img src="/public/home.svg" alt="home icon" width="20" height="20" />
+    </a>
   </div>
   {{if eq .Role "visitor"}}
-  <a class="w-1/2 text-center hover:text-blue-600" href="/login">Iniciar sesión</a>
+  <div class="w-1/2 flex justify-center">
+    <a class="border border-transparent rounded hover:border-white p-2 " href="/login">
+      <img src="/public/login.svg" alt="login icon" width="20" height="20" />
+    </a>
+  </div>
   {{else}}
   <div class="w-1/2 flex justify-evenly">
-    <p class="text-center">Usuario: {{.Name}}</p>
-    <div class="text-center hover:text-blue-600 cursor-pointer" hx-post="/logout">
-      Cerrar sesión
+    <div class="flex items-center gap-2">
+      <img class="inline" src="/public/user.svg" alt="user icon" width="20" height="20" />
+      <span> {{.Name}} </span>
+    </div>
+    <div class="border border-transparent rounded hover:border-white p-2 cursor-pointer" hx-post="/logout">
+      <img class="inline" src="/public/login.svg" alt="login icon" width="20" height="20" />
     </div>
   </div>
   {{end}}
