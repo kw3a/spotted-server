@@ -91,11 +91,6 @@ func viewRoutes(r *chi.Mux, dbURL, jwtSecret, judgeURL, judgeAuthToken, callback
 	if err != nil {
 		log.Println(err)
 	}
-	/*
-	devMiddleware := func(next http.Handler) http.Handler {
-		return auth.CreateMiddleware(app.Storage, app.AuthType, "/login", "dev", next)
-	}
-	*/
 	authNMiddleware := func(next http.Handler) http.Handler {
 		return auth.AuthNMiddleware(app.Storage, app.AuthType, next)
 	}
@@ -103,31 +98,33 @@ func viewRoutes(r *chi.Mux, dbURL, jwtSecret, judgeURL, judgeAuthToken, callback
 		return auth.AuthRMiddleware("/login", "dev", next)
 	}
 	fileServer := http.FileServer(http.FS(Files))
-	r.Use(authNMiddleware)
 	r.Handle("/public/*", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
 	r.Handle("/static/*", fileServer)
-	r.Get("/login", app.LoginPageHandler())
-	r.Post("/login", app.LoginHandler())
-	r.Post("/logout", app.LogoutHandler())
-	//r.Get("/languages/{quizID}", app.LanguagesHandler())
-	r.Get("/", app.JobOffersHandler())
-	r.Get("/preamble/{quizID}", app.PreambleHandler())
 
-	devRouter := chi.NewRouter()
-	//devRouter.Use(authNMiddleware)
-	devRouter.Use(authRMiddlewareDev)
-	devRouter.Get("/quizzes/{quizID}", app.QuizPageHandler())
-	devRouter.Get("/problems", app.ProblemsHandler())
-	devRouter.Get("/examples", app.ExamplesHandler())
-	devRouter.Get("/source", app.SourceHandler())
-	devRouter.Get("/score", app.ScoreHandler())
-	devRouter.Post("/participate", app.ParticipateHandler())
-	devRouter.Post("/end", app.EndHandler())
+	r.NotFound(app.NotFoundHandler())
 
-	devRouter.Post("/submissions", app.RunHandler())
-	devRouter.HandleFunc("/results/{submissionID}", app.ResultsHandler())
+	r.With(authNMiddleware).Group(func(r chi.Router) {
+		r.Get("/login", app.LoginPageHandler())
+		r.Post("/login", app.LoginHandler())
+		r.Post("/logout", app.LogoutHandler())
+		//r.Get("/languages/{quizID}", app.LanguagesHandler())
+		r.Get("/", app.JobOffersHandler())
+		r.Get("/preamble/{quizID}", app.PreambleHandler())
+	})
 
-	r.Mount("/", devRouter)
+	r.With(authNMiddleware).With(authRMiddlewareDev).Group(func(r chi.Router) {
+		r.Get("/quizzes/{quizID}", app.QuizPageHandler())
+		r.Get("/problems", app.ProblemsHandler())
+		r.Get("/examples", app.ExamplesHandler())
+		r.Get("/source", app.SourceHandler())
+		r.Get("/score", app.ScoreHandler())
+		r.Post("/participate", app.ParticipateHandler())
+		r.Post("/end", app.EndHandler())
+
+		r.Post("/submissions", app.RunHandler())
+		r.HandleFunc("/results/{submissionID}", app.ResultsHandler())
+	})
+
 	r.Put("/api/submissions/{submissionID}/tc/{testCaseID}", app.CallbackHandler())
 }
 
