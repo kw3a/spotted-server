@@ -104,7 +104,6 @@ func TestQuizPageHandlerBadInput(t *testing.T) {
 		&templates{},
 		&quizPageStorage{}, 
 		&authRepo{}, 
-		"/", 
 		invalidInputFn, 
 		selectProblemsFn, 
 		selectLanguagesFn, 
@@ -126,7 +125,6 @@ func TestQuizPageHandlerBadAuth(t *testing.T) {
 		&templates{},
 		&quizPageStorage{}, 
 		&invalidAuthRepo{}, 
-		"/", 
 		quizPageInputFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
@@ -138,11 +136,8 @@ func TestQuizPageHandlerBadAuth(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
-	if w.Code != http.StatusSeeOther{
-		t.Error("expected see other")
-	}
-	if w.Header().Get("Location") != "/" {
-		t.Error("expected redirect to /")
+	if w.Code != http.StatusUnauthorized{
+		t.Error("expected unauthorized")
 	}
 }
 
@@ -153,7 +148,6 @@ func TestQuizPageHandlerBadStorageParticipationStatus(t *testing.T) {
 		&templates{},
 		storage,
 		&authRepo{}, 
-		"/", 
 		quizPageInputFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
@@ -178,7 +172,6 @@ func TestQuizPageHandlerBadStorageParticipationStatusExpired(t *testing.T) {
 		&templates{},
 		storage,
 		&authRepo{}, 
-		"/", 
 		quizPageInputFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
@@ -204,7 +197,6 @@ func TestQuizPageHandlerBadStorageSelectProblemIDs(t *testing.T) {
 		&templates{},
 		storage,
 		&authRepo{}, 
-		"/", 
 		quizPageInputFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
@@ -231,7 +223,6 @@ func TestQuizPageHandlerBadStorageSelectScore(t *testing.T) {
 		&templates{},
 		storage,
 		&authRepo{}, 
-		"/", 
 		quizPageInputFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
@@ -259,7 +250,6 @@ func TestQuizPageHandlerBadStorageSelectProblem(t *testing.T) {
 		&templates{},
 		storage,
 		&authRepo{}, 
-		"/", 
 		quizPageInputFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
@@ -288,7 +278,6 @@ func TestQuizPageHandlerBadStorageSelectExamples(t *testing.T) {
 		&templates{},
 		storage,
 		&authRepo{}, 
-		"/", 
 		quizPageInputFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
@@ -318,7 +307,6 @@ func TestQuizPageHandlerBadStorageSelectLanguages(t *testing.T) {
 		&templates{},
 		storage,
 		&authRepo{}, 
-		"/", 
 		quizPageInputFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
@@ -349,7 +337,6 @@ func TestQuizPageHandlerBadStorageLastSource(t *testing.T) {
 		&templates{},
 		storage,
 		&authRepo{}, 
-		"/", 
 		quizPageInputFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 
@@ -380,7 +367,6 @@ func TestQuizPageHandlerBadTemplate(t *testing.T) {
 		&invalidTemplates{},
 		storage,
 		&authRepo{},
-		"/",
 		quizPageInputFn,
 		selectProblemsFn,
 		selectLanguagesFn,
@@ -411,7 +397,6 @@ func TestQuizPageHandler(t *testing.T) {
 		&templates{},
 		storage,
 		&authRepo{}, 
-		"/", 
 		quizPageInputFn,
 		selectProblemsFn, 
 		selectLanguagesFn, 

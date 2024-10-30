@@ -101,7 +101,6 @@ func CreateQuizPageHandler(
 	templ TemplatesRepo,
 	storage QuizPageStorage,
 	authRep AuthRep,
-	redirectPath string,
 	inputFn quizPageInputFunc,
 	selectProblFn selectProblemFn,
 	selectLangFn selectLanguageFn,
@@ -110,7 +109,7 @@ func CreateQuizPageHandler(
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := authRep.GetUser(r)
 		if err != nil {
-			http.Redirect(w, r, redirectPath, http.StatusSeeOther)
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 		input, err := inputFn(r)
@@ -181,7 +180,6 @@ func (DI *App) QuizPageHandler() http.HandlerFunc {
 		DI.Templ,
 		DI.Storage,
 		DI.AuthService,
-		"/",
 		GetQuizPageInput,
 		SelectFirstProblem,
 		SelectFirstLanguage,

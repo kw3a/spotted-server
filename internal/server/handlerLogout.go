@@ -14,12 +14,10 @@ type logoutStorage interface {
 func CreateLogoutHandler(storage logoutStorage, redirectPath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		refreshToken, err := r.Cookie("refresh_token")
-		if err != nil {
-			http.Redirect(w, r, redirectPath, http.StatusSeeOther)
-			return
-		}
-		if err = storage.Revoke(r.Context(), refreshToken.Value); err != nil {
-			log.Println(err)
+		if err == nil {
+			if err = storage.Revoke(r.Context(), refreshToken.Value); err != nil {
+				log.Println(err)
+			}
 		}
 		auth.DeleteCookies(w)
 		w.Header().Set("HX-Redirect", redirectPath)
