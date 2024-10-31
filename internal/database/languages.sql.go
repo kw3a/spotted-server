@@ -10,7 +10,7 @@ import (
 )
 
 const selectLanguages = `-- name: SelectLanguages :many
-SELECT language.id, language.created_at, language.updated_at, language.name, language.version
+SELECT language.id, language.created_at, language.updated_at, language.name, language.display_name
 FROM language
 INNER JOIN language_quiz ON language.id = language_quiz.language_id
 INNER JOIN quiz ON language_quiz.quiz_id = quiz.id
@@ -31,7 +31,7 @@ func (q *Queries) SelectLanguages(ctx context.Context, id string) ([]Language, e
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Name,
-			&i.Version,
+			&i.DisplayName,
 		); err != nil {
 			return nil, err
 		}

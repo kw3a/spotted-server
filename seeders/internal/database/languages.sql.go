@@ -32,17 +32,17 @@ func (q *Queries) DeleteLanguages(ctx context.Context, ids []int32) error {
 
 const seedLanguage = `-- name: SeedLanguage :exec
 INSERT INTO language
-(id, name, version) VALUES
+(id, name, display_name) VALUES
 (?, ?, ?)
 `
 
 type SeedLanguageParams struct {
-	ID      int32
-	Name    string
-	Version int32
+	ID          int32
+	Name        string
+	DisplayName string
 }
 
 func (q *Queries) SeedLanguage(ctx context.Context, arg SeedLanguageParams) error {
-	_, err := q.db.ExecContext(ctx, seedLanguage, arg.ID, arg.Name, arg.Version)
+	_, err := q.db.ExecContext(ctx, seedLanguage, arg.ID, arg.Name, arg.DisplayName)
 	return err
 }

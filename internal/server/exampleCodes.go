@@ -31,7 +31,7 @@ func main() {
    fmt.Print(output)
 }`,
 
- 54: `// Código de ejemplo en C++ que resuelve el siguiente problema:
+	54: `// Código de ejemplo en C++ que resuelve el siguiente problema:
 // Recibir una palabra (stdin) e imprimir la palabra invertida (stdout).
 
 #include <iostream>
@@ -85,4 +85,19 @@ readline.question('', (input) => {
  console.log(output);
  readline.close();
 });`,
+	73: `// Código de ejemplo en Rust que resuelve el siguiente problema:
+// Recibir una palabra (stdin) e imprimir la palabra invertida (stdout).
+use std::io::{self, Write};
+
+fn main() {
+    print!("Enter text: ");
+    io::stdout().flush().unwrap(); 
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).expect("Failed to read line");
+
+    let output: String = input.chars().rev().collect();
+    println!("{}", output);
+}
+`,
 }

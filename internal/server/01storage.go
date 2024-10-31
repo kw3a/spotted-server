@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -164,7 +163,7 @@ func (mysql *MysqlStorage) SelectLanguages(ctx context.Context, quizID string) (
 	for _, dbLang := range dbLanguages {
 		lang := LanguageSelector{
 			LanguageID:    dbLang.ID,
-			DisplayedName: dbLang.Name + " v" + strconv.Itoa(int(dbLang.Version)),
+			DisplayedName: dbLang.DisplayName,
 			SimpleName:    dbLang.Name,
 		}
 		res = append(res, lang)
@@ -199,6 +198,8 @@ func (mysql *MysqlStorage) SelectProblem(ctx context.Context, problemID string) 
 	return ProblemContent{
 		Title:       dbProblem.Title,
 		Description: dbProblem.Description,
+		MemoryLimit: dbProblem.MemoryLimit,
+		TimeLimit:   dbProblem.TimeLimit,
 	}, nil
 }
 

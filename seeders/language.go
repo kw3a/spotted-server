@@ -12,14 +12,34 @@ func (cfg *SeedersConfig) seedLanguages() ([]int, error) {
 	ctx := context.Background()
 	languages := []database.SeedLanguageParams{
 		{
-			ID:      71,
-			Name:    "python",
-			Version: 3,
+			ID:          71,
+			Name:        "python",
+			DisplayName: "Python (3.8.1)",
 		},
 		{
-			ID:      54,
-			Name:    "cpp",
-			Version: 9,
+			ID:          54,
+			Name:        "cpp",
+			DisplayName: "C++ (GCC 9.2.0)",
+		},
+		{
+			ID:          60,
+			Name:        "go",
+			DisplayName: "Go (1.13.5)",
+		},
+		{
+			ID:          62,
+			Name:        "java",
+			DisplayName: "Java (OpenJDK 13.0.1)",
+		},
+		{
+			ID:          63,
+			Name:        "javascript",
+			DisplayName: "JavaScript (Node.js 12.14.0)",
+		},
+		{
+			ID:          73,
+			Name:        "rust",
+			DisplayName: "Rust (1.40.0)",
 		},
 	}
 

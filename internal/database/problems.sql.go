@@ -37,20 +37,24 @@ func (q *Queries) CreateProblem(ctx context.Context, arg CreateProblemParams) er
 }
 
 const selectProblem = `-- name: SelectProblem :one
-SELECT problem.title, problem.description
+SELECT problem.id, problem.created_at, problem.updated_at, problem.description, problem.title, problem.memory_limit, problem.time_limit, problem.quiz_id
 FROM problem
 WHERE problem.id = ?
 `
 
-type SelectProblemRow struct {
-	Title       string
-	Description string
-}
-
-func (q *Queries) SelectProblem(ctx context.Context, id string) (SelectProblemRow, error) {
+func (q *Queries) SelectProblem(ctx context.Context, id string) (Problem, error) {
 	row := q.db.QueryRowContext(ctx, selectProblem, id)
-	var i SelectProblemRow
-	err := row.Scan(&i.Title, &i.Description)
+	var i Problem
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Description,
+		&i.Title,
+		&i.MemoryLimit,
+		&i.TimeLimit,
+		&i.QuizID,
+	)
 	return i, err
 }
 

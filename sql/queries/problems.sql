@@ -1,6 +1,6 @@
 
 -- name: SelectProblem :one
-SELECT problem.title, problem.description
+SELECT problem.*
 FROM problem
 WHERE problem.id = ?;
 --

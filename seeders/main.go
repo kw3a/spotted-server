@@ -60,23 +60,20 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	languageProblems := []database.SeedLanguageQuizParams{
-		{
+	languageProblems := []database.SeedLanguageQuizParams{}
+	for _, langID := range languageIDs {
+		languageProblems = append(languageProblems, database.SeedLanguageQuizParams{
 			ID:         uuid.New().String(),
-			LanguageID: int32(languageIDs[0]),
+			LanguageID: int32(langID),
 			QuizID:     quizesID[0],
-		},
-		{
-			ID:         uuid.New().String(),
-			LanguageID: int32(languageIDs[1]),
-			QuizID:     quizesID[0],
-		},
-		{
-			ID:         uuid.New().String(),
-			LanguageID: int32(languageIDs[0]),
-			QuizID:     quizesID[1],
-		},
+		})
 	}
+	languageProblems = append(languageProblems, database.SeedLanguageQuizParams{
+		ID:         uuid.New().String(),
+		LanguageID: int32(languageIDs[0]),
+		QuizID:     quizesID[1],
+	})
+	
 	_, err = seedCfg.seedLanguageProblem(languageProblems)
 	if err != nil {
 		log.Fatal(err)

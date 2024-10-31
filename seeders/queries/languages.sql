@@ -1,6 +1,6 @@
 -- name: SeedLanguage :exec
 INSERT INTO language
-(id, name, version) VALUES
+(id, name, display_name) VALUES
 (?, ?, ?);
 
 -- name: DeleteLanguages :exec

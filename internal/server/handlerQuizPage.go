@@ -34,6 +34,8 @@ type ScoreData struct {
 type ProblemContent struct {
 	Title       string
 	Description string
+	MemoryLimit int32
+	TimeLimit   float64
 }
 
 type Example struct {
@@ -92,6 +94,7 @@ func SelectFirstProblem(problemIDs []string) string {
 func SelectFirstLanguage(languages []LanguageSelector) LanguageSelector {
 	return languages[0]
 }
+
 type quizPageInputFunc = func(r *http.Request) (QuizPageInput, error)
 type enumProblemsFn = func([]string) []ProblemSelector
 type selectProblemFn = func([]string) string

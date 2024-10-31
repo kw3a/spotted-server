@@ -24,11 +24,11 @@ type Jwt struct {
 }
 
 type Language struct {
-	ID        int32
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Name      string
-	Version   int32
+	ID          int32
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Name        string
+	DisplayName string
 }
 
 type LanguageQuiz struct {

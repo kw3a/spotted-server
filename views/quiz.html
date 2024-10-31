@@ -1,224 +1,168 @@
 {{block "quizPage" .}}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta charset="UTF-8" />
-    <link href="/static/output.css" rel="stylesheet" />
-    <link
-      rel="stylesheet"
-      data-name="vs/editor/editor.main"
-      href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.20.0/min/vs/editor/editor.main.min.css"
-    />
 
-    <script src="/static/htmx.min.js"></script>
-    <script src="/static/sse.js"></script>
-    <title>Quiz Page</title>
-  </head>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" />
+  <link href="/static/output.css" rel="stylesheet" />
+  <link rel="stylesheet" data-name="vs/editor/editor.main"
+    href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.20.0/min/vs/editor/editor.main.min.css" />
 
-  <body class="bg-black">
-    <div class="flex flex-row h-screen p-2 gap-2">
-      <script>
-        function changeProblem(id) {
-          let targets = [
-            "#problem-info",
-            "#examples",
-            "#language-select",
-            "#submit-button",
-            "#score",
-          ];
-          targets.forEach((target) => {
-            htmx.trigger(target, "evtproblemchange", {
-              problem_id: id,
-            });
+  <script src="/static/htmx.min.js"></script>
+  <script src="/static/sse.js"></script>
+  <title>Quiz Page</title>
+</head>
+
+<body class="bg-black">
+  <div class="flex flex-row h-screen p-2 gap-2">
+    <script>
+      function changeProblem(id) {
+        let targets = [
+          "#problem-info",
+          "#examples",
+          "#language-select",
+          "#submit-button",
+          "#score",
+        ];
+        targets.forEach((target) => {
+          htmx.trigger(target, "evtproblemchange", {
+            problem_id: id,
           });
+        });
+      }
+      function copy(text) {
+        navigator.clipboard.writeText(text);
+      }
+      let expiresAt = "{{.ExpiresAt}}";
+      var countDownDate = new Date(expiresAt).getTime();
+      var x = setInterval(function () {
+        var now = new Date().getTime();
+        var distance = countDownDate - now;
+        var hours = Math.floor(
+          (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+        );
+        var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        document.getElementById("timer").innerHTML =
+          hours + "h " + minutes + "m " + seconds + "s ";
+        if (distance < 0) {
+          clearInterval(x);
+          document.getElementById("timer").innerHTML = "EXPIRED";
+          showAlertAndRedirect();
         }
-        function copy(text) {
-          navigator.clipboard.writeText(text);
-        }
-        let expiresAt = "{{.ExpiresAt}}";
-        var countDownDate = new Date(expiresAt).getTime();
-        var x = setInterval(function () {
-          var now = new Date().getTime();
-          var distance = countDownDate - now;
-          var hours = Math.floor(
-            (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
-          );
-          var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-          var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-          document.getElementById("timer").innerHTML =
-            hours + "h " + minutes + "m " + seconds + "s ";
-          if (distance < 0) {
-            clearInterval(x);
-            document.getElementById("timer").innerHTML = "EXPIRED";
-            showAlertAndRedirect();
-          }
-        }, 1000);
-        function showAlertAndRedirect() {
-          alert("Time is up!");
-          window.location.href = "/";
-        }
-      </script>
-      <ul
-        id="problem-selector"
-        class="flex-none w-16 flex flex-col justify-evenly overflow-y-auto items-center bg-shark-950 border border-shark-900 rounded"
-      >
-        {{ $first := true }} {{range .Problems}}
-        <li class="w-full p-2 flex items-center justify-center">
-          <input
-            id="radio-{{.ID}}"
-            type="radio"
-            name="selected-problem"
-            value="{{.ID}}"
-            class="hidden peer"
-            data-problem_id="{{.ID}}"
-            onclick="changeProblem(this.dataset.problem_id)"
-            {{
-            if
-            $first
-            }}
-            checked
-            {{
-            end
-            }}
-          />
-          <label
-            for="radio-{{.ID}}"
-            class="
-            w-full text-center flex flex-col justify-center h-12 border border-blue-400 hover:border-blue-600 
-            text-blue-400 font-bold cursor-pointer rounded peer-checked:bg-blue-400 peer-checked:text-shark-950"
-          >
-            {{.ProblemName}}
-          </label>
-        </li>
-        {{ $first = false }} {{end}}
-      </ul>
-      <div class="flex flex-col">
-        <div
-          class="flex flex-row divide-x bg-shark-950 rounded-t border border-shark-900"
-        >
-          <span id="timer" class="w-1/3 text-center p-2 text-white"></span>
-          <div
-            id="score"
-            class="w-1/3 text-center p-2"
-            data-problem_id="{{(index .Problems 0).ID}}"
-            hx-on:evtproblemchange="this.dataset.problem_id = event.detail.problem_id; this.dispatchEvent(new Event('evtscore'));"
-            hx-get="/score"
-            hx-trigger="evtscore, evtrunfinished"
-            hx-vals="js:{problemID: event.target.dataset.problem_id}"
-          >
-            {{template "score" .Score}}
-          </div>
-          <div class="w-1/3 flex justify-center">
-            <button
-              class="w-40 self-center h-6 font-bold text-blue-400 hover:text-blue-600 rounded"
-              hx-post="/end"
-              hx-vals="js:{quizID: '{{.QuizID}}'}"
-              hx-confirm="Are you sure you want to end the quiz?"
-            >
-              Finalizar
-            </button>
-          </div>
+      }, 1000);
+      function showAlertAndRedirect() {
+        alert("Time is up!");
+        window.location.href = "/";
+      }
+    </script>
+    <ul id="problem-selector"
+      class="flex-none w-16 flex flex-col justify-evenly overflow-y-auto items-center bg-shark-950 border border-shark-900 rounded">
+      {{ $first := true }} {{range .Problems}}
+      <li class="w-full p-2 flex items-center justify-center">
+        <input id="radio-{{.ID}}" type="radio" name="selected-problem" value="{{.ID}}" class="hidden peer"
+          data-problem_id="{{.ID}}" onclick="changeProblem(this.dataset.problem_id)" {{ if $first }} checked {{ end
+          }} />
+        <label for="radio-{{.ID}}"
+          class="w-full text-center flex flex-col justify-center h-12 border border-blue-400 hover:border-blue-600 text-blue-400 font-bold cursor-pointer rounded peer-checked:bg-blue-400 peer-checked:text-shark-950">
+          {{.ProblemName}}
+        </label>
+      </li>
+      {{ $first = false }} {{end}}
+    </ul>
+    <div class="flex flex-col">
+      <div class="flex flex-row divide-x bg-shark-950 rounded-t border border-shark-900">
+        <span id="timer" class="w-1/3 text-center p-2 text-white"></span>
+        <div id="score" class="w-1/3 text-center p-2" data-problem_id="{{(index .Problems 0).ID}}"
+          hx-on:evtproblemchange="this.dataset.problem_id = event.detail.problem_id; this.dispatchEvent(new Event('evtscore'));"
+          hx-get="/score" hx-trigger="evtscore, evtrunfinished"
+          hx-vals="js:{problemID: event.target.dataset.problem_id}">
+          {{template "score" .Score}}
         </div>
-        <section
-          id="workspace"
-          class="flex-1 gap-2 overflow-y-auto xl:flex-row xl:flex"
-        >
-          <section
-            id="problem-content"
-            class="flex-1 xl:w-1/2 p-8 bg-shark-950 border border-shark-900 rounded overflow-y-auto"
-          >
-            <div
-              id="problem-info"
-              hx-get="/problems"
-              hx-trigger="evtproblemchange"
-              hx-vals="js:{problemID: event.detail.problem_id }"
-            >
-              {{template "problem" .ProblemContent}}
-            </div>
-            <hr class="p-2" />
-            <div
-              id="examples"
-              hx-get="/examples"
-              hx-trigger="evtproblemchange"
-              hx-vals="js:{problemID: event.detail.problem_id }"
-            >
-              {{template "examples" .Examples}}
-            </div>
-          </section>
-          <section id="editor-section" class="flex-1 xl:w-1/2 flex flex-col">
-            <div
-              id="code-editor"
-              class="xl:h-3/4 border border-shark-900"
-            ></div>
-            {{template "codeEditor" .EditorData}}
-            <form id="editor-form" class="h-1/12 text-xl flex flex-row">
-              <select
-                id="language-select"
-                name="languageID"
-                class="w-1/3 rounded-bl-lg bg-shark-950 border border-white text-white hover:border-blue-600 hover:text-blue-600 text-center"
-                data-problem_id="{{(index .Problems 0).ID}}"
-                hx-on:evtproblemchange="this.dataset.problem_id = event.detail.problem_id; this.dispatchEvent(new Event('change'));"
-                hx-get="/source"
-                hx-trigger="change"
-                hx-swap="none"
-                hx-vals="js:{problemID: event.target.dataset.problem_id}"
-                hx-on::before-request="monaco.editor.setModelLanguage(editor.getModel(), this.selectedOptions[0].dataset.simple_name);"
-                hx-on::after-request="editor.setValue(event.detail.xhr.responseText)"
-              >
-                {{template "languages" .Languages}}
-              </select>
-              <button
-                id="submit-button"
-                class="w-2/3 rounded-br-lg bg-shark-950 border border-blue-400 text-blue-400 hover:border-blue-500 hover:text-blue-500"
-                hx-on:evtproblemchange="this.dataset.problem_id = event.detail.problem_id;"
-                hx-post="/submissions"
-                hx-swap="#results"
-                data-quiz_id="{{.QuizID}}"
-                data-problem_id="{{(index .Problems 0).ID}}"
-                hx-vals="js:{quizID: event.target.dataset.quiz_id, problemID: event.target.dataset.problem_id}"
-                hx-on::config-request="event.detail.parameters['src']=editor.getValue();"
-                hx-target="#results"
-              >
-                Ejecutar
-              </button>
-            </form>
-            <div
-              class="flex-1 mt-2 p-4 bg-shark-950 rounded border border-shark-900 overflow-y-auto"
-            >
-              <p class="text-xl text-shark-400">Resultado:</p>
-              <div id="results" class="text-lg text-shark-400">
-                <p>Los resultados de las ejecuciones se mostrarán aquí</p>
-              </div>
-            </div>
-          </section>
-        </section>
+        <div class="w-1/3 flex justify-center">
+          <button class="w-40 self-center h-6 font-bold text-blue-400 hover:text-blue-600 rounded" hx-post="/end"
+            hx-vals="js:{quizID: '{{.QuizID}}'}" hx-confirm="Are you sure you want to end the quiz?">
+            Finalizar
+          </button>
+        </div>
       </div>
+      <section id="workspace" class="flex-1 gap-2 overflow-y-auto xl:flex-row xl:flex">
+        <section id="problem-content"
+          class="flex-1 xl:w-1/2 p-8 bg-shark-950 border border-shark-900 rounded overflow-y-auto">
+          <div id="problem-info" hx-get="/problems" hx-trigger="evtproblemchange"
+            hx-vals="js:{problemID: event.detail.problem_id }">
+            {{template "problem" .ProblemContent}}
+          </div>
+          <hr class="p-2" />
+          <div id="examples" hx-get="/examples" hx-trigger="evtproblemchange"
+            hx-vals="js:{problemID: event.detail.problem_id }">
+            {{template "examples" .Examples}}
+          </div>
+        </section>
+        <section id="editor-section" class="flex-1 xl:w-1/2 flex flex-col">
+          <div id="code-editor" class="xl:h-3/4 border border-shark-900"></div>
+          {{template "codeEditor" .EditorData}}
+          <form id="editor-form" class="h-1/12 text-xl flex flex-row">
+            <select id="language-select" name="languageID"
+              class="w-1/3 rounded-bl-lg bg-shark-950 border border-white text-white hover:border-blue-600 hover:text-blue-600 text-center"
+              data-problem_id="{{(index .Problems 0).ID}}"
+              hx-on:evtproblemchange="this.dataset.problem_id = event.detail.problem_id; this.dispatchEvent(new Event('change'));"
+              hx-get="/source" hx-trigger="change" hx-swap="none"
+              hx-vals="js:{problemID: event.target.dataset.problem_id}"
+              hx-on::before-request="monaco.editor.setModelLanguage(editor.getModel(), this.selectedOptions[0].dataset.simple_name);"
+              hx-on::after-request="editor.setValue(event.detail.xhr.responseText)">
+              {{template "languages" .Languages}}
+            </select>
+            <button id="submit-button"
+              class="w-2/3 rounded-br-lg bg-shark-950 border border-blue-400 text-blue-400 hover:border-blue-500 hover:text-blue-500"
+              hx-on:evtproblemchange="this.dataset.problem_id = event.detail.problem_id;" hx-post="/submissions"
+              hx-swap="#results" data-quiz_id="{{.QuizID}}" data-problem_id="{{(index .Problems 0).ID}}"
+              hx-vals="js:{quizID: event.target.dataset.quiz_id, problemID: event.target.dataset.problem_id}"
+              hx-on::config-request="event.detail.parameters['src']=editor.getValue();" hx-target="#results">
+              Ejecutar
+            </button>
+          </form>
+          <div class="flex-1 mt-2 p-4 bg-shark-950 rounded border border-shark-900 overflow-y-auto">
+            <p class="text-xl text-shark-400">Resultado:</p>
+            <div id="results" class="text-lg text-shark-400">
+              <p>Los resultados de las ejecuciones se mostrarán aquí</p>
+            </div>
+          </div>
+        </section>
+      </section>
     </div>
-  </body>
+  </div>
+</body>
+
 </html>
 {{end}} {{block "score" .}}
 <p class="text-white">Puntaje: {{.AcceptedTestCases}}/{{.TotalTestCases}}</p>
 {{end}} {{block "problem" .}}
-<h1 class="text-blue-200">{{.Title}}</h1>
-<hr />
-<pre class="text-shark-200 whitespace-pre-wrap">{{.Description}}</pre>
+<div class="flex flex-col gap-2">
+  <h1 class="text-blue-200">{{.Title}}</h1>
+  <pre class="text-shark-200 whitespace-pre-wrap">{{.Description}}</pre>
+  <div class="flex flex-wrap overflow-x-auto">
+    <span class="w-1/2 text-shark-200">Tiempo límite: {{.TimeLimit}} segundos</span>
+    <span class="w-1/2 text-shark-200">Memoria límite: {{.MemoryLimit}} kb</span>
+  </div>
+</div>
 {{end}} {{block "examples" .}} {{range .}}
 <div class="flex flex-row gap-4">
   <div class="w-1/2 rounded bg-shark-900">
     <div class="flex justify-between pl-2">
-      <span class="text-blue-200">ENTRADA</span>
-      <button class="bg-white hover:bg-blue-600 w-5 rounded" onclick="copy('{{.Input}}')">
-        <img src="/public/copypaste.png" alt="copy img" />
+      <span class="text-white">ENTRADA</span>
+      <button class="border border-transparent rounded hover:border-white p-1" onclick="copy('{{.Input}}')">
+        <img src="/public/copy_paste.svg" alt="copy icon" width="15" height="15" />
       </button>
     </div>
     <pre class="text-shark-200 p-4">{{.Input}}</pre>
   </div>
   <div class="w-1/2 rounded bg-shark-900">
     <div class="flex justify-between pl-2">
-      <span class="text-blue-200">SALIDA</span>
-      <button class="bg-white hover:bg-blue-600 w-5 rounded" onclick="copy('{{.Output}}')">
-        <img src="/public/copypaste.png" alt="copy img" />
+      <span class="text-white">SALIDA</span>
+      <button class="border border-transparent rounded hover:border-white p-1" onclick="copy('{{.Output}}')">
+        <img src="/public/copy_paste.svg" alt="copy icon" width="15" height="15" />
       </button>
     </div>
     <pre class="text-shark-200 p-4">{{.Output}}</pre>
@@ -240,7 +184,7 @@
         value: "{{.SrcValue}}",
         language: "{{.Language}}",
         theme: "vs-dark",
-        minimap: { enabled: false },
+        minimap: {enabled: false},
         automaticLayout: true,
       },
     );
@@ -257,11 +201,7 @@
 {{end}} {{block "quizStatus" .}}
 <p>{{.ResolvedProblems}} Of {{.NumberOfProblems}}</p>
 {{end}} {{block "sseResults" .}}
-<div
-  id="temporal-results"
-  hx-ext="sse"
-  sse-connect="/results/{{.SubmissionID}}"
->
+<div id="temporal-results" hx-ext="sse" sse-connect="/results/{{.SubmissionID}}">
   <span class="loader"></span>
   <span class="text-lg text-shark-400">Ejecutando...</span>
   <div sse-swap="result" class="text-lg text-shark-400"></div>

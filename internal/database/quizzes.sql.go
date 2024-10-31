@@ -12,7 +12,7 @@ import (
 )
 
 const getQuiz = `-- name: GetQuiz :one
-SELECT quiz.id, quiz.created_at, quiz.updated_at, quiz.title, quiz.description, quiz.duration, quiz.min_wage, quiz.max_wage, quiz.user_id, user.name as author, GROUP_CONCAT(language.name) AS languages 
+SELECT quiz.id, quiz.created_at, quiz.updated_at, quiz.title, quiz.description, quiz.duration, quiz.min_wage, quiz.max_wage, quiz.user_id, user.name as author, GROUP_CONCAT(language.display_name) AS languages 
 FROM quiz
 JOIN user ON quiz.user_id = user.id
 LEFT JOIN language_quiz ON quiz.id = language_quiz.quiz_id
