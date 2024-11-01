@@ -21,13 +21,13 @@ func runInputFn(r *http.Request) (server.RunInput, error) {
 
 type judgeService struct{}
 
-func (j *judgeService) Send(dbTestCases []codejudge.TestCase, submissionID, src string, languageID int32) ([]string, error) {
+func (j *judgeService) Send(dbTestCases []codejudge.TestCase, submission codejudge.Submission) ([]string, error) {
 	return nil, nil
 }
 
 type invalidJudgeService struct{}
 
-func (i *invalidJudgeService) Send(dbTestCases []codejudge.TestCase, submissionID, src string, languageID int32) ([]string, error) {
+func (i *invalidJudgeService) Send(dbTestCases []codejudge.TestCase, submission codejudge.Submission) ([]string, error) {
 	return nil, errors.New("error")
 }
 

@@ -107,7 +107,7 @@ func TestDBTCsToJsonEmpty(t *testing.T) {
 	dbTestCases := []TestCase{}
 	submission := getSubmission()
 	judge := getJudge()
-	_, err := DBTCsToJson(dbTestCases, submission, judge.CallbackURL)
+	_, err := JsonFormat(dbTestCases, submission, judge.CallbackURL)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -117,7 +117,7 @@ func TestDBTCsToJson(t *testing.T) {
 	submission := getSubmission()
 	judge := getJudge()
 	dbTestCases := getTestCases()
-	body, err := DBTCsToJson(dbTestCases, submission, judge.CallbackURL)
+	body, err := JsonFormat(dbTestCases, submission, judge.CallbackURL)
 	if err != nil {
 		t.Error(err)
 	}
@@ -142,7 +142,7 @@ func TestSendRequestBadBody(t *testing.T) {
 func TestSendRequestBadURL(t *testing.T) {
 	submission := getSubmission()
 	dbTestCases := getTestCases()
-	body, err := DBTCsToJson(dbTestCases, submission, "http://localhost:42069/callback")
+	body, err := JsonFormat(dbTestCases, submission, "http://localhost:42069/callback")
 	if err != nil {
 		t.Error(err)
 	}
@@ -163,7 +163,7 @@ func TestSendRequestUnexpectedStatusCode(t *testing.T) {
 	submission := getSubmission()
 	dbTestCases := getTestCases()
 	judge := getJudge()
-	body, err := DBTCsToJson(dbTestCases, submission, judge.CallbackURL)
+	body, err := JsonFormat(dbTestCases, submission, judge.CallbackURL)
 	if err != nil {
 		t.Error(err)
 	}
@@ -182,7 +182,7 @@ func TestSendRequestUnexpectedStatusCode(t *testing.T) {
 }
 
 func TestSendRequest(t *testing.T) {
-	judgeTCs := []JudgeTestCase{
+	judgeTCs := []Judge0TC{
 		{},
 		{},
 	}
@@ -235,7 +235,7 @@ func testServer() *httptest.Server {
 func TestSendEmptyTC(t *testing.T) {
 	judge := getJudge()
 	submission := getSubmission()
-	_, err := judge.Send([]TestCase{}, submission.ID, submission.Src, submission.LanguageID)
+	_, err := judge.Send([]TestCase{}, submission)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -244,7 +244,7 @@ func TestSendEmptyTC(t *testing.T) {
 func TestSendEmptySubmission(t *testing.T) {
 	judge := getJudge()
 	dbTestCases := getTestCases()
-	_, err := judge.Send(dbTestCases, "", "", 0)
+	_, err := judge.Send(dbTestCases, Submission{})
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -255,7 +255,7 @@ func TestSendBadJudgeURL(t *testing.T) {
 	submission := getSubmission()
 	dbTestCases := getTestCases()
 	judge.JudgeURL = ""
-	_, err := judge.Send(dbTestCases, submission.ID, submission.Src, submission.LanguageID)
+	_, err := judge.Send(dbTestCases, submission)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -267,7 +267,7 @@ func TestSend(t *testing.T) {
 	testServer := testServer()
 	defer testServer.Close()
 	judge.JudgeURL = testServer.URL
-	tokens, err := judge.Send(dbTestCases, submission.ID, submission.Src, submission.LanguageID)
+	tokens, err := judge.Send(dbTestCases, submission)
 	if err != nil {
 		t.Error(err)
 	}

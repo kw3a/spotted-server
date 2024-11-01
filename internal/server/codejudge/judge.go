@@ -10,7 +10,7 @@ import (
 	"net/url"
 )
 
-type JudgeTestCase struct {
+type Judge0TC struct {
 	Src            string  `json:"source_code"`
 	LanguageID     int32   `json:"language_id"`
 	Memory_limit   int32   `json:"memory_limit"`
@@ -21,16 +21,16 @@ type JudgeTestCase struct {
 }
 
 type JudgeSubmission struct {
-	TestsCases []JudgeTestCase `json:"submissions"`
+	TestsCases []Judge0TC `json:"submissions"`
 }
 
 type Token struct {
 	Token string `json:"token"`
 }
 type Submission struct {
-	ID              string
-	Src             string
-	LanguageID      int32
+	ID         string
+	Src        string
+	LanguageID int32
 }
 
 type TestCase struct {
@@ -41,13 +41,6 @@ type TestCase struct {
 	ExpectedOutput string
 }
 
-
-/*
-type JudgeService interface {
-	Send([]TestCase, Submission) ([]Token, error)
-}
-*/
-
 type Judge0 struct {
 	CallbackURL string
 	JudgeURL    string
@@ -55,20 +48,15 @@ type Judge0 struct {
 }
 
 func NewJudge0(judgeURL, authToken, callbackURL string) Judge0 {
-  return Judge0{
-    CallbackURL: callbackURL,
-    JudgeURL:    judgeURL,
-    AuthToken:   authToken,
-  }
+	return Judge0{
+		CallbackURL: callbackURL,
+		JudgeURL:    judgeURL,
+		AuthToken:   authToken,
+	}
 }
 
-func (j *Judge0) Send(dbTestCases []TestCase, submissionID, src string, languageID int32) ([]string, error) {
-  submission := Submission{
-    ID: submissionID,
-    Src: src,
-    LanguageID: languageID,
-  }
-	body, err := DBTCsToJson(dbTestCases, submission, j.CallbackURL)
+func (j *Judge0) Send(testCases []TestCase, submission Submission) ([]string, error) {
+	body, err := JsonFormat(testCases, submission, j.CallbackURL)
 	if err != nil {
 		return []string{}, err
 	}
@@ -79,13 +67,13 @@ func (j *Judge0) Send(dbTestCases []TestCase, submissionID, src string, language
 	return SendRequest(body, URL)
 }
 
-func DBTCsToJson(dbTestCases []TestCase, submission Submission, callbackURL string) ([]byte, error) {
+func JsonFormat(dbTestCases []TestCase, submission Submission, callbackURL string) ([]byte, error) {
 	if len(dbTestCases) == 0 {
 		return nil, errors.New("empty database test cases")
 	}
-	testCases := []JudgeTestCase{}
+	judgeTCs := []Judge0TC{}
 	for _, dbTestCase := range dbTestCases {
-		current := JudgeTestCase{
+		current := Judge0TC{
 			Src:            encode(submission.Src),
 			LanguageID:     submission.LanguageID,
 			Memory_limit:   dbTestCase.MemoryLimit,
@@ -94,10 +82,10 @@ func DBTCsToJson(dbTestCases []TestCase, submission Submission, callbackURL stri
 			ExpectedOutput: encode(dbTestCase.ExpectedOutput),
 			CallbackURL:    callbackURL + submission.ID + "/tc/" + dbTestCase.ID,
 		}
-		testCases = append(testCases, current)
+		judgeTCs = append(judgeTCs, current)
 	}
 	judgeSubmission := JudgeSubmission{
-		TestsCases: testCases,
+		TestsCases: judgeTCs,
 	}
 	jsonJudgeTC, err := json.Marshal(judgeSubmission)
 	if err != nil {
@@ -112,7 +100,6 @@ func SendRequest(body []byte, URL url.URL) ([]string, error) {
 	if err != nil {
 		return []string{}, errors.New("Post submission failed: " + err.Error())
 	}
-
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusCreated {
 		return []string{}, fmt.Errorf("status code: %d", resp.StatusCode)
@@ -122,10 +109,10 @@ func SendRequest(body []byte, URL url.URL) ([]string, error) {
 	if err != nil {
 		return []string{}, err
 	}
-  res := []string{}
-  for _, token := range successResp {
-    res = append(res, token.Token)
-  }
+	res := []string{}
+	for _, token := range successResp {
+		res = append(res, token.Token)
+	}
 	return res, nil
 }
 

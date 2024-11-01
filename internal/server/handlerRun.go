@@ -56,7 +56,7 @@ type RunStorage interface {
 	GetTestCases(ctx context.Context, problemID string) ([]codejudge.TestCase, error)
 }
 type JudgeService interface {
-	Send(dbTestCases []codejudge.TestCase, submissionID, src string, languageID int32) ([]string, error)
+	Send(dbTestCases []codejudge.TestCase, submission codejudge.Submission) ([]string, error)
 }
 type StreamService interface {
 	Register(name string, tokens []string, duration time.Duration) error
@@ -107,7 +107,12 @@ func CreateRunHandler(
 			return
 		}
 		//Judge request
-		tokens, err := judge.Send(testCases, submissionID, input.Src, input.LanguageID)
+		submission := codejudge.Submission{
+			ID:         submissionID,
+			Src:        input.Src,
+			LanguageID: input.LanguageID,
+		}
+		tokens, err := judge.Send(testCases, submission)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
