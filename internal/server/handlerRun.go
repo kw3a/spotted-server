@@ -58,8 +58,11 @@ type RunStorage interface {
 type JudgeService interface {
 	Send(dbTestCases []codejudge.TestCase, submission codejudge.Submission) ([]string, error)
 }
+
 type StreamService interface {
 	Register(name string, tokens []string, duration time.Duration) error
+	Listen(name string) (chan string, error)
+	Update(name, token, status string) error
 }
 
 type runInputFn func(r *http.Request) (RunInput, error)

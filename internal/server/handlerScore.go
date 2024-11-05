@@ -20,6 +20,7 @@ func GetScoreInput(r *http.Request) (ScoreInput, error) {
 		ProblemID: problemID,
 	}, nil
 }
+
 type scoreInputFn func(r *http.Request) (ScoreInput, error)
 func CreateScoreHandler(templ TemplatesRepo, storage ScoreStorage, authService AuthRep, inputFn scoreInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

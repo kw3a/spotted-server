@@ -55,6 +55,29 @@ func getTestCases() []TestCase {
 	}
 }
 
+func testServer() *httptest.Server {
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := r.URL.Query().Get("X-Auth-Token")
+		base_64 := r.URL.Query().Get("base64_encoded")
+		if token != "test_token" || base_64 != "true" {
+			RespondWithError(w, 400, "invalid token")
+			return
+		}
+		params := JudgeSubmission{}
+		if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+			RespondWithError(w, 401, "can't unmarshal params")
+			return
+		}
+		if len(params.TestsCases) != 2 {
+			RespondWithError(w, 402, "invalid length")
+			return
+		}
+		payload := []Token{{Token: "token1"}, {Token: "token2"}}
+		RespondWithJSON(w, http.StatusCreated, payload)
+	}))
+	return testServer
+}
+
 func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, err := json.Marshal(payload)
 	if err != nil {
@@ -72,6 +95,30 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 func RespondWithError(w http.ResponseWriter, code int, msg string) {
 	RespondWithJSON(w, code, map[string]string{"error": msg})
 }
+
+func TestJsonFormatEmptyTCs(t *testing.T) {
+	dbTestCases := []TestCase{}
+	submission := getSubmission()
+	judge := getJudge()
+	_, err := JsonFormat(dbTestCases, submission, judge.CallbackURL)
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+}
+
+func TestJsonFormat(t *testing.T) {
+	submission := getSubmission()
+	judge := getJudge()
+	dbTestCases := getTestCases()
+	body, err := JsonFormat(dbTestCases, submission, judge.CallbackURL)
+	if err != nil {
+		t.Error(err)
+	}
+	if body == nil {
+		t.Error("Expected body, got nil")
+	}
+}
+
 func TestComposeUrlEmpty(t *testing.T) {
 	auth_token := getAuthToken()
 	_, err := ComposeUrl("", "submissions/batch", auth_token)
@@ -100,29 +147,6 @@ func TestComposeUrl(t *testing.T) {
 	expectedUrl := judgeUrl + "/submissions/batch?" + "X-Auth-Token=" + authToken + "&" + "base64_encoded=true"
 	if url.String() != expectedUrl {
 		t.Errorf("Expected %s, got %s", expectedUrl, url.String())
-	}
-}
-
-func TestDBTCsToJsonEmpty(t *testing.T) {
-	dbTestCases := []TestCase{}
-	submission := getSubmission()
-	judge := getJudge()
-	_, err := JsonFormat(dbTestCases, submission, judge.CallbackURL)
-	if err == nil {
-		t.Error("Expected error, got nil")
-	}
-}
-
-func TestDBTCsToJson(t *testing.T) {
-	submission := getSubmission()
-	judge := getJudge()
-	dbTestCases := getTestCases()
-	body, err := JsonFormat(dbTestCases, submission, judge.CallbackURL)
-	if err != nil {
-		t.Error(err)
-	}
-	if body == nil {
-		t.Error("Expected body, got nil")
 	}
 }
 
@@ -209,29 +233,6 @@ func TestSendRequest(t *testing.T) {
 	}
 }
 
-func testServer() *httptest.Server {
-	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := r.URL.Query().Get("X-Auth-Token")
-		base_64 := r.URL.Query().Get("base64_encoded")
-		if token != "test_token" || base_64 != "true" {
-			RespondWithError(w, 400, "invalid token")
-			return
-		}
-		params := JudgeSubmission{}
-		if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
-			RespondWithError(w, 401, "can't unmarshal params")
-			return
-		}
-		if len(params.TestsCases) != 2 {
-			RespondWithError(w, 402, "invalid length")
-			return
-		}
-		payload := []Token{{Token: "token1"}, {Token: "token2"}}
-		RespondWithJSON(w, http.StatusCreated, payload)
-	}))
-	return testServer
-}
-
 func TestSendEmptyTC(t *testing.T) {
 	judge := getJudge()
 	submission := getSubmission()
@@ -260,6 +261,7 @@ func TestSendBadJudgeURL(t *testing.T) {
 		t.Error("Expected error, got nil")
 	}
 }
+
 func TestSend(t *testing.T) {
 	judge := getJudge()
 	submission := getSubmission()

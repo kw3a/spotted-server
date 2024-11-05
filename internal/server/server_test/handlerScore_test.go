@@ -78,6 +78,19 @@ func TestScoreHandlerBadInput(t *testing.T) {
 	}
 }
 
+func TestScoreHandlerBadAuth(t *testing.T) {
+	handler := server.CreateScoreHandler(&templates{}, scoreStorage{}, &invalidAuthRepo{}, scoreInputFn)
+	if handler == nil {
+		t.Error("expected handler")
+	}
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusUnauthorized {
+		t.Error("expected unauthorized")
+	}
+}
+
 func TestScoreHandlerBadStorage(t *testing.T) {
 	handler := server.CreateScoreHandler(&templates{}, &invalidScoreStorage{}, authRepo{}, scoreInputFn)
 	if handler == nil {
@@ -91,18 +104,6 @@ func TestScoreHandlerBadStorage(t *testing.T) {
 	}
 }
 
-func TestScoreHandlerBadAuth(t *testing.T) {
-	handler := server.CreateScoreHandler(&templates{}, scoreStorage{}, &invalidAuthRepo{}, scoreInputFn)
-	if handler == nil {
-		t.Error("expected handler")
-	}
-	req, _ := http.NewRequest("GET", "/", nil)
-	w := httptest.NewRecorder()
-	handler(w, req)
-	if w.Code != http.StatusUnauthorized {
-		t.Error("expected unauthorized")
-	}
-}
 
 func TestScoreHandlerBadTemplate(t *testing.T) {
 	handler := server.CreateScoreHandler(&invalidTemplates{}, scoreStorage{}, authRepo{}, scoreInputFn)

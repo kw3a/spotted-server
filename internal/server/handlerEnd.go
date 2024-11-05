@@ -21,6 +21,7 @@ func GetEndInput(r *http.Request) (EndInput, error) {
 		QuizID: quizID,
 	}, nil
 }
+
 type endInputFn func(r *http.Request) (EndInput, error)
 func CreateEndHandler(endStorage EndStorage, authService AuthRep, inputFn endInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

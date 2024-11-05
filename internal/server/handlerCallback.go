@@ -3,38 +3,35 @@ package server
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/kw3a/spotted-server/internal/server/codejudge"
 	"github.com/shopspring/decimal"
 )
 
-type CallbackUrlParams struct {
+type CallbackURLParamsInput struct {
 	SubmissionID string
 	TestCaseID   string
 }
 
-func NewCallbackUrlParams(r *http.Request) (CallbackUrlParams, error) {
+func GetCallbackURLParamsInput(r *http.Request) (CallbackURLParamsInput, error) {
 	submissionID := chi.URLParam(r, "submissionID")
 	if uuid.Validate(submissionID) != nil {
-		return CallbackUrlParams{}, errors.New("invalid submission ID")
+		return CallbackURLParamsInput{}, errors.New("invalid submission ID")
 	}
-
 	testCaseID := chi.URLParam(r, "testCaseID")
 	if uuid.Validate(testCaseID) != nil {
-		return CallbackUrlParams{}, errors.New("invalid tc ID")
+		return CallbackURLParamsInput{}, errors.New("invalid tc ID")
 	}
-	return CallbackUrlParams{
+	return CallbackURLParamsInput{
 		SubmissionID: submissionID,
 		TestCaseID:   testCaseID,
 	}, nil
 }
 
-type CallbackInput struct {
+type CallbackJsonInput struct {
 	Stdout        interface{}     `json:"stdout"`
 	Time          decimal.Decimal `json:"time"`
 	Memory        int32           `json:"memory"`
@@ -49,50 +46,43 @@ type status struct {
 	Description string `json:"description"`
 }
 
-func (input CallbackInput) Valid(ctx context.Context) map[string]string {
-	problems := make(map[string]string)
-	return problems
-}
-
 type CallbackStorage interface {
-	UpdateTestCaseResult(ctx context.Context, input CallbackInput, submissionID string, tcID string) error
+	UpdateTestCaseResult(ctx context.Context, input CallbackJsonInput, submissionID string, tcID string) error
 }
 
-func createCallbackHandler(storage CallbackStorage, st *codejudge.Stream) http.HandlerFunc {
+type callbackInputFn func(r *http.Request) (CallbackURLParamsInput, error)
+type decoderFn func(r *http.Request) (CallbackJsonInput, error)
+func CreateCallbackHandler(storage CallbackStorage, st StreamService, decoder decoderFn, inputFn callbackInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		urlParams, err := NewCallbackUrlParams(r)
+		urlParams, err := inputFn(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		decoded, problems, err := DecodeValid[CallbackInput](r)
+		decoded, err := decoder(r)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("problems:\n%v", problems), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		w.WriteHeader(200)
-
 		err = storage.UpdateTestCaseResult(r.Context(), decoded, urlParams.SubmissionID, urlParams.TestCaseID)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 		log.Println("Updated testCase, status: " + decoded.Status.Description)
-		topic, err := st.GetTopic(urlParams.SubmissionID)
+		err = st.Update(urlParams.SubmissionID, decoded.Token, decoded.Status.Description)
 		if err != nil {
-			log.Println(err)
-			return
-		}
-		err = topic.Update(decoded.Token, decoded.Status.Description)
-		if err != nil {
-			log.Println(err)
+			log.Printf("error updating stream: %v", err)
 		}
 	}
 }
 
 func (app *App) CallbackHandler() http.HandlerFunc {
-	return createCallbackHandler(
+	return CreateCallbackHandler(
 		app.Storage,
 		app.Stream,
+		Decode[CallbackJsonInput],
+		GetCallbackURLParamsInput,
 	)
 }

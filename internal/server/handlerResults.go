@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/kw3a/spotted-server/internal/server/codejudge"
 )
 
 type ResultsInput struct {
@@ -24,23 +23,26 @@ func GetResultsInput(r *http.Request) (ResultsInput, error) {
 	return input, nil
 }
 
-func createJudgeResultsHandler(st *codejudge.Stream) http.HandlerFunc {
+type resultsInputFn func(r *http.Request) (ResultsInput, error)
+func CreateJudgeResultsHandler(st StreamService, inputFn resultsInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		input, err := GetResultsInput(r)
+		input, err := inputFn(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		topic, err := st.GetTopic(input.SubmissionID)
+		listener, err := st.Listen(input.SubmissionID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		SSEHeaders(w)
-		EventStream(w, topic.Listen(), FormatSSEvent)
+		EventStream(w, listener, FormatSSEvent)
 	}
 }
-type formatFunc = func(string, string) (string, error) 
+
+type formatFunc = func(string, string) string
+
 func EventStream(w http.ResponseWriter, listenerChannel chan string, formatter formatFunc) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
@@ -50,42 +52,28 @@ func EventStream(w http.ResponseWriter, listenerChannel chan string, formatter f
 	last := ""
 	for msg := range listenerChannel {
 		last = msg
-		formatedEvent, err := formatter("result", msg)
-		if err != nil {
-			log.Println(err)
-			break
-		}
-
-		_, err = fmt.Fprint(w, formatedEvent)
+		formatedEvent := formatter("result", msg)
+		_, err := fmt.Fprint(w, formatedEvent)
 		if err != nil {
 			log.Println(err)
 			break
 		}
 		flusher.Flush()
 	}
-	formatedEvent, err := formatter("finished", last)
-	if err != nil {
-		log.Println(err)
-	}
-	_, err = fmt.Fprint(w, formatedEvent)
+	formatedEvent := formatter("finished", last)
+	_, err := fmt.Fprint(w, formatedEvent)
 	if err != nil {
 		log.Println(err)
 	}
 	flusher.Flush()
 }
 
-func FormatSSEvent(event string, data string) (string, error) {
-	if event == "" {
-		return "", fmt.Errorf("event is empty")
-	}
-	if data == "" {
-		return "", fmt.Errorf("data is empty")
-	}
+func FormatSSEvent(event string, data string) string {
 	formatData := fmt.Sprintf("<p>%s</p>", data)
 	if event == "finished" {
 		formatData += `<div hx-on::load="htmx.trigger('#score', 'evtrunfinished')"></div>`
 	}
-	return fmt.Sprintf("event: %s\ndata: %s\n\n", event, formatData), nil
+	return fmt.Sprintf("event: %s\ndata: %s\n\n", event, formatData)
 }
 
 func SSEHeaders(w http.ResponseWriter) {
@@ -95,7 +83,8 @@ func SSEHeaders(w http.ResponseWriter) {
 }
 
 func (app *App) ResultsHandler() http.HandlerFunc {
-	return createJudgeResultsHandler(
+	return CreateJudgeResultsHandler(
 		app.Stream,
+		GetResultsInput,
 	)
 }

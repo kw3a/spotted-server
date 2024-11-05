@@ -85,16 +85,20 @@ func (s *Stream) Register(name string, tokens []string, duration time.Duration) 
 	return nil
 }
 
-func (s *Stream) automaticDelete(name string, topic *Topic, duration time.Duration) {
-	<-time.After(duration)
-	s.mu.Lock()
-	if topic.listening {
-		close(topic.MessageChannel)
+func (s *Stream) Listen(name string) (chan string, error) {
+	t, err := s.GetTopic(name)
+	if err != nil {
+		return nil, err
 	}
-	delete(s.topics, name)
-	log.Printf("Topic: %s deleted\n", name)
-	log.Println("new length: ", len(s.topics))
-	s.mu.Unlock()
+	return t.Listen(), nil
+}
+
+func (s *Stream) Update(name, token, status string) error {
+	t, err := s.GetTopic(name)
+	if err != nil {
+		return err
+	}
+	return t.Update(token, status)
 }
 
 func (s *Stream) GetTopic(name string) (*Topic, error) {
@@ -105,6 +109,18 @@ func (s *Stream) GetTopic(name string) (*Topic, error) {
 		return nil, fmt.Errorf("topic %s not found", name)
 	}
 	return t, nil
+}
+
+func (s *Stream) automaticDelete(name string, topic *Topic, duration time.Duration) {
+	<-time.After(duration)
+	s.mu.Lock()
+	if topic.listening {
+		close(topic.MessageChannel)
+	}
+	delete(s.topics, name)
+	log.Printf("Topic: %s deleted\n", name)
+	log.Println("new length: ", len(s.topics))
+	s.mu.Unlock()
 }
 
 func (t *Topic) Listen() chan string {

@@ -270,7 +270,7 @@ func ToTC(dbTestCases []database.GetTestCasesRow) ([]codejudge.TestCase, error) 
 }
 
 // This method must work only when TCResult is empty
-func (s MysqlStorage) UpdateTestCaseResult(ctx context.Context, input CallbackInput, submissionID, testCaseID string) error {
+func (s MysqlStorage) UpdateTestCaseResult(ctx context.Context, input CallbackJsonInput, submissionID, testCaseID string) error {
 	return s.Queries.UpdateTestCaseResult(ctx, database.UpdateTestCaseResultParams{
 		ID:           sql.NullString{String: input.Token, Valid: true},
 		Status:       sql.NullString{String: input.Status.Description, Valid: true},

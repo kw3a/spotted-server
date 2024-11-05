@@ -145,7 +145,6 @@ func TestListenBeforeEmit(t *testing.T) {
 	log.Println("before loop")
 	counter := 0
 	for msg := range ch {
-
 		log.Println(msg)
 		counter++
 	}
