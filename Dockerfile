@@ -4,6 +4,8 @@ RUN apt-get update && apt-get install -y ca-certificates
 
 WORKDIR /app
 
+RUN go build -o out cmd/api
+
 COPY ./views /app/views
 ADD cmd/api/out /app/out
 
