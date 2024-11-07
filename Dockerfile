@@ -1,12 +1,13 @@
-FROM --platform=linux/amd64 golang:1.22.4 as builder
+# First stage: Build the Go binary
+FROM --platform=linux/amd64 golang:1.21 as builder
 
-RUN apt-get update && apt-get install -y ca-certificates
-
+# Set the working directory in the Go build container
 WORKDIR /app
 
-RUN go build -o out cmd/api
+# Copy all Go files into the container
+COPY . .
 
-COPY ./views /app/views
-ADD cmd/api/out /app/out
+# Ensure the Go files are in the correct directory and build the Go binary
+RUN go build -o /app/out ./cmd/api
 
 CMD ["./out"]
