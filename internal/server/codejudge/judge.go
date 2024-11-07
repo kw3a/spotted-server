@@ -44,14 +44,19 @@ type TestCase struct {
 type Judge0 struct {
 	CallbackURL string
 	JudgeURL    string
-	AuthToken   string
+	Headers     []Judge0Header
 }
 
-func NewJudge0(judgeURL, authToken, callbackURL string) Judge0 {
+type Judge0Header struct {
+	Name  string
+	Value string
+}
+
+func NewJudge0(judgeURL, callbackURL string, headers []Judge0Header) Judge0 {
 	return Judge0{
 		CallbackURL: callbackURL,
 		JudgeURL:    judgeURL,
-		AuthToken:   authToken,
+		Headers:     headers,
 	}
 }
 
@@ -60,11 +65,11 @@ func (j *Judge0) Send(testCases []TestCase, submission Submission) ([]string, er
 	if err != nil {
 		return []string{}, err
 	}
-	URL, err := ComposeUrl(j.JudgeURL, "submissions/batch", j.AuthToken)
+	URL, err := ComposeUrl(j.JudgeURL, "submissions/batch")
 	if err != nil {
 		return []string{}, err
 	}
-	return SendRequest(body, URL)
+	return SendRequest(body, URL, j.Headers)
 }
 
 func JsonFormat(dbTestCases []TestCase, submission Submission, callbackURL string) ([]byte, error) {
@@ -94,9 +99,18 @@ func JsonFormat(dbTestCases []TestCase, submission Submission, callbackURL strin
 	return jsonJudgeTC, nil
 }
 
-func SendRequest(body []byte, URL url.URL) ([]string, error) {
+func SendRequest(body []byte, URL url.URL, headers []Judge0Header) ([]string, error) {
 	bodyReader := bytes.NewReader(body)
-	resp, err := http.Post(URL.String(), "application/json", bodyReader)
+	req, err := http.NewRequest("POST", URL.String(), bodyReader)
+	if err != nil {
+		return []string{}, errors.New("Post submission failed: " + err.Error())
+	}
+	req.Header.Set("Content-Type", "application/json")
+	for _, header := range headers {
+		req.Header.Set(header.Name, header.Value)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return []string{}, errors.New("Post submission failed: " + err.Error())
 	}
@@ -116,15 +130,12 @@ func SendRequest(body []byte, URL url.URL) ([]string, error) {
 	return res, nil
 }
 
-func ComposeUrl(host, path, authToken string) (url.URL, error) {
+func ComposeUrl(host, path string) (url.URL, error) {
 	if host == "" {
 		return url.URL{}, errors.New("empty host")
 	}
 	if path == "" {
 		return url.URL{}, errors.New("empty path")
-	}
-	if authToken == "" {
-		return url.URL{}, errors.New("empty auth token")
 	}
 	parsedHost, err := url.Parse(host)
 	if err != nil {
@@ -137,7 +148,6 @@ func ComposeUrl(host, path, authToken string) (url.URL, error) {
 	}
 	q := u.Query()
 	q.Set("base64_encoded", "true")
-	q.Set("X-Auth-Token", authToken)
 	u.RawQuery = q.Encode()
 	return u, nil
 }

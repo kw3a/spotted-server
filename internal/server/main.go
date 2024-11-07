@@ -7,24 +7,26 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/kw3a/spotted-server/internal/auth"
+	"github.com/kw3a/spotted-server/internal/server/codejudge"
 )
 
 //go:embed static
 var Files embed.FS
 
 type EnvVariables struct {
-	port           string
-	dbURL          string
-	jwtSecret      string
-	judgeURL       string
-	judgeAuthToken string
-	myURL          string
+	port         string
+	dbURL        string
+	jwtSecret    string
+	judgeURL     string
+	judgeHeaders []codejudge.Judge0Header
+	myURL        string
 }
 
 func Run() error {
@@ -34,9 +36,7 @@ func Run() error {
 	}
 	r := chi.NewRouter()
 	setupCors(r)
-	callbackPath := "/api/submissions/"
-	callbackURL := envVars.myURL + callbackPath
-	viewRoutes(r, envVars.dbURL, envVars.jwtSecret, envVars.judgeURL, envVars.judgeAuthToken, callbackURL)
+	viewRoutes(r, envVars)
 	srv := &http.Server{
 		Addr:              ":" + envVars.port,
 		Handler:           r,
@@ -67,9 +67,29 @@ func envVariables() (EnvVariables, error) {
 	if judgeURL == "" {
 		return EnvVariables{}, fmt.Errorf("JUDGE_URL environment variable is not set")
 	}
-	judgeAuthToken := os.Getenv("JUDGE_AUTHN_SECRET")
-	if judgeAuthToken == "" {
-		return EnvVariables{}, fmt.Errorf("JUDGE_AUTHN_SECRET environment variable is not set")
+	judgeHeaders := []codejudge.Judge0Header{}
+	if strings.Contains(judgeURL, "rapidapi") {
+		rapidAPIKey := os.Getenv("X_RAPID_API_KEY")
+		if rapidAPIKey == "" {
+			return EnvVariables{}, fmt.Errorf("RAPID_API_KEY environment variable is not set")
+		}
+		judgeHeaders = append(judgeHeaders, codejudge.Judge0Header{
+			Name:  "x-rapidapi-key",
+			Value: rapidAPIKey,
+		})
+		judgeHeaders = append(judgeHeaders, codejudge.Judge0Header{
+			Name:  "x-rapidapi-host",
+			Value: "judge0.p.rapidapi.com",
+		})
+	} else {
+		judgeAuthToken := os.Getenv("JUDGE_AUTHN_SECRET")
+		if judgeAuthToken == "" {
+			return EnvVariables{}, fmt.Errorf("JUDGE_AUTHN_SECRET environment variable is not set")
+		}
+		judgeHeaders = append(judgeHeaders, codejudge.Judge0Header{
+			Name:  "X-Auth-Token",
+			Value: judgeAuthToken,
+		})
 	}
 	myURL := os.Getenv("MY_URL")
 	if myURL == "" {
@@ -80,14 +100,14 @@ func envVariables() (EnvVariables, error) {
 		dbURL:          dbURL,
 		jwtSecret:      jwtSecret,
 		judgeURL:       judgeURL,
-		judgeAuthToken: judgeAuthToken,
+		judgeHeaders:   judgeHeaders,
 		myURL:          myURL,
 	}, nil
 
 }
 
-func viewRoutes(r *chi.Mux, dbURL, jwtSecret, judgeURL, judgeAuthToken, callbackURL string) {
-	app, err := NewApp(dbURL, jwtSecret, judgeURL, judgeAuthToken, callbackURL)
+func viewRoutes(r *chi.Mux, envVars EnvVariables) {
+	app, err := NewApp(envVars)
 	if err != nil {
 		log.Println(err)
 	}

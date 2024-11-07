@@ -11,8 +11,38 @@ import (
 	"github.com/google/uuid"
 )
 
-func getAuthToken() string {
+func getXAuthToken() string {
 	return "test_token"
+}
+
+func getRapidAPIKey() string {
+	return "test_rapidapi_token"
+}
+
+func getRapidAPIHost() string {
+	return "judge0.p.rapidapi.com"
+}
+
+func getXAuthHeaders() []Judge0Header {
+	return []Judge0Header{
+		{
+			Name:  "X-Auth-Token",
+			Value: getXAuthToken(),
+		},
+	}
+}
+
+func getRapidAPIHeaders() []Judge0Header {
+	return []Judge0Header{
+		{
+			Name:  "x-rapidapi-key",
+			Value: getRapidAPIKey(),
+		},
+		{
+			Name:  "x-rapidapi-host",
+			Value: getRapidAPIHost(),
+		},
+	}
 }
 
 func getJudgeURL() string {
@@ -28,11 +58,19 @@ func getSubmission() Submission {
 	}
 }
 
-func getJudge() *Judge0 {
+func getJudgeXAuth() *Judge0 {
 	return &Judge0{
 		CallbackURL: "http://localhost:42069/api/submissions/",
 		JudgeURL:    "",
-		AuthToken:   "test_token",
+		Headers:     getXAuthHeaders(),
+	}
+}
+
+func getJudgeRapidAPI() *Judge0 {
+	return &Judge0{
+		CallbackURL: "http://localhost:42069/api/submissions/",
+		JudgeURL:    "",
+		Headers:     getRapidAPIHeaders(),
 	}
 }
 
@@ -57,10 +95,16 @@ func getTestCases() []TestCase {
 
 func testServer() *httptest.Server {
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := r.URL.Query().Get("X-Auth-Token")
-		base_64 := r.URL.Query().Get("base64_encoded")
-		if token != "test_token" || base_64 != "true" {
+		x_auth_token := r.Header.Get("X-Auth-Token")
+		x_rapidapi_key := r.Header.Get("x-rapidapi-key")
+		x_rapidapi_host := r.Header.Get("x-rapidapi-host")
+		if x_auth_token != getXAuthToken() && x_rapidapi_key != getRapidAPIKey() && x_rapidapi_host != getRapidAPIHost() {
 			RespondWithError(w, 400, "invalid token")
+			return
+		}
+		base_64 := r.URL.Query().Get("base64_encoded")
+		if base_64 != "true" {
+			RespondWithError(w, 400, "base64 not encoded")
 			return
 		}
 		params := JudgeSubmission{}
@@ -99,7 +143,7 @@ func RespondWithError(w http.ResponseWriter, code int, msg string) {
 func TestJsonFormatEmptyTCs(t *testing.T) {
 	dbTestCases := []TestCase{}
 	submission := getSubmission()
-	judge := getJudge()
+	judge := getJudgeXAuth()
 	_, err := JsonFormat(dbTestCases, submission, judge.CallbackURL)
 	if err == nil {
 		t.Error("Expected error, got nil")
@@ -108,7 +152,7 @@ func TestJsonFormatEmptyTCs(t *testing.T) {
 
 func TestJsonFormat(t *testing.T) {
 	submission := getSubmission()
-	judge := getJudge()
+	judge := getJudgeXAuth()
 	dbTestCases := getTestCases()
 	body, err := JsonFormat(dbTestCases, submission, judge.CallbackURL)
 	if err != nil {
@@ -120,17 +164,12 @@ func TestJsonFormat(t *testing.T) {
 }
 
 func TestComposeUrlEmpty(t *testing.T) {
-	auth_token := getAuthToken()
-	_, err := ComposeUrl("", "submissions/batch", auth_token)
+	_, err := ComposeUrl("", "submissions/batch")
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
 	judgeURL := getJudgeURL()
-	_, err = ComposeUrl(judgeURL, "", auth_token)
-	if err == nil {
-		t.Error("Expected error, got nil")
-	}
-	_, err = ComposeUrl(judgeURL, "submissions/batch", "")
+	_, err = ComposeUrl(judgeURL, "")
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -138,13 +177,12 @@ func TestComposeUrlEmpty(t *testing.T) {
 
 func TestComposeUrl(t *testing.T) {
 	judgeUrl := "http://localhost:42069"
-	authToken := getAuthToken()
 	judgeUrl = getJudgeURL()
-	url, err := ComposeUrl(judgeUrl, "submissions/batch", authToken)
+	url, err := ComposeUrl(judgeUrl, "submissions/batch")
 	if err != nil {
 		t.Error(err)
 	}
-	expectedUrl := judgeUrl + "/submissions/batch?" + "X-Auth-Token=" + authToken + "&" + "base64_encoded=true"
+	expectedUrl := judgeUrl + "/submissions/batch?" + "base64_encoded=true"
 	if url.String() != expectedUrl {
 		t.Errorf("Expected %s, got %s", expectedUrl, url.String())
 	}
@@ -157,7 +195,7 @@ func TestSendRequestBadBody(t *testing.T) {
 		Host:   "localhost:42069",
 		Path:   "test",
 	}
-	_, err := SendRequest(body, URL)
+	_, err := SendRequest(body, URL, []Judge0Header{})
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -177,7 +215,7 @@ func TestSendRequestBadURL(t *testing.T) {
 		Scheme: "http",
 		Host:   "randomdomain.zxczxd",
 	}
-	_, err = SendRequest(body, URL)
+	_, err = SendRequest(body, URL, []Judge0Header{})
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -186,7 +224,7 @@ func TestSendRequestBadURL(t *testing.T) {
 func TestSendRequestUnexpectedStatusCode(t *testing.T) {
 	submission := getSubmission()
 	dbTestCases := getTestCases()
-	judge := getJudge()
+	judge := getJudgeXAuth()
 	body, err := JsonFormat(dbTestCases, submission, judge.CallbackURL)
 	if err != nil {
 		t.Error(err)
@@ -199,13 +237,13 @@ func TestSendRequestUnexpectedStatusCode(t *testing.T) {
 		Host:   "localhost:42069",
 		Path:   "test",
 	}
-	_, err = SendRequest(body, URL)
+	_, err = SendRequest(body, URL, []Judge0Header{})
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
 }
 
-func TestSendRequest(t *testing.T) {
+func TestSendRequestXAuth(t *testing.T) {
 	judgeTCs := []Judge0TC{
 		{},
 		{},
@@ -219,12 +257,40 @@ func TestSendRequest(t *testing.T) {
 	}
 	testServer := testServer()
 	defer testServer.Close()
-	URLStr := testServer.URL + "?X-Auth-Token=test_token&base64_encoded=true"
+	URLStr := testServer.URL + "?base64_encoded=true"
 	URL, err := url.Parse(URLStr)
 	if err != nil {
 		t.Error(err)
 	}
-	tokens, err := SendRequest(body, *URL)
+	tokens, err := SendRequest(body, *URL, getXAuthHeaders())
+	if err != nil {
+		t.Error(err)
+	}
+	if len(tokens) != 2 {
+		t.Errorf("Expected 2 tokens, got %d", len(tokens))
+	}
+}
+
+func TestSendRequestRapidAPI(t *testing.T) {
+	judgeTCs := []Judge0TC{
+		{},
+		{},
+	}
+	payload := JudgeSubmission{
+		TestsCases: judgeTCs,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		t.Error(err)
+	}
+	testServer := testServer()
+	defer testServer.Close()
+	URLStr := testServer.URL + "?base64_encoded=true"
+	URL, err := url.Parse(URLStr)
+	if err != nil {
+		t.Error(err)
+	}
+	tokens, err := SendRequest(body, *URL, getRapidAPIHeaders())
 	if err != nil {
 		t.Error(err)
 	}
@@ -234,7 +300,7 @@ func TestSendRequest(t *testing.T) {
 }
 
 func TestSendEmptyTC(t *testing.T) {
-	judge := getJudge()
+	judge := getJudgeXAuth()
 	submission := getSubmission()
 	_, err := judge.Send([]TestCase{}, submission)
 	if err == nil {
@@ -243,7 +309,7 @@ func TestSendEmptyTC(t *testing.T) {
 }
 
 func TestSendEmptySubmission(t *testing.T) {
-	judge := getJudge()
+	judge := getJudgeXAuth()
 	dbTestCases := getTestCases()
 	_, err := judge.Send(dbTestCases, Submission{})
 	if err == nil {
@@ -252,7 +318,7 @@ func TestSendEmptySubmission(t *testing.T) {
 }
 
 func TestSendBadJudgeURL(t *testing.T) {
-	judge := getJudge()
+	judge := getJudgeXAuth()
 	submission := getSubmission()
 	dbTestCases := getTestCases()
 	judge.JudgeURL = ""
@@ -262,8 +328,24 @@ func TestSendBadJudgeURL(t *testing.T) {
 	}
 }
 
-func TestSend(t *testing.T) {
-	judge := getJudge()
+func TestSendXAuth(t *testing.T) {
+	judge := getJudgeXAuth()
+	submission := getSubmission()
+	dbTestCases := getTestCases()
+	testServer := testServer()
+	defer testServer.Close()
+	judge.JudgeURL = testServer.URL
+	tokens, err := judge.Send(dbTestCases, submission)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(tokens) != 2 {
+		t.Errorf(`Expected 2 tokens, got %d`, len(tokens))
+	}
+}
+
+func TestSendRapidAPI(t *testing.T) {
+	judge := getJudgeRapidAPI()
 	submission := getSubmission()
 	dbTestCases := getTestCases()
 	testServer := testServer()

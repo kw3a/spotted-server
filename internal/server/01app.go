@@ -14,23 +14,25 @@ type App struct {
 	Judge       codejudge.Judge0
 }
 
-func NewApp(dbURL, jwtSecret, judgeURL, judgeAuthToken, callbackURL string) (*App, error) {
+func NewApp(envVars EnvVariables) (*App, error) {
 	views, err := viewsPath()
 	if err != nil {
 		return nil, err
 	}
 	templ := newTemplates(views)
-	mysqlStorage, err := NewMysqlStorage(dbURL)
+	mysqlStorage, err := NewMysqlStorage(envVars.dbURL)
 	if err != nil {
 		return nil, err
 	}
-	authType := auth.NewJWTAuth(jwtSecret)
+	authType := auth.NewJWTAuth(envVars.jwtSecret)
 	authService := &auth.AuthService{}
 	stream := codejudge.NewStream()
+	callbackPath := "/api/submissions/"
+	callbackURL := envVars.myURL + callbackPath
 	judge := codejudge.NewJudge0(
-		judgeURL,
-		judgeAuthToken,
+		envVars.judgeURL,
 		callbackURL,
+		envVars.judgeHeaders,
 	)
 	return &App{
 		Templ:       templ,

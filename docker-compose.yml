@@ -2,14 +2,22 @@ version: '3.1'
 
 services:
 
-  mysql:
-    image: mysql
-    container_name: spotted-mysql
-    restart: "always"
-    environment:
-      MYSQL_DATABASE: spotted-db
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - 7778:3306
+  #mysql:
+  #  image: mysql
+  #  container_name: spotted-mysql
+  #  restart: "always"
+  #  environment:
+  #    MYSQL_DATABASE: spotted-db
+  #    MYSQL_ROOT_PASSWORD: root
+  #  ports:
+  #    - 7778:3306
     #volumes:
     #  - ./sql-generator:/sql-generator
+  app:
+    build: .
+    ports:
+      - "42069:42069"
+    environment:
+      - ENV=production
+    env_file:
+      - ./.env 
