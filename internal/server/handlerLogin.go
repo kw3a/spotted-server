@@ -14,26 +14,37 @@ type LoginInput struct {
 	Password string
 }
 
-func GetLoginInput(r *http.Request) (LoginInput, error) {
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-
-	if email == "" {
-		return LoginInput{}, fmt.Errorf("email cannot be empty")
-	}
+func EmailValidation(email string) error {
 	exp := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	compiledRegExp := regexp.MustCompile(exp)
 	if !compiledRegExp.MatchString(email) {
-		return LoginInput{}, fmt.Errorf("invalid email address")
+		return fmt.Errorf("invalid email address")
 	}
-	if len(password) == 0 || len(password) > 30 {
-		return LoginInput{}, fmt.Errorf("password length must be less than 30 and non empty")
+	return nil
+}
+
+func PasswordValidation(password string) error {
+	if len(password) < 5 || len(password) > 30 {
+		return fmt.Errorf("password length must be less than 30 and non empty")
+	}
+	return nil
+}
+
+func GetLoginInput(r *http.Request) (LoginInput, error) {
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+	if err := EmailValidation(email); err != nil {
+		return LoginInput{}, err
+	}
+	if err := PasswordValidation(password); err != nil {
+		return LoginInput{}, err
 	}
 	return LoginInput{
 		Email:    email,
 		Password: password,
 	}, nil
 }
+
 type LoginStorage interface {
 	GetUserID(ctx context.Context, email, password string) (string, error)
 	Save(ctx context.Context, refreshToken string) error

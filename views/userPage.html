@@ -1,0 +1,73 @@
+{{block "profilePage" .}}
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User</title>
+  <link href="/static/output.css" rel="stylesheet" />
+  <script src="/static/htmx.min.js"></script>
+</head>
+
+<body class="bg-shark-950">
+  {{template "navBar" .User}}
+  <script>
+    function showAndHide(formId) {
+      const form = document.getElementById(formId);
+      form.classList.toggle('hidden');
+    }
+  </script>
+  <div class="flex flex-row justify-center">
+    <div class="w-1/2 flex flex-col gap-4">
+      <form class="relative" hx-patch="/pictures" hx-encoding="multipart/form-data" hx-target="#image-error">
+        <img src="{{.Profile.ImageURL}}"
+          class="w-1/2 h-auto border-2 border-white aspect-square rounded-full mx-auto object-cover" id="preview"
+          alt="avatar" />
+        <input type="file" name="image" id="image" accept="image/*" class="hidden" />
+        <label for="image" class=" cursor-pointer hover:text-blue-600">
+          <img src="/public/edit.svg" class="bottom-0 right-0 absolute w-8 h-8">
+          </img>
+        </label>
+        <button class="hidden text-white" id="save-image" type="submit" >Editar</button>
+        <button class="hidden text-white" id="cancel" onclick="editionCancel(event)">Cancelar</button>
+        <span id="image-error" class="text-red-500 text-sm"></span>
+        <script>
+          const fileInput = document.getElementById("image");
+          const preview = document.getElementById("preview");
+          const defaultImagePath = "{{.Profile.ImageURL}}";
+          fileInput.addEventListener("change", (e) => {
+            if (e.target.files[0]) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                preview.src = e.target.result;
+              };
+              reader.readAsDataURL(e.target.files[0]);
+              document.getElementById("save-image").classList.remove("hidden");
+              document.getElementById("cancel").classList.remove("hidden");
+
+            } else {
+              preview.src = defaultImagePath;
+            }
+          });
+
+          function editionCancel(evt) {
+            evt.preventDefault();
+            preview.src = defaultImagePath;
+            document.getElementById("save-image").classList.add("hidden");
+            document.getElementById("cancel").classList.add("hidden");
+          }
+        </script>
+      </form>
+      <span class="text-center text-shark-200 text-2xl">{{.Profile.Name}}</span>
+      <span class="text-shark-200">{{.Profile.Description}}</span>
+      {{template "linkSection" .}}
+      {{template "experienceSection" .}}
+      {{template "educationSection" .}}
+      {{template "skillSection" .}}
+    </div>
+  </div>
+</body>
+
+</html>
+{{end}}  

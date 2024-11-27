@@ -20,6 +20,167 @@ type MysqlStorage struct {
 	Queries *database.Queries
 }
 
+func (mysql *MysqlStorage) UpdateProfilePic(ctx context.Context, userID string, imageURL string) error {
+	return mysql.Queries.UpdateImage(ctx, database.UpdateImageParams{
+		ID:       userID,
+		ImageUrl: imageURL,
+	})
+}
+
+func (mysql *MysqlStorage) DeleteEducation(ctx context.Context, userID string, educationID string) error {
+	return mysql.Queries.DeleteEducation(ctx, database.DeleteEducationParams{
+		ID:     educationID,
+		UserID: userID,
+	})
+}
+
+func (mysql *MysqlStorage) RegisterEducation(ctx context.Context, educationID, userID, institution, degree string, start time.Time, end time.Time) error {
+	return mysql.Queries.InsertEducation(ctx, database.InsertEducationParams{
+		ID:          educationID,
+		Institution: institution,
+		Degree:      degree,
+		StartDate:   start,
+		EndDate:     sql.NullTime{Time: end, Valid: true},
+		UserID:      userID,
+	})
+}
+
+func (mysql *MysqlStorage) DeleteExperience(ctx context.Context, userID string, experienceID string) error {
+	return mysql.Queries.DeleteExperience(ctx, database.DeleteExperienceParams{
+		ID:     experienceID,
+		UserID: userID,
+	})
+}
+
+func (mysql *MysqlStorage) RegisterExperience(ctx context.Context, experienceID, userID, company, title string, start time.Time, end time.Time) error {
+	return mysql.Queries.InsertExperience(ctx, database.InsertExperienceParams{
+		ID:        experienceID,
+		Company:   company,
+		Title:     title,
+		StartDate: start,
+		EndDate:   sql.NullTime{Time: end, Valid: true},
+		UserID:    userID,
+	})
+}
+
+func (mysql *MysqlStorage) DeleteSkill(ctx context.Context, userID string, skillID string) error {
+	return mysql.Queries.DeleteSkill(ctx, database.DeleteSkillParams{
+		ID:     skillID,
+		UserID: userID,
+	})
+}
+
+func (mysql *MysqlStorage) RegisterSkill(ctx context.Context, skillID, userID, name string) error {
+	return mysql.Queries.InsertSkill(ctx, database.InsertSkillParams{
+		ID:     skillID,
+		Name:   name,
+		UserID: userID,
+	})
+}
+
+func (mysql *MysqlStorage) DeleteLink(ctx context.Context, userID string, linkID string) error {
+	return mysql.Queries.DeleteLink(ctx, database.DeleteLinkParams{
+		ID:     linkID,
+		UserID: userID,
+	})
+}
+
+func (mysql *MysqlStorage) RegisterLink(ctx context.Context, linkID, userID, url, name string) error {
+	return mysql.Queries.InsertLink(ctx, database.InsertLinkParams{
+		ID:     linkID,
+		Url:    url,
+		Name:   name,
+		UserID: userID,
+	})
+}
+
+func (mysql *MysqlStorage) SelectEducation(ctx context.Context, userID string) ([]EducationEntry, error) {
+	education, err := mysql.Queries.SelectEducation(ctx, userID)
+	res := []EducationEntry{}
+	if err == sql.ErrNoRows {
+		return res, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range education {
+		endDate := "actualmente"
+		if entry.EndDate.Valid {
+			endDate = entry.EndDate.Time.Format("2006-01")
+		}
+		res = append(res, EducationEntry{
+			ID:          entry.ID,
+			Degree:      entry.Degree,
+			Institution: entry.Institution,
+			StartDate:   entry.StartDate.Format("2006-01"),
+			EndDate:     endDate,
+		})
+	}
+	return res, nil
+}
+
+func (mysql *MysqlStorage) SelectExperiences(ctx context.Context, userID string) ([]ExperienceEntry, error) {
+	experiences, err := mysql.Queries.SelectExperience(ctx, userID)
+	res := []ExperienceEntry{}
+	if err == sql.ErrNoRows {
+		return res, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range experiences {
+		endDate := "actualmente"
+		if entry.EndDate.Valid {
+			endDate = entry.EndDate.Time.Format("2006-01")
+		}
+		res = append(res, ExperienceEntry{
+			ID:        entry.ID,
+			Title:     entry.Title,
+			Company:   entry.Company,
+			StartDate: entry.StartDate.Format("2006-01"),
+			EndDate:   endDate,
+		})
+	}
+	return res, nil
+}
+
+func (mysql *MysqlStorage) SelectLinks(ctx context.Context, userID string) ([]Link, error) {
+	res := []Link{}
+	links, err := mysql.Queries.SelectLinks(ctx, userID)
+	if err == sql.ErrNoRows {
+		return res, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	for _, link := range links {
+		res = append(res, Link{
+			URL:  link.Url,
+			Name: link.Name,
+			ID:   link.ID,
+		})
+	}
+	return res, nil
+}
+
+func (mysql *MysqlStorage) SelectSkills(ctx context.Context, userID string) ([]SkillEntry, error) {
+	skills, err := mysql.Queries.SelectSkills(ctx, userID)
+	res := []SkillEntry{}
+	if err == sql.ErrNoRows {
+		return res, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	for _, skill := range skills {
+		res = append(res, SkillEntry{
+			Name: skill.Name,
+			ID:   skill.ID,
+		})
+	}
+	return res, nil
+}
+
 func NewMysqlStorage(dbURL string) (*MysqlStorage, error) {
 	db, err := sql.Open("mysql", dbURL)
 	if err != nil {
@@ -33,6 +194,21 @@ func NewMysqlStorage(dbURL string) (*MysqlStorage, error) {
 	}
 	queries := database.New(db)
 	return &MysqlStorage{Queries: queries}, nil
+}
+
+func (mysql *MysqlStorage) CreateUser(ctx context.Context, name, password, email, description string) error {
+	encriptedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	return mysql.Queries.CreateUser(ctx, database.CreateUserParams{
+		ID:          uuid.New().String(),
+		Name:        name,
+		Email:       email,
+		Password:    string(encriptedPassword),
+		Role:        "dev",
+		Description: description,
+	})
 }
 
 func (mysql *MysqlStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (ParticipationData, error) {
@@ -80,7 +256,7 @@ func (mysql *MysqlStorage) SelectQuiz(ctx context.Context, quizID string) (Offer
 	if err != nil {
 		return Offer{}, err
 	}
-	relativeTime:= RelativeTime(dbQuiz.CreatedAt)
+	relativeTime := RelativeTime(dbQuiz.CreatedAt)
 	return Offer{
 		ID:           dbQuiz.ID,
 		Title:        dbQuiz.Title,
@@ -143,7 +319,7 @@ func RelativeTime(t time.Time) string {
 		}
 	}
 	if duration < time.Minute {
-		return "justo ahora" 
+		return "justo ahora"
 	} else if duration < time.Hour {
 		return fmt.Sprintf("hace %d minutos", int(duration.Minutes()))
 	} else if duration < 24*time.Hour {

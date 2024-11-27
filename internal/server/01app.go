@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/kw3a/spotted-server/internal/auth"
 	"github.com/kw3a/spotted-server/internal/server/codejudge"
 )
@@ -12,6 +13,7 @@ type App struct {
 	AuthType    *auth.JWTAuth
 	Stream      *codejudge.Stream
 	Judge       codejudge.Judge0
+	Cld 			 *cloudinary.Cloudinary
 }
 
 func NewApp(envVars EnvVariables) (*App, error) {
@@ -24,6 +26,10 @@ func NewApp(envVars EnvVariables) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	cloudinaryService, err := cloudinary.New()
+	if err != nil {
+		return nil, err
+	} 
 	authType := auth.NewJWTAuth(envVars.jwtSecret)
 	authService := &auth.AuthService{}
 	stream := codejudge.NewStream()
@@ -41,5 +47,6 @@ func NewApp(envVars EnvVariables) (*App, error) {
 		AuthType:    authType,
 		Stream:      stream,
 		Judge:       judge,
+		Cld:				 cloudinaryService,
 	}, nil
 }

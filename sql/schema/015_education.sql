@@ -1,0 +1,14 @@
+-- +goose Up
+CREATE TABLE education(
+  id CHAR(36) PRIMARY KEY,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  institution VARCHAR(100) NOT NULL,
+  degree VARCHAR(100) NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE,
+  user_id CHAR(36) NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES user(id)
+);
+-- +goose Down
+DROP TABLE education;

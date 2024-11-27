@@ -9,6 +9,28 @@ import (
 	"time"
 )
 
+type Company struct {
+	ID          string
+	Name        string
+	Description sql.NullString
+	Website     sql.NullString
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	ImageUrl    sql.NullString
+	UserID      string
+}
+
+type Education struct {
+	ID          string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Institution string
+	Degree      string
+	StartDate   time.Time
+	EndDate     sql.NullTime
+	UserID      string
+}
+
 type Example struct {
 	ID        string
 	CreatedAt time.Time
@@ -16,6 +38,17 @@ type Example struct {
 	Input     string
 	Output    string
 	ProblemID string
+}
+
+type Experience struct {
+	ID        string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Company   string
+	Title     string
+	StartDate time.Time
+	EndDate   sql.NullTime
+	UserID    string
 }
 
 type Jwt struct {
@@ -37,6 +70,15 @@ type LanguageQuiz struct {
 	UpdatedAt  time.Time
 	LanguageID int32
 	QuizID     string
+}
+
+type Link struct {
+	ID          string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Url         string
+	Description sql.NullString
+	UserID      string
 }
 
 type Participation struct {
@@ -69,6 +111,14 @@ type Quiz struct {
 	MinWage     int32
 	MaxWage     int32
 	UserID      string
+}
+
+type Skill struct {
+	ID        string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
+	UserID    string
 }
 
 type Submission struct {
@@ -110,5 +160,6 @@ type User struct {
 	Email       string
 	Password    string
 	Role        string
-	Description sql.NullString
+	Description string
+	ImageUrl    string
 }

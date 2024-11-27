@@ -25,6 +25,8 @@ func (cfg *SeedersConfig) seedUsers() ([]string, error) {
 		Email:    "contact@braintrust.com",
 		Password: passHashed1,
 		Role:     "ev",
+		Description: "We are a team of developers",
+		ImageUrl:    "https://braintrust.com/logo.png",
 	})
 	if err != nil {
 		return nil, err
@@ -40,6 +42,8 @@ func (cfg *SeedersConfig) seedUsers() ([]string, error) {
 		Email:    "contact@launch.io",
 		Password: passHashed2,
 		Role:     "ev",
+		Description: "We are a team of developers",
+		ImageUrl:    "https://launch.io/logo.png",
 	})
 	if err != nil {
 		return nil, err

@@ -9,8 +9,35 @@ import (
 	"context"
 )
 
+const createUser = `-- name: CreateUser :exec
+INSERT INTO user 
+(id, name, email, password, role, description) VALUES 
+(?, ?, ?, ?, ?, ?)
+`
+
+type CreateUserParams struct {
+	ID          string
+	Name        string
+	Email       string
+	Password    string
+	Role        string
+	Description string
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
+	_, err := q.db.ExecContext(ctx, createUser,
+		arg.ID,
+		arg.Name,
+		arg.Email,
+		arg.Password,
+		arg.Role,
+		arg.Description,
+	)
+	return err
+}
+
 const getUser = `-- name: GetUser :one
-SELECT id, created_at, updated_at, name, email, password, role, description FROM user WHERE id = ?
+SELECT id, created_at, updated_at, name, email, password, role, description, image_url FROM user WHERE id = ?
 `
 
 func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
@@ -25,6 +52,7 @@ func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
 		&i.Password,
 		&i.Role,
 		&i.Description,
+		&i.ImageUrl,
 	)
 	return i, err
 }
@@ -44,4 +72,18 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 	var i GetUserByEmailRow
 	err := row.Scan(&i.ID, &i.Email, &i.Password)
 	return i, err
+}
+
+const updateImage = `-- name: UpdateImage :exec
+UPDATE user SET image_url = ? WHERE id = ?
+`
+
+type UpdateImageParams struct {
+	ImageUrl string
+	ID       string
+}
+
+func (q *Queries) UpdateImage(ctx context.Context, arg UpdateImageParams) error {
+	_, err := q.db.ExecContext(ctx, updateImage, arg.ImageUrl, arg.ID)
+	return err
 }

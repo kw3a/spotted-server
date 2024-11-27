@@ -1,7 +1,7 @@
 -- name: SeedUser :exec
 INSERT INTO user 
-(id, name, email, password, role) VALUES
-(?, ?, ?, ?, ?);
+(id, name, email, password, description, role, image_url) VALUES
+(?, ?, ?, ?, ?, ?, ?);
 
 -- name: DeleteUsers :exec
 DELETE FROM user

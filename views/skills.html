@@ -1,0 +1,69 @@
+{{block "skillSection" .}}
+<div>
+  <span class="text-white text-xl">Habilidades</span>
+  <button
+    class="inline text-white"
+    onclick="showAndHide('skillForm')"
+  >
+    +
+  </button>
+  {{template "skillForm" .}}
+  {{template "skillList" .}}
+</div>
+{{end}}
+
+{{block "skillEntry" .}}
+<tr id="skill_{{.ID}}">
+  <td>
+    <span class="text-shark-200">{{.Name}}</span>
+  </td>
+  <td>
+    <button 
+      hx-delete="/skills/{{.ID}}" 
+      hx-target="#skill_{{.ID}}"
+      hx-swap="delete"
+      class="hover:border rounded hover:border-red-400  text-red-400 text-sm w-6 h-6 flex items-center justify-center">
+      x
+    </button>
+  </td>
+</tr>
+
+{{end}} 
+
+{{block "skillList" .}} 
+<table id="skill_list" class="border-separate border-spacing-2 ">
+  {{if .Skills}}
+  {{range .Skills}} {{template "skillEntry" .}} {{end}}
+  {{else}}
+  <span class="text-shark-200">No hay habilidades para mostrar</span>
+  {{end}} 
+</table>
+{{end}} 
+
+{{block "skillForm" .}}
+<div id="skillForm" class="hidden">
+  <form 
+    hx-post="/skills" 
+    hx-target="#skill_list" 
+    hx-swap="beforeend"
+    class="flex items-end gap-4 bg-shark-900 rounded p-4"
+  >
+    <div>
+      <label for="name" class="block text-shark-200">Habilidad</label>
+      <input
+        id="name"
+        class="border border-gray-300 rounded "
+        type="text"
+        name="name"
+        required
+      />
+    </div>
+    <button
+      class="w-28 h-7 border rounded border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400"
+      type="submit"
+    >
+      Agregar
+    </button>
+  </form>
+</div>
+{{end}}

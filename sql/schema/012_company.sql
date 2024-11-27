@@ -1,0 +1,15 @@
+-- +goose Up
+CREATE TABLE company(
+  id CHAR(36) PRIMARY KEY,
+  name VARCHAR(256) NOT NULL,
+  description VARCHAR(500) NOT NULL,
+  website VARCHAR(256) DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL,
+  image_url VARCHAR(2083) DEFAULT NULL,
+  user_id CHAR(36) NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES user(id)
+);
+
+-- +goose Down
+DROP TABLE company;

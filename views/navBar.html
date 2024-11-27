@@ -1,24 +1,52 @@
 {{block "navBar" .}}
 <nav class="flex flex-row text-white p-4">
   <div class="w-1/2 flex justify-center">
-    <a class="border border-transparent rounded hover:border-white p-2" href="/">
+    <a
+      class="border border-transparent rounded hover:border-white p-2"
+      href="/"
+    >
       <img src="/public/home.svg" alt="home icon" width="25" height="25" />
     </a>
   </div>
   {{if eq .Role "visitor"}}
   <div class="w-1/2 flex justify-center">
-    <a class="border border-transparent rounded hover:border-white p-2" href="/login">
+    <a
+      class="border border-transparent rounded hover:border-white p-2"
+      href="/login"
+    >
       <img src="/public/log.svg" alt="login icon" width="25" height="25" />
     </a>
   </div>
   {{else}}
   <div class="w-1/2 flex justify-evenly">
     <div class="flex items-center gap-2">
-      <img class="inline" src="/public/user.svg" alt="user icon" width="25" height="25" />
-      <span> {{.Name}} </span>
+      <a href="/profile/{{.ID}}" >
+        <img
+          class="aspect-square rounded-full mx-auto object-cover inline"
+          {{if
+          .ImageURL}}
+          src="{{.ImageURL}}"
+          {{else}}
+          src="/public/user.svg"
+          {{end}}
+          alt="user icon"
+          width="25"
+          height="25"
+        />
+      </a>
+      <span class="text-xl"> {{.Name}} </span>
     </div>
-    <div class="border border-transparent rounded hover:border-white p-2 cursor-pointer" hx-post="/logout">
-      <img class="inline" src="/public/log.svg" alt="login icon" width="25" height="25" />
+    <div
+      class="border border-transparent rounded hover:border-white p-2 cursor-pointer"
+      hx-post="/logout"
+    >
+      <img
+        class="inline"
+        src="/public/log.svg"
+        alt="login icon"
+        width="25"
+        height="25"
+      />
     </div>
   </div>
   {{end}}

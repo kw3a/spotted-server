@@ -96,12 +96,12 @@ func envVariables() (EnvVariables, error) {
 		return EnvVariables{}, fmt.Errorf("MY_URL environment variable is not set")
 	}
 	return EnvVariables{
-		port:           port,
-		dbURL:          dbURL,
-		jwtSecret:      jwtSecret,
-		judgeURL:       judgeURL,
-		judgeHeaders:   judgeHeaders,
-		myURL:          myURL,
+		port:         port,
+		dbURL:        dbURL,
+		jwtSecret:    jwtSecret,
+		judgeURL:     judgeURL,
+		judgeHeaders: judgeHeaders,
+		myURL:        myURL,
 	}, nil
 
 }
@@ -122,8 +122,20 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 	r.Handle("/static/*", fileServer)
 
 	r.NotFound(app.NotFoundHandler())
+	r.Post("/register", app.UserHandler())
 
 	r.With(authNMiddleware).Group(func(r chi.Router) {
+		r.Get("/register", app.UserPageHandler())
+		r.Get("/profile/{userID}", app.ProfilePageHandler())
+		r.Patch("/pictures", app.ProfilePicHandler())
+		r.Post("/links", app.LinkRegisterHandler())
+		r.Delete("/links/{linkID}", app.LinkDeleteHandler())
+		r.Post("/skills", app.SkillRegisterHandler())
+		r.Delete("/skills/{skillID}", app.SkillDeleteHandler())
+		r.Post("/experiences", app.ExperienceRegisterHandler())
+		r.Delete("/experiences/{experienceID}", app.ExperienceDeleteHandler())
+		r.Post("/education", app.EducationRegisterHandler())
+		r.Delete("/education/{educationID}", app.EducationDeleteHandler())
 		r.Get("/login", app.LoginPageHandler())
 		r.Post("/login", app.LoginHandler())
 		r.Post("/logout", app.LogoutHandler())

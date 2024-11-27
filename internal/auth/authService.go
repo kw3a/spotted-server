@@ -10,9 +10,10 @@ import (
 )
 
 type AuthUser struct {
-	ID   string
-	Role string
-	Name string
+	ID       string
+	Role     string
+	Name     string
+	ImageURL string
 }
 type AuthService struct{}
 
@@ -139,9 +140,10 @@ func AuthNMiddleware(storage MiddlewareStorage, authType MiddlewareAuthType, nex
 			return
 		}
 		setContext(AuthUser{
-			ID:   dbUser.ID,
-			Role: dbUser.Role,
-			Name: dbUser.Name,
+			ID:       dbUser.ID,
+			Role:     dbUser.Role,
+			Name:     dbUser.Name,
+			ImageURL: dbUser.ImageUrl,
 		})
 	})
 }

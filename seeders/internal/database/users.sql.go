@@ -32,16 +32,18 @@ func (q *Queries) DeleteUsers(ctx context.Context, ids []string) error {
 
 const seedUser = `-- name: SeedUser :exec
 INSERT INTO user 
-(id, name, email, password, role) VALUES
-(?, ?, ?, ?, ?)
+(id, name, email, password, description, role, image_url) VALUES
+(?, ?, ?, ?, ?, ?, ?)
 `
 
 type SeedUserParams struct {
-	ID       string
-	Name     string
-	Email    string
-	Password string
-	Role     string
+	ID          string
+	Name        string
+	Email       string
+	Password    string
+	Description string
+	Role        string
+	ImageUrl    string
 }
 
 func (q *Queries) SeedUser(ctx context.Context, arg SeedUserParams) error {
@@ -50,7 +52,9 @@ func (q *Queries) SeedUser(ctx context.Context, arg SeedUserParams) error {
 		arg.Name,
 		arg.Email,
 		arg.Password,
+		arg.Description,
 		arg.Role,
+		arg.ImageUrl,
 	)
 	return err
 }

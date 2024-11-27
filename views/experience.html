@@ -1,0 +1,79 @@
+{{block "experienceSection" .}}
+<div>
+  <span class="text-white text-xl">Experiencia</span>
+  <button
+    class="inline text-white"
+    onclick="showAndHide('experienceForm')"
+  >
+    +
+  </button>
+  {{template "experienceForm" .}}
+  {{template "experienceList" .}}
+</div>
+{{end}}
+
+{{block "experienceEntry" .}}
+<tr id="experience_{{.ID}}">
+  <td>
+    <span class="block text-shark-200 font-semibold text-xl">{{.Company}}</span>
+    <span class="block text-shark-200">{{.Title}}</span>
+    <span class="text-shark-200 text-sm">{{.StartDate}}</span>
+    <span class="text-shark-200 text-sm">{{.EndDate}}</span>
+  </td>
+  <td>
+    <button 
+      hx-delete="/experiences/{{.ID}}" 
+      hx-target="#experience_{{.ID}}"
+      hx-swap="delete"
+      class="hover:border rounded hover:border-red-400  text-red-400 text-sm w-6 h-6 flex items-center justify-center">
+      x
+    </button>
+  </td>
+</tr>
+
+{{end}} 
+
+{{block "experienceList" .}} 
+<table id="experience_list" class="border-separate border-spacing-2 ">
+  {{if .Experiences}}
+  {{range .Experiences}} {{template "experienceEntry" .}} {{end}}
+  {{else}}
+  <span class="text-shark-200">No hay experiencia para mostrar</span>
+  {{end}} 
+</table>
+{{end}} 
+
+{{block "experienceForm" .}}
+<div id="experienceForm" class="hidden">
+  <form 
+    hx-post="/experiences" 
+    hx-target="#experience_list" 
+    hx-swap="beforeend"
+    class="flex flex-col gap-4 bg-shark-900 rounded p-4"
+  >
+    <div>
+      <label for="title" class="text-shark-200">Título</label>
+      <input class="border border-gray-300 rounded p-2" type="text" name="title" required />
+    </div>
+    <div>
+      <label for="company" class="text-shark-200">Empresa</label>
+      <input class="border border-gray-300 rounded p-2" type="text" name="company" required />
+    </div>
+    <div>
+      <label for="start" class="text-shark-200">Fecha de inicio</label>
+      <input class="border border-gray-300 rounded p-2" type="month" name="start" required />
+    </div>
+    <div>
+      <label for="end" class="text-shark-200">Fecha de fin</label>
+      <input class="border border-gray-300 rounded p-2" type="month" name="end" required />
+    </div>
+    <button
+      class="w-28 h-7 border rounded border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400"
+      type="submit"
+    >
+      Agregar
+    </button>
+  </form>
+</div>
+{{end}}
+
