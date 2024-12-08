@@ -1,4 +1,4 @@
-package server
+package profiles
 
 import (
 	"context"
@@ -7,49 +7,29 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/kw3a/spotted-server/internal/auth"
 	"github.com/kw3a/spotted-server/internal/database"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type ProfilePageData struct {
 	User        auth.AuthUser
 	Profile     Profile
-	Links       []Link
-	Experiences []ExperienceEntry
-	Education   []EducationEntry
-	Skills      []SkillEntry
+	Links       []shared.Link
+	Experiences []shared.ExperienceEntry
+	Education   []shared.EducationEntry
+	Skills      []shared.SkillEntry
 }
 type Profile struct {
 	Name        string
 	ImageURL    string
 	Description string
 }
-type Link struct {
-	URL  string
-	Name string
-	ID   string
-}
-type ExperienceEntry struct {
-	ID          string
-	Title       string
-	Company     string
-	StartDate   string
-	EndDate     string
-	Description string
-}
-type EducationEntry struct {
-	ID					string
-	Degree      string
-	Institution string
-	StartDate   string
-	EndDate     string
-}
-
 type ProfilePageInput struct {
 	UserID string
 }
 
 func GetProfilePageInput(r *http.Request) (ProfilePageInput, error) {
 	userID := chi.URLParam(r, "userID")
-	err := ValidateUUID(userID)
+	err := shared.ValidateUUID(userID)
 	if err != nil {
 		return ProfilePageInput{}, err
 	}
@@ -60,17 +40,17 @@ func GetProfilePageInput(r *http.Request) (ProfilePageInput, error) {
 
 type ProfilePageStorage interface {
 	GetUser(ctx context.Context, userID string) (database.User, error)
-	SelectExperiences(ctx context.Context, userID string) ([]ExperienceEntry, error)
-	SelectEducation(ctx context.Context, userID string) ([]EducationEntry, error)
-	SelectSkills(ctx context.Context, userID string) ([]SkillEntry, error)
-	SelectLinks(ctx context.Context, userID string) ([]Link, error)
+	SelectExperiences(ctx context.Context, userID string) ([]shared.ExperienceEntry, error)
+	SelectEducation(ctx context.Context, userID string) ([]shared.EducationEntry, error)
+	SelectSkills(ctx context.Context, userID string) ([]shared.SkillEntry, error)
+	SelectLinks(ctx context.Context, userID string) ([]shared.Link, error)
 }
 
 type profilePageInputFunc func(r *http.Request) (ProfilePageInput, error)
 
 func CreateProfilePageHandler(
-	authService AuthRep,
-	templ TemplatesRepo,
+	authService shared.AuthRep,
+	templ shared.TemplatesRepo,
 	storage ProfilePageStorage,
 	inputFn profilePageInputFunc,
 ) http.HandlerFunc {
@@ -133,6 +113,3 @@ func CreateProfilePageHandler(
 	}
 }
 
-func (DI *App) ProfilePageHandler() http.HandlerFunc {
-	return CreateProfilePageHandler(DI.AuthService, DI.Templ, DI.Storage, GetProfilePageInput)
-}

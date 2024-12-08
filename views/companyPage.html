@@ -1,0 +1,29 @@
+{{block "companyPage" .}}
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title></title>
+  <link href="/static/output.css" rel="stylesheet" />
+  <script src="/static/htmx.min.js"></script>
+</head>
+
+<body class="bg-shark-950">
+  {{template "navBar" .User}}
+
+  <div class="flex flex-row justify-center">
+    <div class="w-1/2 flex flex-col gap-4">
+      <img src="{{.Company.ImageURL}}"
+        class="w-1/2 h-auto border-2 border-white aspect-square rounded-full mx-auto object-cover" id="preview"
+        alt="avatar" />
+      <span class="text-white text-2xl text-center">{{.Company.Name}}</span>
+      <span class="text-white text-lg text-center">{{.Company.Description}}</span>
+      <a href="{{.Company.Website}}" class="text-white text-lg text-center" target="_blank">Sitio web</a>
+    </div>
+  </div>
+</body>
+
+</html>
+{{end}}

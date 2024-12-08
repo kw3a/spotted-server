@@ -1,4 +1,4 @@
-package server
+package profiles
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type SkillRegisterInput struct {
@@ -17,10 +18,6 @@ type SkillDeleteInput struct {
 	SkillID string
 }
 
-type SkillEntry struct {
-	Name string
-	ID   string
-}
 
 func GetSkillRegisterInput(r *http.Request) (SkillRegisterInput, error) {
 	name := r.FormValue("name")
@@ -34,7 +31,7 @@ func GetSkillRegisterInput(r *http.Request) (SkillRegisterInput, error) {
 
 func GetSkillDeleteInput(r *http.Request) (SkillDeleteInput, error) {
 	skillID := chi.URLParam(r, "skillID")
-	if err := ValidateUUID(skillID); err != nil {
+	if err := shared.ValidateUUID(skillID); err != nil {
 		return SkillDeleteInput{}, err
 	}
 	return SkillDeleteInput{
@@ -49,7 +46,7 @@ type SkillStorage interface {
 
 type registerSkillInputFn func(r *http.Request) (SkillRegisterInput, error)
 
-func CreateRegisterSkillHandler(templ TemplatesRepo, auth AuthRep, storage SkillStorage, inputFn registerSkillInputFn) http.HandlerFunc {
+func CreateRegisterSkillHandler(templ shared.TemplatesRepo, auth shared.AuthRep, storage SkillStorage, inputFn registerSkillInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := auth.GetUser(r)
 		if err != nil {
@@ -66,7 +63,7 @@ func CreateRegisterSkillHandler(templ TemplatesRepo, auth AuthRep, storage Skill
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		data := SkillEntry{
+		data := shared.SkillEntry{
 			Name: input.Name,
 			ID:   skillID,
 		}
@@ -78,7 +75,7 @@ func CreateRegisterSkillHandler(templ TemplatesRepo, auth AuthRep, storage Skill
 
 type deleteSkillInputFn func(r *http.Request) (SkillDeleteInput, error)
 
-func CreateDeleteSkillHandler(auth AuthRep, storage SkillStorage, inputFn deleteSkillInputFn) http.HandlerFunc {
+func CreateDeleteSkillHandler(auth shared.AuthRep, storage SkillStorage, inputFn deleteSkillInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := auth.GetUser(r)
 		if err != nil {
@@ -98,10 +95,3 @@ func CreateDeleteSkillHandler(auth AuthRep, storage SkillStorage, inputFn delete
 	}
 }
 
-func (DI *App) SkillRegisterHandler() http.HandlerFunc {
-	return CreateRegisterSkillHandler(DI.Templ, DI.AuthService, DI.Storage, GetSkillRegisterInput)
-}
-
-func (DI *App) SkillDeleteHandler() http.HandlerFunc {
-	return CreateDeleteSkillHandler(DI.AuthService, DI.Storage, GetSkillDeleteInput)
-}

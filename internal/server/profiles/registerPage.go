@@ -1,9 +1,10 @@
-package server
+package profiles
 
 import (
 	"net/http"
 
 	"github.com/kw3a/spotted-server/internal/auth"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type UserFormData struct {
@@ -13,7 +14,7 @@ type UserFormData struct {
 
 const defaultImagePath = "/public/user.svg"
 
-func CreateUserPageHandler(defaultImage string, authService AuthRep, templ TemplatesRepo) http.HandlerFunc {
+func CreateUserPageHandler(defaultImage string, authService shared.AuthRep, templ shared.TemplatesRepo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := authService.GetUser(r)
 		if err != nil {
@@ -30,6 +31,3 @@ func CreateUserPageHandler(defaultImage string, authService AuthRep, templ Templ
 	}
 }
 
-func (DI *App) UserPageHandler() http.HandlerFunc {
-	return CreateUserPageHandler(defaultImagePath, DI.AuthService, DI.Templ)
-}

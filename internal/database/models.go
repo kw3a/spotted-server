@@ -12,7 +12,7 @@ import (
 type Company struct {
 	ID          string
 	Name        string
-	Description sql.NullString
+	Description string
 	Website     sql.NullString
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

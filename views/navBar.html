@@ -1,52 +1,34 @@
 {{block "navBar" .}}
 <nav class="flex flex-row text-white p-4">
   <div class="w-1/2 flex justify-center">
-    <a
-      class="border border-transparent rounded hover:border-white p-2"
-      href="/"
-    >
+    <a class="border border-transparent rounded hover:border-white p-2" href="/">
       <img src="/public/home.svg" alt="home icon" width="25" height="25" />
     </a>
   </div>
+  <button class="rounded text-white" hx-get="/companies" hx-target="body" hx-push-url="true" hx-boost="true">
+    Empresas
+  </button>
   {{if eq .Role "visitor"}}
   <div class="w-1/2 flex justify-center">
-    <a
-      class="border border-transparent rounded hover:border-white p-2"
-      href="/login"
-    >
+    <a class="border border-transparent rounded hover:border-white p-2" href="/login">
       <img src="/public/log.svg" alt="login icon" width="25" height="25" />
     </a>
   </div>
   {{else}}
   <div class="w-1/2 flex justify-evenly">
     <div class="flex items-center gap-2">
-      <a href="/profile/{{.ID}}" >
-        <img
-          class="aspect-square rounded-full mx-auto object-cover inline"
-          {{if
-          .ImageURL}}
-          src="{{.ImageURL}}"
-          {{else}}
-          src="/public/user.svg"
-          {{end}}
-          alt="user icon"
-          width="25"
-          height="25"
-        />
-      </a>
+      <button class="rounded text-white" hx-get="/register/companies" hx-target="body" hx-push-url="true"
+        hx-boost="true">
+        Registrar empresa
+      </button>
+      <button class="rounded text-white" hx-get="/profile/{{.ID}}" hx-target="body" hx-push-url="true" hx-boost="true">
+        <img class="aspect-square rounded-full mx-auto object-cover inline" {{if .ImageURL}} src="{{.ImageURL}}"
+          {{else}} src="/public/user.svg" {{end}} alt="user icon" width="25" height="25" />
+      </button>
       <span class="text-xl"> {{.Name}} </span>
     </div>
-    <div
-      class="border border-transparent rounded hover:border-white p-2 cursor-pointer"
-      hx-post="/logout"
-    >
-      <img
-        class="inline"
-        src="/public/log.svg"
-        alt="login icon"
-        width="25"
-        height="25"
-      />
+    <div class="border border-transparent rounded hover:border-white p-2 cursor-pointer" hx-post="/logout">
+      <img class="inline" src="/public/log.svg" alt="login icon" width="25" height="25" />
     </div>
   </div>
   {{end}}

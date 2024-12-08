@@ -32,12 +32,11 @@
 
 {{block "skillList" .}} 
 <table id="skill_list" class="border-separate border-spacing-2 ">
-  {{if .Skills}}
   {{range .Skills}} {{template "skillEntry" .}} {{end}}
-  {{else}}
-  <span class="text-shark-200">No hay habilidades para mostrar</span>
-  {{end}} 
 </table>
+{{if not .Skills}}
+<span class="text-shark-200">No hay habilidades para mostrar</span>
+{{end}} 
 {{end}} 
 
 {{block "skillForm" .}}
@@ -49,9 +48,9 @@
     class="flex items-end gap-4 bg-shark-900 rounded p-4"
   >
     <div>
-      <label for="name" class="block text-shark-200">Habilidad</label>
+      <label for="skill-name" class="block text-shark-200">Habilidad</label>
       <input
-        id="name"
+        id="skill-name"
         class="border border-gray-300 rounded "
         type="text"
         name="name"

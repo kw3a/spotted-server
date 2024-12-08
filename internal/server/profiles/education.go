@@ -1,4 +1,4 @@
-package server
+package profiles
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type EducationRegisterInput struct {
@@ -48,7 +49,7 @@ func GetEducationRegisterInput(r *http.Request) (EducationRegisterInput, error) 
 
 func GetEducationDeleteInput(r *http.Request) (EducationDeleteInput, error) {
 	educationID := chi.URLParam(r, "educationID")
-	if err := ValidateUUID(educationID); err != nil {
+	if err := shared.ValidateUUID(educationID); err != nil {
 		return EducationDeleteInput{}, err
 	}
 	return EducationDeleteInput{
@@ -63,7 +64,7 @@ type EducationStorage interface {
 
 type registerEducationInputFn func(r *http.Request) (EducationRegisterInput, error)
 
-func CreateRegisterEducationHandler(templ TemplatesRepo, auth AuthRep, storage EducationStorage, inputFn registerEducationInputFn) http.HandlerFunc {
+func CreateRegisterEducationHandler(templ shared.TemplatesRepo, auth shared.AuthRep, storage EducationStorage, inputFn registerEducationInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := auth.GetUser(r)
 		if err != nil {
@@ -80,7 +81,7 @@ func CreateRegisterEducationHandler(templ TemplatesRepo, auth AuthRep, storage E
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		data := EducationEntry{
+		data := shared.EducationEntry{
 			Institution: input.Institution,
 			Degree:      input.Degree,
 			StartDate:   input.Start.Format("2006-01"),
@@ -95,7 +96,7 @@ func CreateRegisterEducationHandler(templ TemplatesRepo, auth AuthRep, storage E
 
 type deleteEducationInputFn func(r *http.Request) (EducationDeleteInput, error)
 
-func CreateDeleteEducationHandler(auth AuthRep, storage EducationStorage, inputFn deleteEducationInputFn) http.HandlerFunc {
+func CreateDeleteEducationHandler(auth shared.AuthRep, storage EducationStorage, inputFn deleteEducationInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := auth.GetUser(r)
 		if err != nil {
@@ -114,10 +115,3 @@ func CreateDeleteEducationHandler(auth AuthRep, storage EducationStorage, inputF
 	}
 }
 
-func (DI *App) EducationRegisterHandler() http.HandlerFunc {
-	return CreateRegisterEducationHandler(DI.Templ, DI.AuthService, DI.Storage, GetEducationRegisterInput)
-}
-
-func (DI *App) EducationDeleteHandler() http.HandlerFunc {
-	return CreateDeleteEducationHandler(DI.AuthService, DI.Storage, GetEducationDeleteInput)
-}

@@ -13,11 +13,89 @@ import (
 	"github.com/google/uuid"
 	"github.com/kw3a/spotted-server/internal/database"
 	"github.com/kw3a/spotted-server/internal/server/codejudge"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type MysqlStorage struct {
 	Queries *database.Queries
+}
+
+func (mysql *MysqlStorage) GetCompanies(ctx context.Context, params shared.CompanyQueryParams) ([]shared.Company, error) {
+	companies := []shared.Company{}
+	var dbCompanies []database.Company
+	if params.Query != "" {
+		if params.UserID == "" {
+			comp, err := mysql.Queries.GetCompaniesByQuery(ctx, params.Query)
+			if err != nil {
+				return nil, err
+			}
+			dbCompanies = comp
+		} else {
+			comp, err := mysql.Queries.GetCompaniesByUserAndQuery(ctx, database.GetCompaniesByUserAndQueryParams{
+				UserID: params.UserID,
+				CONCAT: params.Query,
+			})
+			if err != nil {
+				return nil, err
+			}
+			dbCompanies = comp
+		}
+	} else {
+		if params.UserID == "" {
+			comp, err := mysql.Queries.GetCompanies(ctx)
+			if err != nil {
+				return nil, err
+			}
+			dbCompanies = comp
+		} else {
+			comp, err := mysql.Queries.GetCompaniesByUser(ctx, params.UserID)
+			if err != nil {
+				return nil, err
+			}
+			dbCompanies = comp
+		}
+	}
+	for _, dbCompany := range dbCompanies {
+		companies = append(companies, shared.Company{
+			ID:          dbCompany.ID,
+			Name:        dbCompany.Name,
+			Description: dbCompany.Description,
+			Website:     dbCompany.Website.String,
+			ImageURL:    dbCompany.ImageUrl.String,
+		})
+	}
+	return companies, nil
+}
+
+func (mysql *MysqlStorage) GetCompany(ctx context.Context, companyID, userID string) (shared.Company, error) {
+	dbCompany, err := mysql.Queries.SelectCompany(ctx, database.SelectCompanyParams{
+		ID:     companyID,
+		UserID: userID,
+	})
+	if err != nil {
+		return shared.Company{}, err
+	}
+	return shared.Company{
+		ID:          dbCompany.ID,
+		Name:        dbCompany.Name,
+		Description: dbCompany.Description,
+		Website:     dbCompany.Website.String,
+		ImageURL:    dbCompany.ImageUrl.String,
+	}, nil
+}
+
+func (mysql *MysqlStorage) RegisterCompany(ctx context.Context, id string, userID string, name string, description string, website string, imageURL string) error {
+	nullWebsite := sql.NullString{String: website, Valid: true}
+	nullImageURL := sql.NullString{String: imageURL, Valid: true}
+	return mysql.Queries.InsertCompany(ctx, database.InsertCompanyParams{
+		ID:          id,
+		UserID:      userID,
+		Name:        name,
+		Description: description,
+		Website:     nullWebsite,
+		ImageUrl:    nullImageURL,
+	})
 }
 
 func (mysql *MysqlStorage) UpdateProfilePic(ctx context.Context, userID string, imageURL string) error {
@@ -94,9 +172,9 @@ func (mysql *MysqlStorage) RegisterLink(ctx context.Context, linkID, userID, url
 	})
 }
 
-func (mysql *MysqlStorage) SelectEducation(ctx context.Context, userID string) ([]EducationEntry, error) {
+func (mysql *MysqlStorage) SelectEducation(ctx context.Context, userID string) ([]shared.EducationEntry, error) {
 	education, err := mysql.Queries.SelectEducation(ctx, userID)
-	res := []EducationEntry{}
+	res := []shared.EducationEntry{}
 	if err == sql.ErrNoRows {
 		return res, nil
 	}
@@ -108,7 +186,7 @@ func (mysql *MysqlStorage) SelectEducation(ctx context.Context, userID string) (
 		if entry.EndDate.Valid {
 			endDate = entry.EndDate.Time.Format("2006-01")
 		}
-		res = append(res, EducationEntry{
+		res = append(res, shared.EducationEntry{
 			ID:          entry.ID,
 			Degree:      entry.Degree,
 			Institution: entry.Institution,
@@ -119,9 +197,9 @@ func (mysql *MysqlStorage) SelectEducation(ctx context.Context, userID string) (
 	return res, nil
 }
 
-func (mysql *MysqlStorage) SelectExperiences(ctx context.Context, userID string) ([]ExperienceEntry, error) {
+func (mysql *MysqlStorage) SelectExperiences(ctx context.Context, userID string) ([]shared.ExperienceEntry, error) {
 	experiences, err := mysql.Queries.SelectExperience(ctx, userID)
-	res := []ExperienceEntry{}
+	res := []shared.ExperienceEntry{}
 	if err == sql.ErrNoRows {
 		return res, nil
 	}
@@ -133,7 +211,7 @@ func (mysql *MysqlStorage) SelectExperiences(ctx context.Context, userID string)
 		if entry.EndDate.Valid {
 			endDate = entry.EndDate.Time.Format("2006-01")
 		}
-		res = append(res, ExperienceEntry{
+		res = append(res, shared.ExperienceEntry{
 			ID:        entry.ID,
 			Title:     entry.Title,
 			Company:   entry.Company,
@@ -144,8 +222,8 @@ func (mysql *MysqlStorage) SelectExperiences(ctx context.Context, userID string)
 	return res, nil
 }
 
-func (mysql *MysqlStorage) SelectLinks(ctx context.Context, userID string) ([]Link, error) {
-	res := []Link{}
+func (mysql *MysqlStorage) SelectLinks(ctx context.Context, userID string) ([]shared.Link, error) {
+	res := []shared.Link{}
 	links, err := mysql.Queries.SelectLinks(ctx, userID)
 	if err == sql.ErrNoRows {
 		return res, nil
@@ -154,7 +232,7 @@ func (mysql *MysqlStorage) SelectLinks(ctx context.Context, userID string) ([]Li
 		return nil, err
 	}
 	for _, link := range links {
-		res = append(res, Link{
+		res = append(res, shared.Link{
 			URL:  link.Url,
 			Name: link.Name,
 			ID:   link.ID,
@@ -163,9 +241,9 @@ func (mysql *MysqlStorage) SelectLinks(ctx context.Context, userID string) ([]Li
 	return res, nil
 }
 
-func (mysql *MysqlStorage) SelectSkills(ctx context.Context, userID string) ([]SkillEntry, error) {
+func (mysql *MysqlStorage) SelectSkills(ctx context.Context, userID string) ([]shared.SkillEntry, error) {
 	skills, err := mysql.Queries.SelectSkills(ctx, userID)
-	res := []SkillEntry{}
+	res := []shared.SkillEntry{}
 	if err == sql.ErrNoRows {
 		return res, nil
 	}
@@ -173,7 +251,7 @@ func (mysql *MysqlStorage) SelectSkills(ctx context.Context, userID string) ([]S
 		return nil, err
 	}
 	for _, skill := range skills {
-		res = append(res, SkillEntry{
+		res = append(res, shared.SkillEntry{
 			Name: skill.Name,
 			ID:   skill.ID,
 		})
@@ -281,22 +359,40 @@ func ConvertLanguages(languages sql.NullString) ([]string, error) {
 	return result, nil
 }
 
-func (mysql *MysqlStorage) SelectOffers(ctx context.Context) ([]PartialOffer, error) {
-	quizzes, err := mysql.Queries.GetQuizzes(ctx)
-	if err != nil {
-		return nil, err
-	}
+func (mysql *MysqlStorage) SelectOffers(ctx context.Context, params shared.JobQueryParams) ([]PartialOffer, error) {
 	offers := []PartialOffer{}
-	for _, quiz := range quizzes {
-		relativeTime := RelativeTime(quiz.CreatedAt)
-		offers = append(offers, PartialOffer{
-			QuizID:       quiz.ID,
-			Title:        quiz.Title,
-			Author:       quiz.Author,
-			MinWage:      quiz.MinWage,
-			MaxWage:      quiz.MaxWage,
-			RelativeTime: relativeTime,
-		})
+	if params.Query == "" {
+		quizzes, err := mysql.Queries.GetQuizzes(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, quiz := range quizzes {
+			relativeTime := RelativeTime(quiz.CreatedAt)
+			offers = append(offers, PartialOffer{
+				QuizID:       quiz.ID,
+				Title:        quiz.Title,
+				Author:       quiz.Author,
+				MinWage:      quiz.MinWage,
+				MaxWage:      quiz.MaxWage,
+				RelativeTime: relativeTime,
+			})
+		}
+	} else {
+		quizzes, err := mysql.Queries.GetQuizzesByQuery(ctx, params.Query)
+		if err != nil {
+			return nil, err
+		}
+		for _, quiz := range quizzes {
+			relativeTime := RelativeTime(quiz.CreatedAt)
+			offers = append(offers, PartialOffer{
+				QuizID:       quiz.ID,
+				Title:        quiz.Title,
+				Author:       quiz.Author,
+				MinWage:      quiz.MinWage,
+				MaxWage:      quiz.MaxWage,
+				RelativeTime: relativeTime,
+			})
+		}
 	}
 	return offers, nil
 }

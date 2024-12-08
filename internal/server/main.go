@@ -127,6 +127,10 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 	r.With(authNMiddleware).Group(func(r chi.Router) {
 		r.Get("/register", app.UserPageHandler())
 		r.Get("/profile/{userID}", app.ProfilePageHandler())
+		r.Get("/register/companies", app.CompanyRegistrationPageHandler())
+		r.Post("/register/companies", app.CompanyRegistrationHandler())
+		r.Get("/companies", app.CompanyListPageHandler())
+		r.Get("/companies/{companyID}", app.CompanyPageHandler())
 		r.Patch("/pictures", app.ProfilePicHandler())
 		r.Post("/links", app.LinkRegisterHandler())
 		r.Delete("/links/{linkID}", app.LinkDeleteHandler())

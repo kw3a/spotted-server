@@ -1,4 +1,4 @@
-package server
+package profiles
 
 import (
 	"context"
@@ -81,11 +81,4 @@ func CreateLoginHandler(authType LoginAuthType, storage LoginStorage, inputFn lo
 		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusOK)
 	}
-}
-func (DI *App) LoginHandler() http.HandlerFunc {
-	return CreateLoginHandler(
-		DI.AuthType,
-		DI.Storage,
-		GetLoginInput,
-	)
 }

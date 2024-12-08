@@ -1,4 +1,4 @@
-package server
+package profiles
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type LinkRegisterInput struct {
@@ -42,7 +43,7 @@ func GetLinkRegisterInput(r *http.Request) (LinkRegisterInput, error) {
 
 func GetLinkDeleteInput(r *http.Request) (LinkDeleteInput, error) {
 	linkID := chi.URLParam(r, "linkID")
-	if err := ValidateUUID(linkID); err != nil {
+	if err := shared.ValidateUUID(linkID); err != nil {
 		return LinkDeleteInput{}, err
 	}
 	return LinkDeleteInput{
@@ -57,7 +58,7 @@ type LinkStorage interface {
 
 type registerLinkInputFn func(r *http.Request) (LinkRegisterInput, error)
 
-func CreateRegisterLinkHandler(templ TemplatesRepo, auth AuthRep, storage LinkStorage, inputFn registerLinkInputFn) http.HandlerFunc {
+func CreateRegisterLinkHandler(templ shared.TemplatesRepo, auth shared.AuthRep, storage LinkStorage, inputFn registerLinkInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := auth.GetUser(r)
 		if err != nil {
@@ -88,7 +89,7 @@ func CreateRegisterLinkHandler(templ TemplatesRepo, auth AuthRep, storage LinkSt
 
 type deleteLinkInputFn func(r *http.Request) (LinkDeleteInput, error)
 
-func CreateDeleteLinkHandler(auth AuthRep, storage LinkStorage, inputFn deleteLinkInputFn) http.HandlerFunc {
+func CreateDeleteLinkHandler(auth shared.AuthRep, storage LinkStorage, inputFn deleteLinkInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := auth.GetUser(r)
 		if err != nil {
@@ -109,19 +110,3 @@ func CreateDeleteLinkHandler(auth AuthRep, storage LinkStorage, inputFn deleteLi
 	}
 }
 
-func (DI *App) LinkRegisterHandler() http.HandlerFunc {
-	return CreateRegisterLinkHandler(
-		DI.Templ,
-		DI.AuthService,
-		DI.Storage,
-		GetLinkRegisterInput,
-	)
-}
-
-func (DI *App) LinkDeleteHandler() http.HandlerFunc {
-	return CreateDeleteLinkHandler(
-		DI.AuthService,
-		DI.Storage,
-		GetLinkDeleteInput,
-	)
-}

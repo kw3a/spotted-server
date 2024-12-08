@@ -1,4 +1,4 @@
-package server
+package profiles
 
 import (
 	"context"
@@ -22,8 +22,4 @@ func CreateLogoutHandler(storage logoutStorage, redirectPath string) http.Handle
 		auth.DeleteCookies(w)
 		w.Header().Set("HX-Redirect", redirectPath)
 	}
-}
-
-func (DI *App) LogoutHandler() http.HandlerFunc {
-	return CreateLogoutHandler(DI.Storage, "/")
 }

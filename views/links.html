@@ -32,12 +32,11 @@
 
 {{block "linkList" .}} 
 <table id="link_list" class="border-separate border-spacing-2 ">
-  {{if .Links}}
   {{range .Links}} {{template "linkEntry" .}} {{end}}
-  {{else}}
-  <span class="text-shark-200">No hay enlaces para mostrar</span>
-  {{end}} 
 </table>
+{{if not .Links}}
+<span class="text-shark-200">No hay enlaces para mostrar</span>
+{{end}} 
 {{end}} 
 
 {{block "linkForm" .}}
@@ -49,9 +48,9 @@
     class="flex items-end gap-4 bg-shark-900 rounded p-4"
   >
     <div>
-      <label for="name" class="block text-shark-200">Nombre</label>
+      <label for="link-name" class="block text-shark-200">Nombre</label>
       <input
-        id="name"
+        id="link-name"
         class="border border-gray-300 rounded "
         type="text"
         name="name"
@@ -59,9 +58,9 @@
       />
     </div>
     <div>
-      <label for="url" class="block text-shark-200">Url</label>
+      <label for="link-url" class="block text-shark-200">Url</label>
       <input
-        id="url"
+        id="link-url"
         class="border border-gray-300 rounded"
         type="url"
         name="url"

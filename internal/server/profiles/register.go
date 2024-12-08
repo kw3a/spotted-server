@@ -1,4 +1,4 @@
-package server
+package profiles
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type UserStorage interface {
@@ -72,7 +73,7 @@ func GetUserInput(r *http.Request) (UserInput, UserInputErrors, error) {
 
 type userInputFunc func(*http.Request) (UserInput, UserInputErrors, error)
 
-func CreateUserHandler(templ TemplatesRepo, storage UserStorage, inputFn userInputFunc, redirection string) http.HandlerFunc {
+func CreateUserHandler(templ shared.TemplatesRepo, storage UserStorage, inputFn userInputFunc, redirection string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		input, inputErr, err := inputFn(r)
 		if err != nil {
@@ -95,6 +96,3 @@ func CreateUserHandler(templ TemplatesRepo, storage UserStorage, inputFn userInp
 	}
 }
 
-func (DI *App) UserHandler() http.HandlerFunc {
-	return CreateUserHandler(DI.Templ, DI.Storage, GetUserInput, "/login")
-}

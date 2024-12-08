@@ -1,17 +1,18 @@
-package server
+package profiles
 
 import (
 	"context"
 	"net/http"
 
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type ProfilePicInput struct {
 	ImageURL string
 }
 
-func GetProfilePicInput(r *http.Request, cloudinaryService CloudinaryService) (ProfilePicInput, error) {
+func GetProfilePicInput(r *http.Request, cloudinaryService shared.CloudinaryService) (ProfilePicInput, error) {
 	err := r.ParseMultipartForm(10 << 20) // 10 MB max memory
 	if err != nil {
 		return ProfilePicInput{}, err
@@ -34,7 +35,7 @@ type ProfilePicStorage interface {
 	UpdateProfilePic(ctx context.Context, userID, imageURL string) error
 }
 
-func CreateProfilePicHandler(storage ProfilePicStorage, auth AuthRep, cloudinaryService CloudinaryService) http.HandlerFunc {
+func CreateProfilePicHandler(storage ProfilePicStorage, auth shared.AuthRep, cloudinaryService shared.CloudinaryService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := auth.GetUser(r)
 		if err != nil {
@@ -55,6 +56,3 @@ func CreateProfilePicHandler(storage ProfilePicStorage, auth AuthRep, cloudinary
 	}
 }
 
-func (DI *App) ProfilePicHandler() http.HandlerFunc {
-	return CreateProfilePicHandler(DI.Storage, DI.AuthService, &DI.Cld.Upload)
-}

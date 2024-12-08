@@ -108,3 +108,59 @@ func (q *Queries) GetQuizzes(ctx context.Context) ([]GetQuizzesRow, error) {
 	}
 	return items, nil
 }
+
+const getQuizzesByQuery = `-- name: GetQuizzesByQuery :many
+SELECT quiz.id, quiz.created_at, quiz.updated_at, quiz.title, quiz.description, quiz.duration, quiz.min_wage, quiz.max_wage, quiz.user_id, user.name as author
+FROM quiz
+JOIN user ON quiz.user_id = user.id
+WHERE quiz.title LIKE CONCAT('%', ?, '%')
+ORDER BY quiz.created_at DESC
+LIMIT 10
+`
+
+type GetQuizzesByQueryRow struct {
+	ID          string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Title       string
+	Description string
+	Duration    int32
+	MinWage     int32
+	MaxWage     int32
+	UserID      string
+	Author      string
+}
+
+func (q *Queries) GetQuizzesByQuery(ctx context.Context, concat interface{}) ([]GetQuizzesByQueryRow, error) {
+	rows, err := q.db.QueryContext(ctx, getQuizzesByQuery, concat)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetQuizzesByQueryRow
+	for rows.Next() {
+		var i GetQuizzesByQueryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
+			&i.Description,
+			&i.Duration,
+			&i.MinWage,
+			&i.MaxWage,
+			&i.UserID,
+			&i.Author,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

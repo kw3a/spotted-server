@@ -1,9 +1,10 @@
-package server
+package profiles
 
 import (
 	"net/http"
 
 	"github.com/kw3a/spotted-server/internal/auth"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type LoginPageStorage interface {
@@ -13,7 +14,7 @@ type LoginPageData struct {
 	User auth.AuthUser
 }
 
-func CreateLoginPageHandler(authService AuthRep, templ TemplatesRepo) http.HandlerFunc {
+func CreateLoginPageHandler(authService shared.AuthRep, templ shared.TemplatesRepo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := authService.GetUser(r)
 		if err != nil {
@@ -29,6 +30,3 @@ func CreateLoginPageHandler(authService AuthRep, templ TemplatesRepo) http.Handl
 	}
 }
 
-func (DI *App) LoginPageHandler() http.HandlerFunc {
-	return CreateLoginPageHandler(DI.AuthService, DI.Templ)
-}

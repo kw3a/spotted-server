@@ -1,4 +1,4 @@
-package server
+package profiles
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type ExperienceRegisterInput struct {
@@ -49,7 +50,7 @@ func GetExperienceRegisterInput(r *http.Request) (ExperienceRegisterInput, error
 
 func GetExperienceDeleteInput(r *http.Request) (ExperienceDeleteInput, error) {
 	experienceID := chi.URLParam(r, "experienceID")
-	if err := ValidateUUID(experienceID); err != nil {
+	if err := shared.ValidateUUID(experienceID); err != nil {
 		return ExperienceDeleteInput{}, err
 	}
 	return ExperienceDeleteInput{
@@ -64,7 +65,7 @@ type ExperienceStorage interface {
 
 type registerExperienceInputFn func(r *http.Request) (ExperienceRegisterInput, error)
 
-func CreateRegisterExperienceHandler(templ TemplatesRepo, auth AuthRep, storage ExperienceStorage, inputFn registerExperienceInputFn) http.HandlerFunc {
+func CreateRegisterExperienceHandler(templ shared.TemplatesRepo, auth shared.AuthRep, storage ExperienceStorage, inputFn registerExperienceInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := auth.GetUser(r)
 		if err != nil {
@@ -81,7 +82,7 @@ func CreateRegisterExperienceHandler(templ TemplatesRepo, auth AuthRep, storage 
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		data := ExperienceEntry{
+		data := shared.ExperienceEntry{
 			Company:     input.Company,
 			Title:       input.Title,
 			StartDate:   input.Start.Format("2006-01"),
@@ -96,7 +97,7 @@ func CreateRegisterExperienceHandler(templ TemplatesRepo, auth AuthRep, storage 
 
 type deleteExperienceInputFn func(r *http.Request) (ExperienceDeleteInput, error)
 
-func CreateDeleteExperienceHandler(auth AuthRep, storage ExperienceStorage, inputFn deleteExperienceInputFn) http.HandlerFunc {
+func CreateDeleteExperienceHandler(auth shared.AuthRep, storage ExperienceStorage, inputFn deleteExperienceInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := auth.GetUser(r)
 		if err != nil {
@@ -116,10 +117,3 @@ func CreateDeleteExperienceHandler(auth AuthRep, storage ExperienceStorage, inpu
 	}
 }
 
-func (DI *App) ExperienceRegisterHandler() http.HandlerFunc {
-	return CreateRegisterExperienceHandler(DI.Templ, DI.AuthService, DI.Storage, GetExperienceRegisterInput)
-}
-
-func (DI *App) ExperienceDeleteHandler() http.HandlerFunc {
-	return CreateDeleteExperienceHandler(DI.AuthService, DI.Storage, GetExperienceDeleteInput)
-}
