@@ -3,10 +3,12 @@ package server
 import (
 	"context"
 	"net/http"
+
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type EndStorage interface {
-	EndQuiz(ctx context.Context, userID, quizID string) error
+	EndQuiz(ctx context.Context, userID, quizID string) (shared.Offer, error)
 }
 type EndInput struct {
 	QuizID string
@@ -35,12 +37,12 @@ func CreateEndHandler(endStorage EndStorage, authService AuthRep, inputFn endInp
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		err = endStorage.EndQuiz(r.Context(), user.ID, input.QuizID)
+		offer, err := endStorage.EndQuiz(r.Context(), user.ID, input.QuizID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		w.Header().Set("HX-Redirect", "/preamble/"+input.QuizID)
+		w.Header().Set("HX-Redirect", "/preamble/"+offer.ID)
 		w.WriteHeader(http.StatusOK)
 	}
 }

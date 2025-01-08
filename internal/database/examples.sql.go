@@ -9,6 +9,29 @@ import (
 	"context"
 )
 
+const insertExample = `-- name: InsertExample :exec
+INSERT INTO example
+(id, problem_id, input, output)
+VALUES (?, ?, ?, ?)
+`
+
+type InsertExampleParams struct {
+	ID        string
+	ProblemID string
+	Input     string
+	Output    string
+}
+
+func (q *Queries) InsertExample(ctx context.Context, arg InsertExampleParams) error {
+	_, err := q.db.ExecContext(ctx, insertExample,
+		arg.ID,
+		arg.ProblemID,
+		arg.Input,
+		arg.Output,
+	)
+	return err
+}
+
 const selectExamples = `-- name: SelectExamples :many
 SELECT example.input, example.output
 FROM example

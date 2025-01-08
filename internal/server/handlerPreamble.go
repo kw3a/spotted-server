@@ -6,11 +6,14 @@ import (
 	"time"
 
 	"github.com/kw3a/spotted-server/internal/auth"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type PreambleData struct {
 	User             auth.AuthUser
-	Quiz             Offer
+	Offer            shared.Offer
+	Quiz             shared.Quiz
+	Languages        []shared.Language
 	Participation    ParticipationData
 	PreambleProblems []PreambleProblem
 }
@@ -25,18 +28,6 @@ type PreambleInput struct {
 	QuizID string
 }
 
-type Offer struct {
-	ID           string
-	Title        string
-	Description  string
-	Duration     int32
-	Author       string
-	MinWage      int32
-	MaxWage      int32
-	RelativeTime string
-	Languages    []string
-}
-
 type ParticipationData struct {
 	ID           string
 	CreatedAt    time.Time
@@ -49,7 +40,9 @@ type PreambleStorage interface {
 	SelectProblemIDs(ctx context.Context, QuizID string) ([]string, error)
 	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
 	SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error)
-	SelectQuiz(ctx context.Context, id string) (Offer, error)
+	SelectOffer(ctx context.Context, id string) (shared.Offer, error)
+	SelectQuizByOffer(ctx context.Context, offerID string) (shared.Quiz, error)
+	SelectLanguages(ctx context.Context, quizID string) ([]shared.Language, error)
 }
 
 func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, authService AuthRep, inputFn quizPageInputFunc) http.HandlerFunc {
@@ -64,43 +57,57 @@ func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, au
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		quiz, err := storage.SelectQuiz(r.Context(), input.QuizID)
+		offer, err := storage.SelectOffer(r.Context(), input.OfferID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		data := PreambleData{
-			Quiz: quiz,
-			User: user,
+			Offer: offer,
+			User:  user,
 		}
-		participation, err := storage.ParticipationStatus(r.Context(), user.ID, input.QuizID)
-		if err == nil {
-			problemIDs, err := storage.SelectProblemIDs(r.Context(), input.QuizID)
+		if offer.Status != 0 {
+			quiz, err := storage.SelectQuizByOffer(r.Context(), offer.ID)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			preambleProblems := make([]PreambleProblem, 0)
-			for _, problemID := range problemIDs {
-				problemContent, err := storage.SelectProblem(r.Context(), problemID)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				score, err := storage.SelectScore(r.Context(), user.ID, problemID)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				problem := PreambleProblem{
-					Title:             problemContent.Title,
-					NumberOfTestCases: score.TotalTestCases,
-					AcceptedTestCases: score.AcceptedTestCases,
-				}
-				preambleProblems = append(preambleProblems, problem)
+			languages, err := storage.SelectLanguages(r.Context(), quiz.ID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
 			}
-			data.PreambleProblems = preambleProblems
-			data.Participation = participation
+			data.Quiz = quiz
+			data.Languages = languages
+			participation, err := storage.ParticipationStatus(r.Context(), user.ID, quiz.ID)
+			if err == nil {
+				problemIDs, err := storage.SelectProblemIDs(r.Context(), quiz.ID)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				preambleProblems := make([]PreambleProblem, 0)
+				for _, problemID := range problemIDs {
+					problemContent, err := storage.SelectProblem(r.Context(), problemID)
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					score, err := storage.SelectScore(r.Context(), user.ID, problemID)
+					if err != nil {
+						http.Error(w, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					problem := PreambleProblem{
+						Title:             problemContent.Title,
+						NumberOfTestCases: score.TotalTestCases,
+						AcceptedTestCases: score.AcceptedTestCases,
+					}
+					preambleProblems = append(preambleProblems, problem)
+				}
+				data.PreambleProblems = preambleProblems
+				data.Participation = participation
+			} 
 		}
 		if err := templ.Render(w, "preamble", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -9,16 +9,67 @@ import (
 	"context"
 )
 
+const allLanguages = `-- name: AllLanguages :many
+SELECT id, created_at, updated_at, name, display_name
+FROM language
+ORDER BY name
+`
+
+func (q *Queries) AllLanguages(ctx context.Context) ([]Language, error) {
+	rows, err := q.db.QueryContext(ctx, allLanguages)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Language
+	for rows.Next() {
+		var i Language
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+			&i.DisplayName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const insertLanguageQuiz = `-- name: InsertLanguageQuiz :exec
+INSERT INTO language_quiz
+(id, quiz_id, language_id)
+VALUES (?, ?, ?)
+`
+
+type InsertLanguageQuizParams struct {
+	ID         string
+	QuizID     string
+	LanguageID int32
+}
+
+func (q *Queries) InsertLanguageQuiz(ctx context.Context, arg InsertLanguageQuizParams) error {
+	_, err := q.db.ExecContext(ctx, insertLanguageQuiz, arg.ID, arg.QuizID, arg.LanguageID)
+	return err
+}
+
 const selectLanguages = `-- name: SelectLanguages :many
 SELECT language.id, language.created_at, language.updated_at, language.name, language.display_name
 FROM language
 INNER JOIN language_quiz ON language.id = language_quiz.language_id
-INNER JOIN quiz ON language_quiz.quiz_id = quiz.id
-WHERE quiz.id = ?
+WHERE language_quiz.quiz_id = ?
 `
 
-func (q *Queries) SelectLanguages(ctx context.Context, id string) ([]Language, error) {
-	rows, err := q.db.QueryContext(ctx, selectLanguages, id)
+func (q *Queries) SelectLanguages(ctx context.Context, quizID string) ([]Language, error) {
+	rows, err := q.db.QueryContext(ctx, selectLanguages, quizID)
 	if err != nil {
 		return nil, err
 	}

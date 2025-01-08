@@ -30,3 +30,8 @@ SELECT company.*
 FROM company
 WHERE company.name LIKE CONCAT('%', ?, '%') AND company.user_id = ?
 LIMIT 10;
+
+-- name: GetCompanyByID :one
+SELECT company.*
+FROM company
+WHERE company.id = ?;

@@ -8,9 +8,10 @@
   <title></title>
   <link href="/static/output.css" rel="stylesheet" />
   <script src="/static/htmx.min.js"></script>
+  <script src="/static/head-support.js"></script>
 </head>
 
-<body class="bg-shark-950">
+<body class="bg-shark-950" hx-ext="head-support">
   {{template "navBar" .User}}
 
   <div class="flex flex-row justify-center">

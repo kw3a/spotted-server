@@ -11,10 +11,11 @@
 
   <script src="/static/htmx.min.js"></script>
   <script src="/static/sse.js"></script>
+  <script src="/static/head-support.js"></script>
   <title>Quiz Page</title>
 </head>
 
-<body class="bg-black">
+<body class="bg-black" hx-ext="head-support">
   <div class="flex flex-row h-screen p-2 gap-2">
     <script>
       function changeProblem(id) {
@@ -191,8 +192,8 @@
   });
 </script>
 {{end}} {{block "languages" .}} {{range .}}
-<option value="{{.LanguageID}}" data-simple_name="{{.SimpleName}}">
-  {{.DisplayedName}}
+<option value="{{.ID}}" data-simple_name="{{.Name}}">
+  {{.DisplayName}}
 </option>
 {{end}} {{end}} {{block "problemStatus" .}}
 <div>

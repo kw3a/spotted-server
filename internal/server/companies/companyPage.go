@@ -19,7 +19,7 @@ type CompanyPageInput struct {
 }
 
 type CompanyPageStorage interface {
-	GetCompany(ctx context.Context, companyID, userID string) (shared.Company, error)
+	GetCompanyByID(ctx context.Context, companyID string) (shared.Company, error)
 }
 
 func GetCompanyPageInput(r *http.Request) (CompanyPageInput, error) {
@@ -52,7 +52,7 @@ func CreateCompanyPageHandler(
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		company, err := storage.GetCompany(r.Context(), input.CompanyID, user.ID)
+		company, err := storage.GetCompanyByID(r.Context(), input.CompanyID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

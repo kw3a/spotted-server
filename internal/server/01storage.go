@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -19,6 +20,214 @@ import (
 
 type MysqlStorage struct {
 	Queries *database.Queries
+	db      *sql.DB
+}
+
+func (mysql *MysqlStorage) RegisterOffer(
+	ctx context.Context,
+	offerID string,
+	offer shared.Offer,
+	quizID string,
+	quiz shared.Quiz,
+	problems []shared.Problem,
+) error {
+	tx, err := mysql.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	qtx := mysql.Queries.WithTx(tx)
+	err = qtx.InsertOffer(ctx, database.InsertOfferParams{
+		ID:           offerID,
+		Title:        offer.Title,
+		About:        offer.About,
+		Requirements: offer.Requirements,
+		Benefits:     offer.Benefits,
+		MinWage:      offer.MinWage,
+		MaxWage:      offer.MaxWage,
+		CompanyID:    offer.CompanyID,
+	})
+
+	if err != nil {
+		return fmt.Errorf("error inserting offer: %w", err)
+	}
+	err = qtx.InsertQuiz(ctx, database.InsertQuizParams{
+		ID:       quizID,
+		Duration: quiz.Duration,
+		OfferID:  offerID,
+	})
+	if err != nil {
+		return fmt.Errorf("error inserting quiz: %w", err)
+	}
+	for _, lang := range quiz.Languages {
+		err = qtx.InsertLanguageQuiz(ctx, database.InsertLanguageQuizParams{
+			ID:         uuid.New().String(),
+			QuizID:     quizID,
+			LanguageID: lang,
+		})
+		if err != nil {
+			return fmt.Errorf("error inserting language quiz: %w", err)
+		}
+	}
+	for _, problem := range problems {
+		problemID := uuid.New().String()
+		err = qtx.InsertProblem(ctx, database.InsertProblemParams{
+			ID:          problemID,
+			QuizID:      quizID,
+			Title:       problem.Title,
+			Description: problem.Description,
+			TimeLimit:   float64(problem.TimeLimit),
+			MemoryLimit: 262144,
+		})
+		if err != nil {
+			return fmt.Errorf("error inserting problem: %w", err)
+		}
+		for _, tc := range problem.TestCases {
+			err = qtx.InsertTestCase(ctx, database.InsertTestCaseParams{
+				ID:        uuid.New().String(),
+				ProblemID: problemID,
+				Input:     tc.Input,
+				Output:    tc.Output,
+			})
+			if err != nil {
+				return fmt.Errorf("error inserting test case: %w", err)
+			}
+		}
+		for _, example := range problem.Examples {
+			err = qtx.InsertExample(ctx, database.InsertExampleParams{
+				ID:        uuid.New().String(),
+				ProblemID: problemID,
+				Input:     example.Input,
+				Output:    example.Output,
+			})
+			if err != nil {
+				return fmt.Errorf("error inserting example: %w", err)
+			}
+		}
+	}
+	return tx.Commit()
+}
+
+func (mysql *MysqlStorage) InsertQuiz(r *http.Request, quizID string, offerID string, languages []int32, duration int32) error {
+	tx, err := mysql.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	qtx := mysql.Queries.WithTx(tx)
+	err = qtx.InsertQuiz(r.Context(), database.InsertQuizParams{
+		ID:       quizID,
+		OfferID:  offerID,
+		Duration: duration,
+	})
+	if err != nil {
+		fmt.Println(offerID)
+		return err
+	}
+	for _, lang := range languages {
+		err = qtx.InsertLanguageQuiz(r.Context(), database.InsertLanguageQuizParams{
+			ID:         uuid.New().String(),
+			QuizID:     quizID,
+			LanguageID: lang,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func (mysql *MysqlStorage) SelectQuizByOffer(ctx context.Context, offerID string) (shared.Quiz, error) {
+	dbQuiz, err := mysql.Queries.GetQuizByOffer(ctx, offerID)
+	if err != nil {
+		return shared.Quiz{}, err
+	}
+	return shared.Quiz{
+		ID:       dbQuiz.ID,
+		Duration: dbQuiz.Duration,
+	}, nil
+}
+
+func (mysql *MysqlStorage) SelectOfferByUser(ctx context.Context, ID string, userID string) (shared.Offer, error) {
+	dbQuiz, err := mysql.Queries.GetOfferByUser(ctx, database.GetOfferByUserParams{
+		ID:   ID,
+		ID_2: userID,
+	})
+	if err != nil {
+		return shared.Offer{}, err
+	}
+	relativeTime := RelativeTime(dbQuiz.CreatedAt)
+	return shared.Offer{
+		ID:           dbQuiz.ID,
+		Title:        dbQuiz.Title,
+		About:        dbQuiz.About,
+		Status:       dbQuiz.Status,
+		CompanyName:  dbQuiz.CompanyName,
+		CompanyID:    dbQuiz.CompanyID,
+		MinWage:      dbQuiz.MinWage,
+		MaxWage:      dbQuiz.MaxWage,
+		RelativeTime: relativeTime,
+	}, nil
+}
+
+func (mysql *MysqlStorage) GetOffersByUser(ctx context.Context, userID string) ([]shared.Offer, error) {
+	offers, err := mysql.Queries.GetOffersByUser(ctx, userID)
+	if err == sql.ErrNoRows {
+		return []shared.Offer{}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	res := []shared.Offer{}
+	for _, offer := range offers {
+		relativeTime := RelativeTime(offer.CreatedAt)
+		res = append(res, shared.Offer{
+			ID:           offer.ID,
+			Title:        offer.Title,
+			About:        offer.About,
+			Requirements: offer.Requirements,
+			Benefits:     offer.Benefits,
+			Status:       offer.Status,
+			CompanyName:  offer.CompanyName,
+			CompanyID:    offer.CompanyID,
+			MinWage:      offer.MinWage,
+			MaxWage:      offer.MaxWage,
+			RelativeTime: relativeTime,
+		})
+	}
+	return res, nil
+
+}
+
+func (mysql *MysqlStorage) GetCompanyByID(ctx context.Context, companyID string) (shared.Company, error) {
+	company, err := mysql.Queries.GetCompanyByID(ctx, companyID)
+	if err != nil {
+		return shared.Company{}, err
+	}
+	return shared.Company{
+		ID:          company.ID,
+		UserID:      company.UserID,
+		Name:        company.Name,
+		Description: company.Description,
+		Website:     company.Website.String,
+		ImageURL:    company.ImageUrl.String,
+	}, nil
+}
+
+func (mysql *MysqlStorage) GetLanguages(ctx context.Context) ([]shared.Language, error) {
+	languages, err := mysql.Queries.AllLanguages(ctx)
+	if err != nil {
+		return nil, err
+	}
+	res := []shared.Language{}
+	for _, lang := range languages {
+		res = append(res, shared.Language{
+			ID:          lang.ID,
+			Name:        lang.Name,
+			DisplayName: lang.DisplayName,
+		})
+	}
+	return res, nil
 }
 
 func (mysql *MysqlStorage) GetCompanies(ctx context.Context, params shared.CompanyQueryParams) ([]shared.Company, error) {
@@ -271,7 +480,8 @@ func NewMysqlStorage(dbURL string) (*MysqlStorage, error) {
 		return nil, err
 	}
 	queries := database.New(db)
-	return &MysqlStorage{Queries: queries}, nil
+
+	return &MysqlStorage{Queries: queries, db: db}, nil
 }
 
 func (mysql *MysqlStorage) CreateUser(ctx context.Context, name, password, email, description string) error {
@@ -325,26 +535,24 @@ func (mysql *MysqlStorage) SelectProblemIDs(ctx context.Context, QuizID string) 
 	return IDs, nil
 }
 
-func (mysql *MysqlStorage) SelectQuiz(ctx context.Context, quizID string) (Offer, error) {
-	dbQuiz, err := mysql.Queries.GetQuiz(ctx, quizID)
+func (mysql *MysqlStorage) SelectOffer(ctx context.Context, ID string) (shared.Offer, error) {
+	dbQuiz, err := mysql.Queries.GetOffer(ctx, ID)
 	if err != nil {
-		return Offer{}, err
-	}
-	languages, err := ConvertLanguages(dbQuiz.Languages)
-	if err != nil {
-		return Offer{}, err
+		return shared.Offer{}, err
 	}
 	relativeTime := RelativeTime(dbQuiz.CreatedAt)
-	return Offer{
+	return shared.Offer{
 		ID:           dbQuiz.ID,
 		Title:        dbQuiz.Title,
-		Description:  dbQuiz.Description,
-		Duration:     dbQuiz.Duration,
-		Author:       dbQuiz.Author,
+		About:        dbQuiz.About,
+		Requirements: dbQuiz.Requirements,
+		Benefits:     dbQuiz.Benefits,
+		Status:       dbQuiz.Status,
+		CompanyName:  dbQuiz.CompanyName,
+		CompanyID:    dbQuiz.CompanyID,
 		MinWage:      dbQuiz.MinWage,
 		MaxWage:      dbQuiz.MaxWage,
 		RelativeTime: relativeTime,
-		Languages:    languages,
 	}, nil
 }
 
@@ -362,7 +570,7 @@ func ConvertLanguages(languages sql.NullString) ([]string, error) {
 func (mysql *MysqlStorage) SelectOffers(ctx context.Context, params shared.JobQueryParams) ([]PartialOffer, error) {
 	offers := []PartialOffer{}
 	if params.Query == "" {
-		quizzes, err := mysql.Queries.GetQuizzes(ctx)
+		quizzes, err := mysql.Queries.GetOffers(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -371,14 +579,15 @@ func (mysql *MysqlStorage) SelectOffers(ctx context.Context, params shared.JobQu
 			offers = append(offers, PartialOffer{
 				QuizID:       quiz.ID,
 				Title:        quiz.Title,
-				Author:       quiz.Author,
+				CompanyName:  quiz.CompanyName,
+				CompanyID:    quiz.CompanyID,
 				MinWage:      quiz.MinWage,
 				MaxWage:      quiz.MaxWage,
 				RelativeTime: relativeTime,
 			})
 		}
 	} else {
-		quizzes, err := mysql.Queries.GetQuizzesByQuery(ctx, params.Query)
+		quizzes, err := mysql.Queries.GetOffersByQuery(ctx, params.Query)
 		if err != nil {
 			return nil, err
 		}
@@ -387,7 +596,8 @@ func (mysql *MysqlStorage) SelectOffers(ctx context.Context, params shared.JobQu
 			offers = append(offers, PartialOffer{
 				QuizID:       quiz.ID,
 				Title:        quiz.Title,
-				Author:       quiz.Author,
+				CompanyName:  quiz.CompanyName,
+				CompanyID:    quiz.CompanyID,
 				MinWage:      quiz.MinWage,
 				MaxWage:      quiz.MaxWage,
 				RelativeTime: relativeTime,
@@ -426,17 +636,17 @@ func RelativeTime(t time.Time) string {
 	}
 }
 
-func (mysql *MysqlStorage) SelectLanguages(ctx context.Context, quizID string) ([]LanguageSelector, error) {
+func (mysql *MysqlStorage) SelectLanguages(ctx context.Context, quizID string) ([]shared.Language, error) {
 	dbLanguages, err := mysql.Queries.SelectLanguages(ctx, quizID)
 	if err != nil {
 		return nil, err
 	}
-	res := []LanguageSelector{}
+	res := []shared.Language{}
 	for _, dbLang := range dbLanguages {
-		lang := LanguageSelector{
-			LanguageID:    dbLang.ID,
-			DisplayedName: dbLang.DisplayName,
-			SimpleName:    dbLang.Name,
+		lang := shared.Language{
+			ID:          dbLang.ID,
+			Name:        dbLang.Name,
+			DisplayName: dbLang.DisplayName,
 		}
 		res = append(res, lang)
 	}
@@ -552,13 +762,19 @@ func (s MysqlStorage) UpdateTestCaseResult(ctx context.Context, input CallbackJs
 		TestCaseID:   testCaseID,
 	})
 }
-func (s MysqlStorage) EndQuiz(ctx context.Context, userID, quizID string) error {
-	return s.Queries.EndParticipation(ctx, database.EndParticipationParams{
+func (s MysqlStorage) EndQuiz(ctx context.Context, userID, quizID string) (shared.Offer, error) {
+	err := s.Queries.EndParticipation(ctx, database.EndParticipationParams{
 		ExpiresAt: time.Now(),
 		UserID:    userID,
 		QuizID:    quizID,
 	})
-
+	if err != nil {
+		return shared.Offer{}, err
+	}
+	offer, _ := s.Queries.GetOfferByQuiz(ctx, quizID)
+	return shared.Offer{
+		ID: offer.ID,
+	}, nil
 }
 
 func CheckPasswordHash(hashedPassword, password string) error {

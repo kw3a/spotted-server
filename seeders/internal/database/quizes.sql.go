@@ -32,29 +32,17 @@ func (q *Queries) DeleteQuizes(ctx context.Context, ids []string) error {
 
 const seedQuiz = `-- name: SeedQuiz :exec
 INSERT INTO quiz 
-(id, title, description, duration, min_wage, max_wage, user_id) VALUES
-(?, ?, ?, ?, ?, ?, ?)
+(id, duration, offer_id) VALUES
+(?, ?, ?)
 `
 
 type SeedQuizParams struct {
-	ID          string
-	Title       string
-	Description string
-	Duration    int32
-	MinWage     int32
-	MaxWage     int32
-	UserID      string
+	ID       string
+	Duration int32
+	OfferID  string
 }
 
 func (q *Queries) SeedQuiz(ctx context.Context, arg SeedQuizParams) error {
-	_, err := q.db.ExecContext(ctx, seedQuiz,
-		arg.ID,
-		arg.Title,
-		arg.Description,
-		arg.Duration,
-		arg.MinWage,
-		arg.MaxWage,
-		arg.UserID,
-	)
+	_, err := q.db.ExecContext(ctx, seedQuiz, arg.ID, arg.Duration, arg.OfferID)
 	return err
 }

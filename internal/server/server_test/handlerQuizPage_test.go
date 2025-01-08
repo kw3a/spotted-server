@@ -91,7 +91,7 @@ func TestGetQuizPageInput(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if input.QuizID != quizID {
+	if input.OfferID != quizID {
 		t.Error("invalid quiz ID")
 	}
 }

@@ -18,7 +18,7 @@ type ExperienceEntry struct {
 	Description string
 }
 type EducationEntry struct {
-	ID					string
+	ID          string
 	Degree      string
 	Institution string
 	StartDate   string
@@ -27,6 +27,7 @@ type EducationEntry struct {
 
 type Company struct {
 	ID          string
+	UserID      string
 	Name        string
 	Description string
 	Website     string
@@ -38,4 +39,48 @@ type CompanyQueryParams struct {
 }
 type JobQueryParams struct {
 	Query string
+}
+type Language struct {
+	ID          int32
+	Name        string
+	DisplayName string
+}
+
+type Offer struct {
+	ID           string
+	Title        string
+	About        string
+	Requirements string
+	Benefits     string
+	Status       int32
+	CompanyName  string
+	CompanyID    string
+	MinWage      int32
+	MaxWage      int32
+	RelativeTime string
+}
+
+type Quiz struct {
+	ID        string
+	Duration  int32
+	Languages []int32
+}
+
+type Problem struct {
+	Title       string
+	Description string
+	MemoryLimit int32
+	TimeLimit   float64
+	TestCases   []TestCase
+	Examples    []Example
+}
+
+type TestCase struct {
+	Input  string
+	Output string
+}
+
+type Example struct {
+	Input  string
+	Output string
 }

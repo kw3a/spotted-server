@@ -170,6 +170,28 @@ func (q *Queries) GetCompaniesByUserAndQuery(ctx context.Context, arg GetCompani
 	return items, nil
 }
 
+const getCompanyByID = `-- name: GetCompanyByID :one
+SELECT company.id, company.name, company.description, company.website, company.created_at, company.updated_at, company.image_url, company.user_id
+FROM company
+WHERE company.id = ?
+`
+
+func (q *Queries) GetCompanyByID(ctx context.Context, id string) (Company, error) {
+	row := q.db.QueryRowContext(ctx, getCompanyByID, id)
+	var i Company
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Website,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ImageUrl,
+		&i.UserID,
+	)
+	return i, err
+}
+
 const insertCompany = `-- name: InsertCompany :exec
 INSERT INTO company
 (id, user_id, name, description, website, image_url)

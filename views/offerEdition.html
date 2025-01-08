@@ -1,0 +1,181 @@
+{{block "offerEdition" .}}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title></title>
+    <link href="/static/output.css" rel="stylesheet" />
+    <script src="/static/htmx.min.js"></script>
+  </head>
+
+  <body class="bg-shark-950">
+    {{template "navBar" .User}}
+
+    <div class="flex flex-row justify-center">
+      <div class="w-1/2 flex flex-col gap-4">
+        <span class="text-shark-200">{{.Offer.Title}}</span>
+        {{if .Quiz.ID}}
+        <span class="text-shark-200">Duración: {{.Quiz.Duration}}</span>
+        <span class="text-shark-200"
+          >Lenguajes: {{range $index, $language := .Languages}}{{if $index}},
+          {{end}}{{$language.DisplayName}}{{end}}</span
+        >
+        {{template "f-problemForm" .}} {{else}} {{template "f-quizForm" .}}
+        {{end}}
+      </div>
+    </div>
+  </body>
+</html>
+{{end}} {{block "f-problemForm" .}}
+<form id="f-problem" hx-post="/problems" hx-target="#f-problem-errors">
+  <input type="hidden" name="quizID" value="{{.Quiz.ID}}" />
+  <div>
+    <input
+      type="text"
+      name="title"
+      placeholder="Título"
+      class="rounded block"
+    />
+    <span id="f-problem-title-error" class="text-red-500 text-sm"></span>
+  </div>
+  <div>
+    <textarea
+      id="description"
+      placeholder="Descripción"
+      name="description"
+      class="auto-resize-textarea w-full rounded"
+    ></textarea>
+    <span id="f-problem-description-error" class="text-red-500 text-sm"></span>
+  </div>
+  <div class="relative mb-6">
+    <label for="f-time-limit" class="sr-only">Límite de tiempo</label>
+    <input
+      id="f-time-limit"
+      type="range"
+      name="time_limit"
+      value="1000"
+      min="500"
+      max="2000"
+      step="100"
+      class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+    />
+    <span
+      class="text-sm text-gray-500 dark:text-gray-400 absolute start-0 -bottom-6"
+      >500 ms</span
+    >
+    <span
+      class="text-sm text-gray-500 dark:text-gray-400 absolute start-1/3 -translate-x-1/2 rtl:translate-x-1/2 -bottom-6"
+      >1000 ms</span
+    >
+    <span
+      class="text-sm text-gray-500 dark:text-gray-400 absolute start-2/3 -translate-x-1/2 rtl:translate-x-1/2 -bottom-6"
+      >1500 ms</span
+    >
+    <span
+      class="text-sm text-gray-500 dark:text-gray-400 absolute end-0 -bottom-6"
+      >2000 ms</span
+    >
+    <span id="f-problem-time-limit-error" class="text-red-500 text-sm"></span>
+  </div>
+  <button type="submit" class="bg-blue-400 text-shark-950 rounded py-1 px-2">
+    Agregar problema
+  </button>
+</form>
+<div id="f-problem-errors"></div>
+{{end}} {{block "f-quizForm" .}}
+<section id="f-quiz" hx-target="#f-quiz-errors" class="flex flex-col gap-4">
+  <div>
+    <div class="flex justify-center">
+      <div class="flex items-center gap-2">
+        <img
+          class="inline"
+          src="/public/clock.svg"
+          width="20"
+          height="20"
+          alt="clock icon"
+        />
+        <input
+          id="f-duration"
+          type="number"
+          name="quiz[duration]"
+          placeholder="Duración"
+          class="rounded bg-gray-700 text-shark-200 block p-2 focus:outline-none focus:ring focus:ring-blue-500"
+        />
+      </div>
+    </div>
+    <div class="flex justify-center">
+      <span
+        id="f-duration-error"
+        class="text-red-500 text-sm text-center"
+      ></span>
+    </div>
+  </div>
+
+  <fieldset id="f-languages" class="flex flex-wrap justify-center gap-2">
+    <legend class="sr-only text-shark-200">Lenguajes</legend>
+    {{range $index, $language := .Languages}}
+    <div>
+      <input
+        id="language-{{$index}}"
+        type="checkbox"
+        name="quiz[languages]"
+        value="{{$language.ID}}"
+        class="hidden peer"
+      />
+      <label
+        for="language-{{$index}}"
+        class="items-center border border-gray-400 py-1 px-2 rounded text-gray-400 select-none cursor-pointer peer-checked:border-blue-400 peer-checked:text-blue-400 hover:border-blue-400"
+        >{{$language.DisplayName}}</label
+      >
+    </div>
+    {{end}}
+    <span id="f-languages-error" class="text-red-500 text-sm"></span>
+  </fieldset>
+</section>
+{{end}} {{block "testCaseForm" .}}
+<form
+  id="f-test-case"
+  hx-post="/problems/{{.ProblemID}}/test-cases"
+  hx-target="#f-test-case-errors"
+>
+  <div>
+    <textarea
+      name="input"
+      placeholder="Entrada"
+      class="auto-resize-textarea w-full rounded"
+    ></textarea>
+    <span id="f-test-case-input-error" class="text-red-500 text-sm"></span>
+  </div>
+  <div>
+    <textarea
+      name="output"
+      placeholder="Salida"
+      class="auto-resize-textarea w-full rounded"
+    ></textarea>
+    <span id="f-test-case-output-error" class="text-red-500 text-sm"></span>
+  </div>
+  <button type="submit" class="bg-blue-400 text-shark-950 rounded py-1 px-2">
+    Agregar
+  </button>
+</form>
+<div id="f-test-case-errors"></div>
+<div id="f-problem" hx-swap-oob="true"></div>
+{{end}} {{block "problemFormErrors" .}}
+<div></div>
+<div id="f-problem-title-error" hx-swap-oob="innerHTML">{{.TitleError}}</div>
+<div id="f-problem-description-error" hx-swap-oob="innerHTML">
+  {{.DescriptionError}}
+</div>
+<div id="f-problem-time-limit-error" hx-swap-oob="innerHTML">
+  {{.TimeLimitError}}
+</div>
+{{end}} {{block "quizFormErrors" .}}
+<div></div>
+<span id="f-quiz-duration-error" hx-swap-oob="innerHTML"
+  >{{.DurationError}}</span
+>
+<span id="f-quiz-languages-error" hx-swap-oob="innerHTML"
+  >{{.LanguagesError}}</span
+>
+{{end}}

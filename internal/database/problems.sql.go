@@ -9,29 +9,29 @@ import (
 	"context"
 )
 
-const createProblem = `-- name: CreateProblem :exec
-
-INSERT INTO problem (id, description, title, memory_limit, time_limit, quiz_id)
-VALUES (?,?,?,?,?,?)
+const insertProblem = `-- name: InsertProblem :exec
+INSERT INTO problem
+(id, quiz_id, title, description, memory_limit, time_limit)
+VALUES (?, ?, ?, ?, ?, ?)
 `
 
-type CreateProblemParams struct {
+type InsertProblemParams struct {
 	ID          string
-	Description string
+	QuizID      string
 	Title       string
+	Description string
 	MemoryLimit int32
 	TimeLimit   float64
-	QuizID      string
 }
 
-func (q *Queries) CreateProblem(ctx context.Context, arg CreateProblemParams) error {
-	_, err := q.db.ExecContext(ctx, createProblem,
+func (q *Queries) InsertProblem(ctx context.Context, arg InsertProblemParams) error {
+	_, err := q.db.ExecContext(ctx, insertProblem,
 		arg.ID,
-		arg.Description,
+		arg.QuizID,
 		arg.Title,
+		arg.Description,
 		arg.MemoryLimit,
 		arg.TimeLimit,
-		arg.QuizID,
 	)
 	return err
 }
@@ -59,6 +59,7 @@ func (q *Queries) SelectProblem(ctx context.Context, id string) (Problem, error)
 }
 
 const selectProblemIDs = `-- name: SelectProblemIDs :many
+
 SELECT problem.id
 FROM problem
 INNER JOIN quiz ON problem.quiz_id = quiz.id

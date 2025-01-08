@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type QuizPageData struct {
@@ -18,7 +19,7 @@ type QuizPageData struct {
 	ProblemContent ProblemContent
 	Examples       []Example
 	EditorData     EditorData
-	Languages      []LanguageSelector
+	Languages      []shared.Language
 }
 
 type ProblemSelector struct {
@@ -42,18 +43,13 @@ type Example struct {
 	Input  string
 	Output string
 }
-type LanguageSelector struct {
-	LanguageID    int32
-	DisplayedName string
-	SimpleName    string
-}
 
 type EditorData struct {
 	SrcValue string
 	Language string
 }
 type QuizPageInput struct {
-	QuizID string
+	OfferID string
 }
 
 func GetQuizPageInput(r *http.Request) (QuizPageInput, error) {
@@ -62,7 +58,7 @@ func GetQuizPageInput(r *http.Request) (QuizPageInput, error) {
 		return QuizPageInput{}, err
 	}
 	return QuizPageInput{
-		QuizID: quizID,
+		OfferID: quizID,
 	}, nil
 }
 
@@ -72,7 +68,7 @@ type QuizPageStorage interface {
 	SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error)
 	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
 	SelectExamples(ctx context.Context, problemID string) ([]Example, error)
-	SelectLanguages(ctx context.Context, quizID string) ([]LanguageSelector, error)
+	SelectLanguages(ctx context.Context, quizID string) ([]shared.Language, error)
 	LastSrc(ctx context.Context, userID string, problemID string, languageID int32) (string, error)
 }
 
@@ -91,14 +87,14 @@ func EnumerateProblems(problemIDs []string) []ProblemSelector {
 func SelectFirstProblem(problemIDs []string) string {
 	return problemIDs[0]
 }
-func SelectFirstLanguage(languages []LanguageSelector) LanguageSelector {
+func SelectFirstLanguage(languages []shared.Language) shared.Language {
 	return languages[0]
 }
 
 type quizPageInputFunc = func(r *http.Request) (QuizPageInput, error)
 type enumProblemsFn = func([]string) []ProblemSelector
 type selectProblemFn = func([]string) string
-type selectLanguageFn = func([]LanguageSelector) LanguageSelector
+type selectLanguageFn = func([]shared.Language) shared.Language
 
 func CreateQuizPageHandler(
 	templ TemplatesRepo,
@@ -120,7 +116,7 @@ func CreateQuizPageHandler(
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		partiData, err := storage.ParticipationStatus(r.Context(), user.ID, input.QuizID)
+		partiData, err := storage.ParticipationStatus(r.Context(), user.ID, input.OfferID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -129,7 +125,7 @@ func CreateQuizPageHandler(
 			http.Error(w, "your participation is over", http.StatusUnauthorized)
 			return
 		}
-		problemIDs, err := storage.SelectProblemIDs(r.Context(), input.QuizID)
+		problemIDs, err := storage.SelectProblemIDs(r.Context(), input.OfferID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -150,25 +146,25 @@ func CreateQuizPageHandler(
 			http.Error(w, "error in find examples", http.StatusInternalServerError)
 			return
 		}
-		languages, err := storage.SelectLanguages(r.Context(), input.QuizID)
+		languages, err := storage.SelectLanguages(r.Context(), input.OfferID)
 		if err != nil {
 			http.Error(w, "languages not found", http.StatusInternalServerError)
 			return
 		}
 		selectedLanguage := selectLangFn(languages)
-		lastSrc, err := storage.LastSrc(r.Context(), user.ID, selectedProblem, selectedLanguage.LanguageID)
+		lastSrc, err := storage.LastSrc(r.Context(), user.ID, selectedProblem, selectedLanguage.ID)
 		if err != nil {
 			http.Error(w, "src not found", http.StatusInternalServerError)
 			return
 		}
 		quizPageData := QuizPageData{
-			QuizID:         input.QuizID,
+			QuizID:         input.OfferID,
 			Problems:       enumerateProblemsFn(problemIDs),
 			ExpiresAt:      partiData.ExpiresAt,
 			Score:          score,
 			ProblemContent: problemContent,
 			Examples:       examples,
-			EditorData:     EditorData{SrcValue: lastSrc, Language: selectedLanguage.SimpleName},
+			EditorData:     EditorData{SrcValue: lastSrc, Language: selectedLanguage.Name},
 			Languages:      languages,
 		}
 		err = templ.Render(w, "quizPage", quizPageData)

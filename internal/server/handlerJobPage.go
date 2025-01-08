@@ -16,7 +16,8 @@ type JobPageData struct {
 type PartialOffer struct {
 	QuizID       string
 	Title        string
-	Author       string
+	CompanyName       string
+	CompanyID     string
 	MinWage      int32
 	MaxWage      int32
 	RelativeTime string

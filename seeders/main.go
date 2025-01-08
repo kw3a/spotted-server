@@ -48,7 +48,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	quizesID, err := seedCfg.seedQuizes(users[:2])
+	companies, err := seedCfg.seedCompanies(users)
+	if err != nil {
+		log.Fatal(err)
+	}
+	offers, err := seedCfg.seedOffers(companies)
+	if err != nil {
+		log.Fatal(err)
+	}
+	quizesID, err := seedCfg.seedQuizes(offers)
 	if err != nil {
 		log.Fatal(err)
 	}

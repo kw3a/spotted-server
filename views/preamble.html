@@ -7,25 +7,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="/static/htmx.min.js"></script>
   <link href="/static/output.css" rel="stylesheet" />
+  <script src="/static/head-support.js"></script>
   <title></title>
 </head>
 
-<body class="bg-shark-950">
+<body class="bg-shark-950" hx-ext="head-support">
   {{template "navBar" .User}}
   <div class="flex justify-center text-shark-200">
     <section class="sm:w-full xl:w-3/4">
-      <strong class="text-center font-semibold text-2xl">{{.Quiz.Title}}</strong>
+      <strong class="text-center font-semibold text-2xl">{{.Offer.Title}}</strong>
       <div class="flex flex-row py-4 gap-2">
         <div class="w-3/4 flex flex-col gap-2">
           <div class="flex flex-row text-shark-100">
-            <span class="w-1/2">{{.Quiz.Author}}</span>
+            <div class="w-1/2">
+              <span class="hover:underline hover:underline-offset-1 hover:cursor-pointer"
+                hx-get="/companies/{{.Offer.CompanyID}}" hx-boost="true" hx-push-url="true" hx-target="body">
+                {{.Offer.CompanyName}}
+              </span>
+            </div>
             <p class="w-1/2">
-              {{.Quiz.MinWage}} - {{.Quiz.MaxWage}}
+              {{.Offer.MinWage}} - {{.Offer.MaxWage}}
               <span class="font-semibold text-xl">$</span>
             </p>
           </div>
+          <p>
+            <span class="font-semibold block">Sobre el puesto:</span>
           <pre class="whitespace-pre-wrap text-shark-200 text-sm">
-            {{.Quiz.Description}}</pre>
+            {{.Offer.About}}</pre>
+          <span class="font-semibold block">Requisitos:</span>
+          <pre class="whitespace-pre-wrap text-shark-200 text-sm">
+            {{.Offer.Requirements}}</pre>
+          <span class="font-semibold block">Beneficios:</span>
+          <pre class="whitespace-pre-wrap text-shark-200 text-sm">
+            {{.Offer.Benefits}}</pre>
+          </p>
         </div>
         <div class="w-1/4">
           <div class="flex flex-col gap-2 justify-around bg-shark-900 rounded p-4">
@@ -35,8 +50,8 @@
               {{.Quiz.Duration}} minutos
             </p>
             <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full">
-              {{range .Quiz.Languages}}
-              <span class="rounded border border-shark-200 text-shark-200 px-2">{{.}}</span>
+              {{range .Languages}}
+              <span class="rounded border border-shark-200 text-shark-200 px-2">{{.DisplayName}}</span>
               {{end}}
             </div>
 

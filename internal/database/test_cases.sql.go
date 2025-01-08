@@ -53,3 +53,26 @@ func (q *Queries) GetTestCases(ctx context.Context, problemID string) ([]GetTest
 	}
 	return items, nil
 }
+
+const insertTestCase = `-- name: InsertTestCase :exec
+INSERT INTO test_case
+(id, problem_id, input, output)
+VALUES (?, ?, ?, ?)
+`
+
+type InsertTestCaseParams struct {
+	ID        string
+	ProblemID string
+	Input     string
+	Output    string
+}
+
+func (q *Queries) InsertTestCase(ctx context.Context, arg InsertTestCaseParams) error {
+	_, err := q.db.ExecContext(ctx, insertTestCase,
+		arg.ID,
+		arg.ProblemID,
+		arg.Input,
+		arg.Output,
+	)
+	return err
+}

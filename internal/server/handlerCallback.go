@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 	"github.com/shopspring/decimal"
 )
 
@@ -82,7 +83,7 @@ func (app *App) CallbackHandler() http.HandlerFunc {
 	return CreateCallbackHandler(
 		app.Storage,
 		app.Stream,
-		Decode[CallbackJsonInput],
+		shared.Decode[CallbackJsonInput],
 		GetCallbackURLParamsInput,
 	)
 }

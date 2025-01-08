@@ -12,7 +12,7 @@ import (
 type Company struct {
 	ID          string
 	Name        string
-	Description sql.NullString
+	Description string
 	Website     sql.NullString
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
@@ -73,12 +73,26 @@ type LanguageQuiz struct {
 }
 
 type Link struct {
-	ID          string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Url         string
-	Description sql.NullString
-	UserID      string
+	ID        string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Url       string
+	Name      string
+	UserID    string
+}
+
+type Offer struct {
+	ID           string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Title        string
+	About        string
+	Requirements string
+	Benefits     string
+	Status       int32
+	MinWage      int32
+	MaxWage      int32
+	CompanyID    string
 }
 
 type Participation struct {
@@ -102,15 +116,11 @@ type Problem struct {
 }
 
 type Quiz struct {
-	ID          string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Title       string
-	Description string
-	Duration    int32
-	MinWage     int32
-	MaxWage     int32
-	UserID      string
+	ID        string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Duration  int32
+	OfferID   string
 }
 
 type Skill struct {

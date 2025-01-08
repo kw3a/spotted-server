@@ -18,6 +18,9 @@ func (cfg *SeedersConfig) CleanDatabase() error {
 	}
 	order := []TableData{
 		{
+			FileName: "company",
+			Function: cfg.DB.DeleteCompanies,
+		}, {
 			FileName: "quiz",
 			Function: cfg.DB.DeleteQuizes,
 		}, {
