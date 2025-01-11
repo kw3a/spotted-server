@@ -107,7 +107,7 @@ func ValidateQuiz(q QuizJ) (shared.Quiz, error) {
 	duration, err := strconv.Atoi(q.Duration)
 	if err != nil {
 		return shared.Quiz{}, fmt.Errorf("la duración de la prueba debe ser un número")
-	} else if duration < 0 || duration > 180 {
+	} else if duration < 15 || duration > 180 {
 		return shared.Quiz{}, lenError("duración", 0, 180)
 	}
 	languages := []int32{}

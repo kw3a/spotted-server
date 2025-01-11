@@ -26,34 +26,32 @@
           <img src="{{.DefaultImage}}"
             class="w-1/2 h-auto border-2 border-white aspect-square rounded-full mx-auto object-cover" id="preview"
             alt="avatar" />
-          <input type="file" name="image" id="image" accept="image/*" class="hidden" />
+          <input id="image" type="file" name="image" onchange="previewImage(event)" accept="image/*" class="hidden" />
           <label for="image" class=" cursor-pointer hover:text-blue-600">
             <img src="/public/edit.svg" class="bottom-0 right-0 absolute w-8 h-8">
             </img>
           </label>
           <span id="image-error" class="text-red-500 text-sm"></span>
           <script>
-            const fileInput = document.getElementById("image");
-            const preview = document.getElementById("preview");
-            const defaultImagePath = "{{.DefaultImage}}";
-            fileInput.addEventListener("change", (e) => {
+            function previewImage(e) {
+              const preview = document.getElementById("preview");
+              const defaultImagePath = "{{.DefaultImage}}";
               if (e.target.files[0]) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                   preview.src = e.target.result;
                 };
                 reader.readAsDataURL(e.target.files[0]);
-
               } else {
                 preview.src = defaultImagePath;
               }
-            });
+            }
           </script>
         </div>
         <div>
           <label for="name" class="text-shark-200 block text-sm font-medium">Nombre</label>
           <input class="block w-full border border-gray-300 rounded p-2 mt-1" type="text" name="name" id="name"
-            required />
+            autocomplete="off" required />
           <span id="name-error" class="text-red-500 text-sm"></span>
         </div>
 
