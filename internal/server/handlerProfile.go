@@ -64,6 +64,7 @@ func (DI *App) LoginHandler() http.HandlerFunc {
 		DI.AuthType,
 		DI.Storage,
 		profiles.GetLoginInput,
+		DI.Templ,
 	)
 }
 

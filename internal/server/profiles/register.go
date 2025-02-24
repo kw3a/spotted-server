@@ -2,11 +2,16 @@ package profiles
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/kw3a/spotted-server/internal/server/shared"
+)
+
+const (
+	errUserTaken = "El correo ya está siendo utilizado"
+	errNameLength = "Debe tener entre 3 a 255 caracteres"
+	errDescriptionLength = "Debe tener entre 20 a 500 caracteres"
 )
 
 type UserStorage interface {
@@ -27,40 +32,50 @@ type UserInputErrors struct {
 	DescriptionError string
 }
 
-func NameValidation(name string) error {
+func NameValidation(name string) string {
 	if len(name) < 3 || len(name) > 255 {
-		return fmt.Errorf("name length must be less than 255 and more than 3")
+		return errNameLength
 	}
-	return nil
+	return ""
 }
 
-func DescriptionValidation(description string) error {
+func DescriptionValidation(description string) string {
 	if len(description) < 20 || len(description) > 500 {
-		return fmt.Errorf("description length must be less than 500 and more than 20")
+		return errDescriptionLength
 	}
-	return nil
+	return ""
 }
 
 type CloudinaryService interface {
-	Upload(ctx context.Context, file interface{}, uploadParams uploader.UploadParams) (*uploader.UploadResult, error)
+	Upload(
+		ctx context.Context,
+		file interface{},
+		uploadParams uploader.UploadParams,
+	) (*uploader.UploadResult, error)
 }
 
-func GetUserInput(r *http.Request) (UserInput, UserInputErrors, error) {
+func GetUserInput(r *http.Request) (UserInput, UserInputErrors, bool) {
+	inputErrors := UserInputErrors{}
+	inputErrFound := false
 	name := r.FormValue("name")
-	if err := NameValidation(name); err != nil {
-		return UserInput{}, UserInputErrors{NameError: err.Error()}, err
+	if strErr := NameValidation(name); strErr != "" {
+		inputErrors.NameError = strErr
+		inputErrFound = true
 	}
 	password := r.FormValue("password")
-	if err := PasswordValidation(password); err != nil {
-		return UserInput{}, UserInputErrors{PasswordError: err.Error()}, err
+	if strErr := PasswordValidation(password); strErr != "" {
+		inputErrors.PasswordError = strErr
+		inputErrFound = true
 	}
 	email := r.FormValue("email")
-	if err := EmailValidation(email); err != nil {
-		return UserInput{}, UserInputErrors{EmailError: err.Error()}, err
+	if strErr := EmailValidation(email); strErr != "" {
+		inputErrors.EmailError = strErr
+		inputErrFound = true
 	}
 	description := r.FormValue("description")
-	if err := DescriptionValidation(description); err != nil {
-		return UserInput{}, UserInputErrors{DescriptionError: err.Error()}, err
+	if strErr := DescriptionValidation(description); strErr != "" {
+		inputErrors.DescriptionError = strErr
+		inputErrFound = true
 	}
 
 	return UserInput{
@@ -68,24 +83,24 @@ func GetUserInput(r *http.Request) (UserInput, UserInputErrors, error) {
 		Password:    password,
 		Email:       email,
 		Description: description,
-	}, UserInputErrors{}, nil
+	}, inputErrors, inputErrFound
 }
 
-type userInputFunc func(*http.Request) (UserInput, UserInputErrors, error)
+type userInputFunc func(*http.Request) (UserInput, UserInputErrors, bool)
 
 func CreateUserHandler(templ shared.TemplatesRepo, storage UserStorage, inputFn userInputFunc, redirection string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		input, inputErr, err := inputFn(r)
-		if err != nil {
+		input, inputErr, errorExists := inputFn(r)
+		if errorExists {
 			renderErr := templ.Render(w, "userFormErrors", inputErr)
 			if renderErr != nil {
 				http.Error(w, renderErr.Error(), http.StatusInternalServerError)
 			}
 			return
 		}
-		err = storage.CreateUser(r.Context(), input.Name, input.Password, input.Email, input.Description)
+		err := storage.CreateUser(r.Context(), input.Name, input.Password, input.Email, input.Description)
 		if err != nil {
-			renderErr := templ.Render(w, "userFormErrors", UserInputErrors{EmailError: err.Error()})
+			renderErr := templ.Render(w, "userFormErrors", UserInputErrors{EmailError: errUserTaken})
 			if renderErr != nil {
 				http.Error(w, renderErr.Error(), http.StatusInternalServerError)
 			}
@@ -95,4 +110,3 @@ func CreateUserHandler(templ shared.TemplatesRepo, storage UserStorage, inputFn 
 		w.WriteHeader(http.StatusCreated)
 	}
 }
-

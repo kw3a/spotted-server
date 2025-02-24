@@ -14,6 +14,7 @@ type AuthUser struct {
 	Role     string
 	Name     string
 	ImageURL string
+	Email    string
 }
 type AuthService struct{}
 
@@ -144,6 +145,7 @@ func AuthNMiddleware(storage MiddlewareStorage, authType MiddlewareAuthType, nex
 			Role:     dbUser.Role,
 			Name:     dbUser.Name,
 			ImageURL: dbUser.ImageUrl,
+			Email:    dbUser.Email,
 		})
 	})
 }
