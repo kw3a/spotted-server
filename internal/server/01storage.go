@@ -567,8 +567,8 @@ func ConvertLanguages(languages sql.NullString) ([]string, error) {
 	return result, nil
 }
 
-func (mysql *MysqlStorage) SelectOffers(ctx context.Context, params shared.JobQueryParams) ([]PartialOffer, error) {
-	offers := []PartialOffer{}
+func (mysql *MysqlStorage) SelectOffers(ctx context.Context, params shared.JobQueryParams) ([]shared.Offer, error) {
+	offers := []shared.Offer{}
 	if params.Query == "" {
 		quizzes, err := mysql.Queries.GetOffers(ctx)
 		if err != nil {
@@ -576,14 +576,19 @@ func (mysql *MysqlStorage) SelectOffers(ctx context.Context, params shared.JobQu
 		}
 		for _, quiz := range quizzes {
 			relativeTime := RelativeTime(quiz.CreatedAt)
-			offers = append(offers, PartialOffer{
-				QuizID:       quiz.ID,
-				Title:        quiz.Title,
-				CompanyName:  quiz.CompanyName,
-				CompanyID:    quiz.CompanyID,
-				MinWage:      quiz.MinWage,
-				MaxWage:      quiz.MaxWage,
-				RelativeTime: relativeTime,
+			offers = append(offers, shared.Offer{
+				ID:              quiz.ID,
+				Title:           quiz.Title,
+				About:           quiz.About,
+				Requirements:    quiz.Requirements,
+				Benefits:        quiz.Benefits,
+				Status:          quiz.Status,
+				CompanyName:     quiz.CompanyName,
+				CompanyID:       quiz.CompanyID,
+				CompanyImageURL: quiz.CompanyImageUrl.String,
+				MinWage:         quiz.MinWage,
+				MaxWage:         quiz.MaxWage,
+				RelativeTime:    relativeTime,
 			})
 		}
 	} else {
@@ -593,14 +598,19 @@ func (mysql *MysqlStorage) SelectOffers(ctx context.Context, params shared.JobQu
 		}
 		for _, quiz := range quizzes {
 			relativeTime := RelativeTime(quiz.CreatedAt)
-			offers = append(offers, PartialOffer{
-				QuizID:       quiz.ID,
-				Title:        quiz.Title,
-				CompanyName:  quiz.CompanyName,
-				CompanyID:    quiz.CompanyID,
-				MinWage:      quiz.MinWage,
-				MaxWage:      quiz.MaxWage,
-				RelativeTime: relativeTime,
+			offers = append(offers, shared.Offer{
+				ID:              quiz.ID,
+				Title:           quiz.Title,
+				About:           quiz.About,
+				Requirements:    quiz.Requirements,
+				Benefits:        quiz.Benefits,
+				Status:          quiz.Status,
+				CompanyName:     quiz.CompanyName,
+				CompanyID:       quiz.CompanyID,
+				CompanyImageURL: quiz.CompanyImageUrl.String,
+				MinWage:         quiz.MinWage,
+				MaxWage:         quiz.MaxWage,
+				RelativeTime:    relativeTime,
 			})
 		}
 	}

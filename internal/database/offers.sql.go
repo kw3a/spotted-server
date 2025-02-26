@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -130,7 +131,7 @@ func (q *Queries) GetOfferByUser(ctx context.Context, arg GetOfferByUserParams) 
 }
 
 const getOffers = `-- name: GetOffers :many
-SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name
+SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name, company.image_url as company_image_url
 FROM offer
 JOIN company ON offer.company_id= company.id
 WHERE offer.status = 1
@@ -139,18 +140,19 @@ LIMIT 10
 `
 
 type GetOffersRow struct {
-	ID           string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	Title        string
-	About        string
-	Requirements string
-	Benefits     string
-	Status       int32
-	MinWage      int32
-	MaxWage      int32
-	CompanyID    string
-	CompanyName  string
+	ID              string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Title           string
+	About           string
+	Requirements    string
+	Benefits        string
+	Status          int32
+	MinWage         int32
+	MaxWage         int32
+	CompanyID       string
+	CompanyName     string
+	CompanyImageUrl sql.NullString
 }
 
 func (q *Queries) GetOffers(ctx context.Context) ([]GetOffersRow, error) {
@@ -175,6 +177,7 @@ func (q *Queries) GetOffers(ctx context.Context) ([]GetOffersRow, error) {
 			&i.MaxWage,
 			&i.CompanyID,
 			&i.CompanyName,
+			&i.CompanyImageUrl,
 		); err != nil {
 			return nil, err
 		}
@@ -190,7 +193,7 @@ func (q *Queries) GetOffers(ctx context.Context) ([]GetOffersRow, error) {
 }
 
 const getOffersByQuery = `-- name: GetOffersByQuery :many
-SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name
+SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name, company.image_url as company_image_url
 FROM offer
 JOIN company ON offer.company_id = company.id
 WHERE offer.title LIKE CONCAT('%', ?, '%')
@@ -199,18 +202,19 @@ LIMIT 10
 `
 
 type GetOffersByQueryRow struct {
-	ID           string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	Title        string
-	About        string
-	Requirements string
-	Benefits     string
-	Status       int32
-	MinWage      int32
-	MaxWage      int32
-	CompanyID    string
-	CompanyName  string
+	ID              string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Title           string
+	About           string
+	Requirements    string
+	Benefits        string
+	Status          int32
+	MinWage         int32
+	MaxWage         int32
+	CompanyID       string
+	CompanyName     string
+	CompanyImageUrl sql.NullString
 }
 
 func (q *Queries) GetOffersByQuery(ctx context.Context, concat interface{}) ([]GetOffersByQueryRow, error) {
@@ -235,6 +239,7 @@ func (q *Queries) GetOffersByQuery(ctx context.Context, concat interface{}) ([]G
 			&i.MaxWage,
 			&i.CompanyID,
 			&i.CompanyName,
+			&i.CompanyImageUrl,
 		); err != nil {
 			return nil, err
 		}

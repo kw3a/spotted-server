@@ -29,6 +29,7 @@ func (DI *App) CompanyRegistrationHandler() http.HandlerFunc {
 		DI.AuthService,
 		&DI.Cld.Upload,
 		companies.GetRegisterCompanyInput,
+		DI.Templ,
 	)
 }
 

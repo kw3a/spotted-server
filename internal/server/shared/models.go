@@ -47,17 +47,18 @@ type Language struct {
 }
 
 type Offer struct {
-	ID           string
-	Title        string
-	About        string
-	Requirements string
-	Benefits     string
-	Status       int32
-	CompanyName  string
-	CompanyID    string
-	MinWage      int32
-	MaxWage      int32
-	RelativeTime string
+	ID              string
+	Title           string
+	About           string
+	Requirements    string
+	Benefits        string
+	Status          int32
+	CompanyName     string
+	CompanyID       string
+	CompanyImageURL string
+	MinWage         int32
+	MaxWage         int32
+	RelativeTime    string
 }
 
 type Quiz struct {

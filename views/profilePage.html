@@ -21,7 +21,7 @@
     }
   </script>
   <div class="flex flex-row justify-center">
-    <div class="w-1/2 flex flex-col gap-4">
+    <div class="w-1/2 flex flex-col p-4 gap-4">
       <form class="relative" hx-patch="/pictures" hx-encoding="multipart/form-data" hx-target="#image-error">
         <img src="{{.Profile.ImageURL}}"
           class="w-1/2 h-auto border-2 border-white aspect-square rounded-full mx-auto object-cover" id="preview"

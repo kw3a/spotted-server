@@ -10,21 +10,11 @@ import (
 
 type JobPageData struct {
 	User   auth.AuthUser
-	Offers []PartialOffer
-}
-
-type PartialOffer struct {
-	QuizID       string
-	Title        string
-	CompanyName       string
-	CompanyID     string
-	MinWage      int32
-	MaxWage      int32
-	RelativeTime string
+	Offers []shared.Offer
 }
 
 type JobOfferStorage interface {
-	SelectOffers(ctx context.Context, params shared.JobQueryParams) ([]PartialOffer, error)
+	SelectOffers(ctx context.Context, params shared.JobQueryParams) ([]shared.Offer, error)
 }
 
 func GetJobOffersParams(r *http.Request) shared.JobQueryParams {

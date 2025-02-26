@@ -6,7 +6,7 @@ WHERE offer.id = ?
 LIMIT 1;
 
 -- name: GetOffers :many
-SELECT offer.*, company.name as company_name
+SELECT offer.*, company.name as company_name, company.image_url as company_image_url
 FROM offer
 JOIN company ON offer.company_id= company.id
 WHERE offer.status = 1
@@ -14,7 +14,7 @@ ORDER BY offer.created_at DESC
 LIMIT 10;
 
 -- name: GetOffersByQuery :many
-SELECT offer.*, company.name as company_name
+SELECT offer.*, company.name as company_name, company.image_url as company_image_url
 FROM offer
 JOIN company ON offer.company_id = company.id
 WHERE offer.title LIKE CONCAT('%', ?, '%')

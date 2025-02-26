@@ -1,0 +1,155 @@
+{{block "companyRegistration" .}}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title></title>
+    <link href="/static/output.css" rel="stylesheet" />
+    <script src="/static/htmx.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.css"
+      rel="stylesheet"
+    />
+    <script src="/static/head-support.js"></script>
+  </head>
+
+  <body class="bg-shark-950" hx-ext="head-support">
+    {{template "navBar" .User}}
+
+    <div class="flex flex-row p-4 justify-center">
+      <div class="w-2/3 flex flex-col gap-4">
+        <form
+          id="company-data-form"
+          class="flex flex-row border border-black rounded p-4 space-y-4"
+          hx-post="/register/companies"
+          hx-swap="none"
+          hx-encoding="multipart/form-data"
+          hx-disabled-elt="#company-reg-btn"
+        >
+          <section class="flex flex-col w-1/2 justify-center gap-4">
+            <div class="w-2/3 mx-auto">
+              <label
+                for="image"
+                class="block w-full h-full rounded-full overflow-hidden cursor-pointer"
+              >
+                <img
+                  src="{{.DefaultImage}}"
+                  class="w-full h-auto border-2 border-blue-500 aspect-square rounded-full object-cover"
+                  id="preview"
+                  alt="avatar"
+                />
+              </label>
+
+              <input
+                id="image"
+                type="file"
+                name="image"
+                onchange="previewImage(event)"
+                accept="image/*"
+                class="hidden"
+              />
+
+              <script>
+                function previewImage(event) {
+                  const preview = document.getElementById("preview");
+                  const defaultImagePath = "{{.DefaultImage}}";
+
+                  if (event.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                      preview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(event.target.files[0]);
+                  } else {
+                    preview.src = defaultImagePath;
+                  }
+                }
+              </script>
+            </div>
+            <span
+              id="image-error"
+              class="text-red-500 text-sm text-center"
+            ></span>
+          </section>
+
+          <section class="flex flex-col w-1/2 justify-center">
+            <div class="flex flex-col gap-4 w-full">
+              <h1 class="text-center text-white font-semibold">
+                Registrar compañía
+              </h1>
+              <div>
+                <label
+                  for="name"
+                  class="text-shark-200 block text-sm font-medium"
+                  >Nombre</label
+                >
+                <input
+                  class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
+                  type="text"
+                  name="name"
+                  id="name"
+                  autocomplete="off"
+                />
+                <span id="name-error" class="text-red-500 text-sm"></span>
+              </div>
+
+              <div>
+                <label
+                  for="description"
+                  class="block text-shark-200 text-sm font-medium"
+                  >Descripción</label
+                >
+                <textarea
+                  id="description"
+                  rows="4"
+                  class="rounded-lg bg-gray-700 text-sm text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
+                  name="description"
+                  placeholder="Escribe una descripción de ti mismo"
+                ></textarea>
+                <span
+                  id="description-error"
+                  class="text-red-500 text-sm"
+                ></span>
+              </div>
+
+              <div>
+                <label
+                  for="website"
+                  class="block text-shark-200 text-sm font-medium"
+                  >Sitio web</label
+                >
+                <input
+                  class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
+                  type="text"
+                  name="website"
+                  id="website"
+                />
+                <span id="website-error" class="text-red-500 text-sm"></span>
+              </div>
+
+              <div class="flex justify-center">
+                <button
+                  id="company-reg-btn"
+                  class="border rounded border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400 font-bold py-2 px-4"
+                  type="submit"
+                >
+                  Registrar
+                  <span class="loader htmx-indicator"></span>
+                </button>
+              </div>
+            </div>
+          </section>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
+{{end}} {{block "companyRegErrors" .}}
+<span id="image-error" hx-swap-oob="innerHTML">{{.ImageURLError}}</span>
+<span id="name-error" hx-swap-oob="innerHTML">{{.NameError}}</span>
+<span id="description-error" hx-swap-oob="innerHTML"
+  >{{.DescriptionError}}</span
+>
+<span id="website-error" hx-swap-oob="innerHTML">{{.WebsiteError}}</span>
+{{end}}

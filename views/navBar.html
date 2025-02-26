@@ -1,56 +1,131 @@
 {{block "navBar" .}}
 <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
-<nav class="flex flex-row text-white p-4">
-  <div class="w-1/2 flex justify-center">
-    <div class="border border-transparent rounded hover:border-white p-2 cursor-pointer" hx-get="/" hx-target="body"
-      hx-push-url="true" hx-boost="true">
-      <img src="/public/home.svg" alt="home icon" width="25" height="25" />
-    </div>
+<nav class="flex flex-row text-white p-4 bg-shark-900">
+  <div class="w-1/2 flex justify-around">
+    <button
+      class="rounded font-semibold text-white hover:underline"
+      hx-get="/"
+      hx-target="body"
+      hx-push-url="true"
+      hx-boost="true"
+    >
+      Trabajos
+    </button>
+    <button
+      class="rounded font-semibold text-white hover:underline"
+      hx-get="/companies"
+      hx-target="body"
+      hx-push-url="true"
+      hx-boost="true"
+    >
+      Empresas
+    </button>
   </div>
-  <button class="rounded text-white" hx-get="/companies" hx-target="body" hx-push-url="true" hx-boost="true">
-    Empresas
-  </button>
-  {{if eq .Role "visitor"}}
-  <div class="w-1/2 flex justify-center">
-    <div class="border border-transparent rounded hover:border-white p-2" hx-get="/login" hx-target="body"
-      hx-push-url="true" hx-boost="true">
-      <img src="/public/log.svg" alt="login icon" width="25" height="25" />
-    </div>
-  </div>
-  {{else}}
   <div class="w-1/2 flex justify-evenly">
-    <div class="flex items-center gap-2">
-      {{template "userIcon" .}}
-    </div>
+    <div class="flex items-center gap-2">{{template "userIcon" .}}</div>
   </div>
-  {{end}}
 </nav>
 
-{{end}}
-
-{{block "userIcon" .}}
-<button id="dropdownUserAvatarButton" class="flex rounded text-white " data-dropdown-toggle="dropdownAvatar"
-  type="button">
+{{end}} {{block "userIcon" .}}
+<button
+  id="dropdownUserAvatarButton"
+  class="flex rounded text-white"
+  data-dropdown-toggle="dropdownAvatar"
+  type="button"
+>
   <span class="sr-only">Open user menu</span>
-  <img class="aspect-square rounded-full mx-auto object-cover inline" {{if .ImageURL}} src="{{.ImageURL}}" {{else}}
-    src="/public/user.svg" {{end}} alt="user icon" width="25" height="25" />
+  <img
+    class="aspect-square rounded-full mx-auto object-cover inline"
+    {{if
+    .ImageURL}}
+    src="{{.ImageURL}}"
+    {{else}}
+    src="/public/user.svg"
+    {{end}}
+    alt="user icon"
+    width="25"
+    height="25"
+  />
 </button>
+{{if eq .Role "visitor"}}
+<div
+  id="dropdownAvatar"
+  class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600"
+>
+  <ul
+    class="py-2 text-sm text-gray-200"
+    aria-labelledby="dropdownUserAvatarButton"
+  >
+    <li
+      class="cursor-pointer"
+      hx-get="/login"
+      hx-target="body"
+      hx-push-url="true"
+      hx-boost="true"
+    >
+      <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white"
+        >Iniciar sesión</span
+      >
+    </li>
+    <li
+      class="cursor-pointer"
+      hx-get="/register"
+      hx-target="body"
+      hx-push-url="true"
+      hx-boost="true"
+    >
+      <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white"
+        >Registrarse</span
+      >
+    </li>
+  </ul>
+</div>
+{{else}}
 
-<div id="dropdownAvatar"
-  class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600">
+<div
+  id="dropdownAvatar"
+  class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600"
+>
   <div class="px-4 py-3 text-sm text-white">
     <div>{{.Name}}</div>
     <div class="font-medium truncate">{{.Email}}</div>
   </div>
-  <ul class="py-2 text-sm text-gray-200" aria-labelledby="dropdownUserAvatarButton">
-    <li class="cursor-pointer" hx-get="/profile/{{.ID}}" hx-target="body" hx-push-url="true" hx-boost="true">
-      <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white">Perfil</span>
+  <ul
+    class="py-2 text-sm text-gray-200"
+    aria-labelledby="dropdownUserAvatarButton"
+  >
+    <li
+      class="cursor-pointer"
+      hx-get="/profile/{{.ID}}"
+      hx-target="body"
+      hx-push-url="true"
+      hx-boost="true"
+    >
+      <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white"
+        >Perfil</span
+      >
     </li>
-    <li class="cursor-pointer" hx-get="/register/companies" hx-target="body" hx-push-url="true" hx-boost="true">
-      <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white">Registrar empresa</span>
+    <li
+      class="cursor-pointer"
+      hx-get="/register/companies"
+      hx-target="body"
+      hx-push-url="true"
+      hx-boost="true"
+    >
+      <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white"
+        >Registrar empresa</span
+      >
     </li>
-    <li class="cursor-pointer" hx-get="/register/offers" hx-target="body" hx-push-url="true" hx-boost="true">
-      <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white">Publicar oferta</span>
+    <li
+      class="cursor-pointer"
+      hx-get="/register/offers"
+      hx-target="body"
+      hx-push-url="true"
+      hx-boost="true"
+    >
+      <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white"
+        >Publicar oferta</span
+      >
     </li>
     <li class="cursor-pointer" hx-post="/logout">
       <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white">
@@ -59,4 +134,4 @@
     </li>
   </ul>
 </div>
-{{end}}
+{{end}} {{end}}
