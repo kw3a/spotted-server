@@ -7,10 +7,6 @@
     <script src="/static/htmx.min.js"></script>
     <link href="/static/output.css" rel="stylesheet" />
     <script src="/static/head-support.js"></script>
-    <link
-      href="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.css"
-      rel="stylesheet"
-    />
   </head>
 
   <body class="bg-shark-950" hx-ext="head-support">
@@ -38,13 +34,17 @@
               id="f-query"
               type="text"
               name="q"
-              class="border border-gray-300 rounded"
+              class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
             />
           </div>
         </form>
+        {{if not .Offers}}
+        <span class="text-white text-center"> Ninguna coincidencia </span>
+        {{else}}
         <div class="grid grid-cols-2 gap-4 m-4">
           {{range .Offers}} {{template "jobCard" .}} {{end}}
         </div>
+        {{end}}
       </div>
     </div>
   </body>
