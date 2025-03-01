@@ -21,7 +21,9 @@
       Empresas
     </button>
   </div>
-  <div class="w-1/2 flex flex-row justify-center">{{template "userIcon" .}}</div>
+  <div class="w-1/2 flex flex-row justify-center">
+    {{template "userIcon" .}}
+  </div>
 </nav>
 {{end}} {{block "userIcon" .}}
 
@@ -41,7 +43,7 @@
     />
   </div>
   <div
-    class="group-hover:block hidden absolute z-10 rounded-lg shadow-sm w-44 bg-gray-700 divide-y divide-gray-600"
+    class="left-1/2 transform -translate-x-1/2 group-hover:block hidden absolute z-10 rounded-lg shadow-sm w-44 bg-gray-700 divide-y divide-gray-600"
   >
     {{if eq .Role "visitor"}}
     <ul class="py-2 text-sm text-gray-200">
@@ -70,8 +72,8 @@
     </ul>
     {{else}}
     <div class="px-4 py-3 text-sm text-white">
-      <span class="truncate">{{.Name}}</span>
-      <span class="font-medium truncate">{{.Email}}</span>
+      <div class="truncate">{{.Name}}</div>
+      <div class="font-medium truncate">{{.Email}}</div>
     </div>
 
     <ul class="py-2 text-sm text-gray-200">
