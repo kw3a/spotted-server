@@ -37,8 +37,10 @@ type CompanyQueryParams struct {
 	UserID string
 	Query  string
 }
-type JobQueryParams struct {
-	Query string
+type OfferQueryParams struct {
+	UserID    string
+	CompanyID string
+	Query     string
 }
 type Language struct {
 	ID          int32

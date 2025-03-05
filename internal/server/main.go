@@ -148,6 +148,8 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 		//r.Get("/languages/{quizID}", app.LanguagesHandler())
 		r.Get("/", app.JobOffersHandler())
 		r.Get("/preamble/{quizID}", app.PreambleHandler())
+		r.Get("/offers/admin", app.OffersAdmin())
+		r.Patch("/offers/archive/{offerID}", app.OfferArchive())
 	})
 
 	r.With(authNMiddleware).With(authRMiddlewareDev).Group(func(r chi.Router) {

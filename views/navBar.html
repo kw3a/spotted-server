@@ -2,23 +2,50 @@
 
 <nav class="flex flex-row text-white p-4 bg-shark-900">
   <div class="w-1/2 flex justify-around">
+    <div class="flex items-end gap-4">
+      <button
+        class="inline-block rounded font-semibold text-white hover:underline"
+        hx-get="/"
+        hx-target="body"
+        hx-push-url="true"
+        hx-boost="true"
+      >
+        <img src="/public/jobs.svg" alt="home icon" width="30" height="30" />
+      </button>
+      <form
+        id="company-filters"
+        hx-get="/"
+        hx-target="body"
+        hx-boost="true"
+        hx-push-url="true"
+        class="inline-block relative"
+      >
+        <div
+          class="absolute inset-y-0 start-0 flex items-center ps-2 pointer-events-none"
+        >
+          <img
+            src="/public/search.svg"
+            alt="home icon"
+            width="20"
+            height="20"
+          />
+        </div>
+        <input
+          id="f-query"
+          type="text"
+          name="q"
+          class="bg-shark-950 ps-8 rounded text-shark-200 block w-full focus:outline-none focus:ring focus:ring-blue-500"
+        />
+      </form>
+    </div>
     <button
-      class="rounded font-semibold text-white hover:underline"
-      hx-get="/"
-      hx-target="body"
-      hx-push-url="true"
-      hx-boost="true"
-    >
-      Trabajos
-    </button>
-    <button
-      class="rounded font-semibold text-white hover:underline"
+      class="rounded font-semibold text-white"
       hx-get="/companies"
       hx-target="body"
       hx-push-url="true"
       hx-boost="true"
     >
-      Empresas
+      <img src="/public/company.svg" alt="home icon" width="30" height="30" />
     </button>
   </div>
   <div class="w-1/2 flex flex-row justify-center">
@@ -38,8 +65,8 @@
       src="/public/user.svg"
       {{end}}
       alt="user icon"
-      width="25"
-      height="25"
+      width="30"
+      height="30"
     />
   </div>
   <div
@@ -90,7 +117,7 @@
       </li>
       <li
         class="cursor-pointer"
-        hx-get="/?u={{.ID}}"
+        hx-get="/offers/admin"
         hx-target="body"
         hx-push-url="true"
         hx-boost="true"

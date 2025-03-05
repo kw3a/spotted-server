@@ -22,11 +22,19 @@ ORDER BY offer.created_at DESC
 LIMIT 10;
 
 -- name: GetOffersByUser :many
-SELECT offer.*, company.name as company_name
+SELECT offer.*, company.name as company_name, company.image_url as company_image_url
 FROM offer
 JOIN company ON offer.company_id = company.id
 JOIN user ON company.user_id = user.id
 WHERE user.id = ? 
+ORDER BY offer.created_at DESC
+LIMIT 10;
+
+-- name: GetOffersByCompany :many
+SELECT offer.*, company.name as company_name, company.image_url as company_image_url
+FROM offer
+JOIN company ON offer.company_id = company.id
+WHERE company.id = ? 
 ORDER BY offer.created_at DESC
 LIMIT 10;
 
@@ -49,3 +57,9 @@ LIMIT 1;
 INSERT INTO offer
 (id, title, about, requirements, benefits, min_wage, max_wage, company_id)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+-- name: ArchiveOffer :exec
+UPDATE offer
+JOIN company ON offer.company_id = company.id
+SET offer.status = -1
+WHERE offer.id = ? AND company.user_id = ?;

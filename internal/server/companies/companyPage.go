@@ -12,6 +12,7 @@ import (
 type CompanyPageData struct {
 	User    auth.AuthUser
 	Company shared.Company
+	Offers  []shared.Offer
 }
 
 type CompanyPageInput struct {
@@ -20,6 +21,7 @@ type CompanyPageInput struct {
 
 type CompanyPageStorage interface {
 	GetCompanyByID(ctx context.Context, companyID string) (shared.Company, error)
+	SelectOffers(ctx context.Context, params shared.OfferQueryParams) ([]shared.Offer, error)
 }
 
 func GetCompanyPageInput(r *http.Request) (CompanyPageInput, error) {
@@ -60,9 +62,16 @@ func CreateCompanyPageHandler(
 		if company.ImageURL == "" {
 			company.ImageURL = defaultImg
 		}
+		query := shared.OfferQueryParams{CompanyID: input.CompanyID}
+		offers, err := storage.SelectOffers(r.Context(), query)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		data := CompanyPageData{
 			User:    user,
 			Company: company,
+			Offers:  offers,
 		}
 		err = templ.Render(w, "companyPage", data)
 		if err != nil {

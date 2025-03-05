@@ -23,6 +23,13 @@ type MysqlStorage struct {
 	db      *sql.DB
 }
 
+func (mysql *MysqlStorage) ArchiveOffer(ctx context.Context, offerID string, ownerID string) error {
+	return mysql.Queries.ArchiveOffer(ctx, database.ArchiveOfferParams{
+		ID: offerID,
+		UserID: ownerID,
+	})
+}
+
 func (mysql *MysqlStorage) RegisterOffer(
 	ctx context.Context,
 	offerID string,
@@ -168,35 +175,6 @@ func (mysql *MysqlStorage) SelectOfferByUser(ctx context.Context, ID string, use
 		MaxWage:      dbQuiz.MaxWage,
 		RelativeTime: relativeTime,
 	}, nil
-}
-
-func (mysql *MysqlStorage) GetOffersByUser(ctx context.Context, userID string) ([]shared.Offer, error) {
-	offers, err := mysql.Queries.GetOffersByUser(ctx, userID)
-	if err == sql.ErrNoRows {
-		return []shared.Offer{}, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	res := []shared.Offer{}
-	for _, offer := range offers {
-		relativeTime := RelativeTime(offer.CreatedAt)
-		res = append(res, shared.Offer{
-			ID:           offer.ID,
-			Title:        offer.Title,
-			About:        offer.About,
-			Requirements: offer.Requirements,
-			Benefits:     offer.Benefits,
-			Status:       offer.Status,
-			CompanyName:  offer.CompanyName,
-			CompanyID:    offer.CompanyID,
-			MinWage:      offer.MinWage,
-			MaxWage:      offer.MaxWage,
-			RelativeTime: relativeTime,
-		})
-	}
-	return res, nil
-
 }
 
 func (mysql *MysqlStorage) GetCompanyByID(ctx context.Context, companyID string) (shared.Company, error) {
@@ -567,54 +545,123 @@ func ConvertLanguages(languages sql.NullString) ([]string, error) {
 	return result, nil
 }
 
-func (mysql *MysqlStorage) SelectOffers(ctx context.Context, params shared.JobQueryParams) ([]shared.Offer, error) {
+func (mysql *MysqlStorage) GetOffersByCompany(ctx context.Context, companyID string) ([]shared.Offer, error) {
 	offers := []shared.Offer{}
-	if params.Query == "" {
-		quizzes, err := mysql.Queries.GetOffers(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, quiz := range quizzes {
-			relativeTime := RelativeTime(quiz.CreatedAt)
-			offers = append(offers, shared.Offer{
-				ID:              quiz.ID,
-				Title:           quiz.Title,
-				About:           quiz.About,
-				Requirements:    quiz.Requirements,
-				Benefits:        quiz.Benefits,
-				Status:          quiz.Status,
-				CompanyName:     quiz.CompanyName,
-				CompanyID:       quiz.CompanyID,
-				CompanyImageURL: quiz.CompanyImageUrl.String,
-				MinWage:         quiz.MinWage,
-				MaxWage:         quiz.MaxWage,
-				RelativeTime:    relativeTime,
-			})
-		}
-	} else {
-		quizzes, err := mysql.Queries.GetOffersByQuery(ctx, params.Query)
-		if err != nil {
-			return nil, err
-		}
-		for _, quiz := range quizzes {
-			relativeTime := RelativeTime(quiz.CreatedAt)
-			offers = append(offers, shared.Offer{
-				ID:              quiz.ID,
-				Title:           quiz.Title,
-				About:           quiz.About,
-				Requirements:    quiz.Requirements,
-				Benefits:        quiz.Benefits,
-				Status:          quiz.Status,
-				CompanyName:     quiz.CompanyName,
-				CompanyID:       quiz.CompanyID,
-				CompanyImageURL: quiz.CompanyImageUrl.String,
-				MinWage:         quiz.MinWage,
-				MaxWage:         quiz.MaxWage,
-				RelativeTime:    relativeTime,
-			})
-		}
+	dbOffers, err := mysql.Queries.GetOffersByCompany(ctx, companyID)
+	if err != nil {
+		return nil, err
+	}
+	for _, dbOffer := range dbOffers {
+		relativeTime := RelativeTime(dbOffer.CreatedAt)
+		offers = append(offers, shared.Offer{
+			ID:              dbOffer.ID,
+			Title:           dbOffer.Title,
+			About:           dbOffer.About,
+			Requirements:    dbOffer.Requirements,
+			Benefits:        dbOffer.Benefits,
+			Status:          dbOffer.Status,
+			CompanyName:     dbOffer.CompanyName,
+			CompanyID:       dbOffer.CompanyID,
+			CompanyImageURL: dbOffer.CompanyImageUrl.String,
+			MinWage:         dbOffer.MinWage,
+			MaxWage:         dbOffer.MaxWage,
+			RelativeTime:    relativeTime,
+		})
 	}
 	return offers, nil
+}
+
+func (mysql *MysqlStorage) GetOffers(ctx context.Context) ([]shared.Offer, error) {
+	offers := []shared.Offer{}
+	dbOffers, err := mysql.Queries.GetOffers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, dbOffer := range dbOffers {
+		relativeTime := RelativeTime(dbOffer.CreatedAt)
+		offers = append(offers, shared.Offer{
+			ID:              dbOffer.ID,
+			Title:           dbOffer.Title,
+			About:           dbOffer.About,
+			Requirements:    dbOffer.Requirements,
+			Benefits:        dbOffer.Benefits,
+			Status:          dbOffer.Status,
+			CompanyName:     dbOffer.CompanyName,
+			CompanyID:       dbOffer.CompanyID,
+			CompanyImageURL: dbOffer.CompanyImageUrl.String,
+			MinWage:         dbOffer.MinWage,
+			MaxWage:         dbOffer.MaxWage,
+			RelativeTime:    relativeTime,
+		})
+	}
+	return offers, nil
+}
+
+func (mysql *MysqlStorage) GetOffersByQuery(ctx context.Context, query string) ([]shared.Offer, error) {
+	offers := []shared.Offer{}
+	dbOffers, err := mysql.Queries.GetOffersByQuery(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	for _, dbOffer := range dbOffers {
+		relativeTime := RelativeTime(dbOffer.CreatedAt)
+		offers = append(offers, shared.Offer{
+			ID:              dbOffer.ID,
+			Title:           dbOffer.Title,
+			About:           dbOffer.About,
+			Requirements:    dbOffer.Requirements,
+			Benefits:        dbOffer.Benefits,
+			Status:          dbOffer.Status,
+			CompanyName:     dbOffer.CompanyName,
+			CompanyID:       dbOffer.CompanyID,
+			CompanyImageURL: dbOffer.CompanyImageUrl.String,
+			MinWage:         dbOffer.MinWage,
+			MaxWage:         dbOffer.MaxWage,
+			RelativeTime:    relativeTime,
+		})
+	}
+	return offers, nil
+}
+
+func (mysql *MysqlStorage) GetOffersByUser(ctx context.Context, userID string) ([]shared.Offer, error) {
+	offers, err := mysql.Queries.GetOffersByUser(ctx, userID)
+	if err == sql.ErrNoRows {
+		return []shared.Offer{}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	res := []shared.Offer{}
+	for _, offer := range offers {
+		relativeTime := RelativeTime(offer.CreatedAt)
+		res = append(res, shared.Offer{
+			ID:           offer.ID,
+			Title:        offer.Title,
+			About:        offer.About,
+			Requirements: offer.Requirements,
+			Benefits:     offer.Benefits,
+			Status:       offer.Status,
+			CompanyName:  offer.CompanyName,
+			CompanyID:    offer.CompanyID,
+			MinWage:      offer.MinWage,
+			MaxWage:      offer.MaxWage,
+			RelativeTime: relativeTime,
+		})
+	}
+	return res, nil
+}
+
+func (mysql *MysqlStorage) SelectOffers(ctx context.Context, params shared.OfferQueryParams) ([]shared.Offer, error) {
+	if params.Query != "" {
+		return mysql.GetOffersByQuery(ctx, params.Query)
+	}
+	if params.CompanyID != "" {
+		return mysql.GetOffersByCompany(ctx, params.CompanyID)
+	}
+	if params.UserID != "" {
+		return mysql.GetOffersByUser(ctx, params.UserID)
+	}
+	return mysql.GetOffers(ctx)
 }
 
 func RelativeTime(t time.Time) string {

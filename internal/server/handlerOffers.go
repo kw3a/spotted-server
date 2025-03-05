@@ -6,6 +6,15 @@ import (
 	"github.com/kw3a/spotted-server/internal/server/offers"
 )
 
+func (DI *App) JobOffersHandler() http.HandlerFunc {
+	return offers.CreateJobOffersHandler(
+		offers.GetJobOffersParams,
+		DI.AuthService,
+		DI.Storage,
+		DI.Templ,
+	)
+}
+
 func (DI *App) OfferRegistrationPage() http.HandlerFunc {
 	return offers.CreateRegisterOfferPage(
 		DI.AuthService,
@@ -39,5 +48,22 @@ func (DI *App) OfferEdition() http.HandlerFunc {
 		DI.Storage,
 		DI.Templ,
 		offers.GetOfferEditionInput,
+	)
+}
+
+func (DI *App) OffersAdmin() http.HandlerFunc {
+	return offers.CreateOffersAdminHandler(
+		DI.AuthService,
+		DI.Storage,
+		DI.Templ,
+	)
+}
+
+func (DI *App) OfferArchive() http.HandlerFunc {
+	return offers.CreateOfferArchiveHandler(
+		offers.GetOfferArchiveInput,
+		DI.AuthService,
+		DI.Storage,
+		DI.Templ,
 	)
 }

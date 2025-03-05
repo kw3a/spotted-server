@@ -1,4 +1,4 @@
-package server
+package offers
 
 import (
 	"context"
@@ -8,31 +8,36 @@ import (
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
-type JobPageData struct {
+type OfferListData struct {
 	User   auth.AuthUser
 	Offers []shared.Offer
 }
 
-type JobOfferStorage interface {
-	SelectOffers(ctx context.Context, params shared.JobQueryParams) ([]shared.Offer, error)
+type OfferListStorage interface {
+	SelectOffers(ctx context.Context, params shared.OfferQueryParams) ([]shared.Offer, error)
 }
 
-func GetJobOffersParams(r *http.Request) shared.JobQueryParams {
-	res := shared.JobQueryParams{}
+func GetJobOffersParams(r *http.Request) shared.OfferQueryParams {
+	params := shared.OfferQueryParams{}
 	q := r.URL.Query()
 	query := q.Get("q")
 	if query != "" {
-		res.Query = query
+		params.Query = query
 	}
-	return res
+	user := q.Get("u")
+	if shared.ValidateUUID(user) == nil {
+		params.UserID = user
+	}
+	return params
 }
 
-type jobOffersParamsFn func(r *http.Request) shared.JobQueryParams
+type offerListParamsFn func(r *http.Request) shared.OfferQueryParams
+
 func CreateJobOffersHandler(
-	authService AuthRep,
-	templ TemplatesRepo,
-	storage JobOfferStorage,
-	paramsFn jobOffersParamsFn,
+	paramsFn offerListParamsFn,
+	authService shared.AuthRep,
+	storage OfferListStorage,
+	templ shared.TemplatesRepo,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := authService.GetUser(r)
@@ -46,7 +51,7 @@ func CreateJobOffersHandler(
 			http.Error(w, "can't find offers", http.StatusInternalServerError)
 			return
 		}
-		data := JobPageData{
+		data := OfferListData{
 			User:   user,
 			Offers: offers,
 		}
@@ -54,8 +59,4 @@ func CreateJobOffersHandler(
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
-}
-
-func (DI *App) JobOffersHandler() http.HandlerFunc {
-	return CreateJobOffersHandler(DI.AuthService, DI.Templ, DI.Storage, GetJobOffersParams)
 }

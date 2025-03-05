@@ -11,6 +11,23 @@ import (
 	"time"
 )
 
+const archiveOffer = `-- name: ArchiveOffer :exec
+UPDATE offer
+JOIN company ON offer.company_id = company.id
+SET offer.status = -1
+WHERE offer.id = ? AND company.user_id = ?
+`
+
+type ArchiveOfferParams struct {
+	ID     string
+	UserID string
+}
+
+func (q *Queries) ArchiveOffer(ctx context.Context, arg ArchiveOfferParams) error {
+	_, err := q.db.ExecContext(ctx, archiveOffer, arg.ID, arg.UserID)
+	return err
+}
+
 const getOffer = `-- name: GetOffer :one
 SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name
 FROM offer
@@ -192,6 +209,68 @@ func (q *Queries) GetOffers(ctx context.Context) ([]GetOffersRow, error) {
 	return items, nil
 }
 
+const getOffersByCompany = `-- name: GetOffersByCompany :many
+SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name, company.image_url as company_image_url
+FROM offer
+JOIN company ON offer.company_id = company.id
+WHERE company.id = ? 
+ORDER BY offer.created_at DESC
+LIMIT 10
+`
+
+type GetOffersByCompanyRow struct {
+	ID              string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Title           string
+	About           string
+	Requirements    string
+	Benefits        string
+	Status          int32
+	MinWage         int32
+	MaxWage         int32
+	CompanyID       string
+	CompanyName     string
+	CompanyImageUrl sql.NullString
+}
+
+func (q *Queries) GetOffersByCompany(ctx context.Context, id string) ([]GetOffersByCompanyRow, error) {
+	rows, err := q.db.QueryContext(ctx, getOffersByCompany, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetOffersByCompanyRow
+	for rows.Next() {
+		var i GetOffersByCompanyRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
+			&i.About,
+			&i.Requirements,
+			&i.Benefits,
+			&i.Status,
+			&i.MinWage,
+			&i.MaxWage,
+			&i.CompanyID,
+			&i.CompanyName,
+			&i.CompanyImageUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getOffersByQuery = `-- name: GetOffersByQuery :many
 SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name, company.image_url as company_image_url
 FROM offer
@@ -255,7 +334,7 @@ func (q *Queries) GetOffersByQuery(ctx context.Context, concat interface{}) ([]G
 }
 
 const getOffersByUser = `-- name: GetOffersByUser :many
-SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name
+SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name, company.image_url as company_image_url
 FROM offer
 JOIN company ON offer.company_id = company.id
 JOIN user ON company.user_id = user.id
@@ -265,18 +344,19 @@ LIMIT 10
 `
 
 type GetOffersByUserRow struct {
-	ID           string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	Title        string
-	About        string
-	Requirements string
-	Benefits     string
-	Status       int32
-	MinWage      int32
-	MaxWage      int32
-	CompanyID    string
-	CompanyName  string
+	ID              string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Title           string
+	About           string
+	Requirements    string
+	Benefits        string
+	Status          int32
+	MinWage         int32
+	MaxWage         int32
+	CompanyID       string
+	CompanyName     string
+	CompanyImageUrl sql.NullString
 }
 
 func (q *Queries) GetOffersByUser(ctx context.Context, id string) ([]GetOffersByUserRow, error) {
@@ -301,6 +381,7 @@ func (q *Queries) GetOffersByUser(ctx context.Context, id string) ([]GetOffersBy
 			&i.MaxWage,
 			&i.CompanyID,
 			&i.CompanyName,
+			&i.CompanyImageUrl,
 		); err != nil {
 			return nil, err
 		}
