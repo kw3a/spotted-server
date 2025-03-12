@@ -11,7 +11,7 @@ import (
 
 const createUser = `-- name: CreateUser :exec
 INSERT INTO user 
-(id, name, email, password, role, description) VALUES 
+(id, name, email, password, description, image_url) VALUES 
 (?, ?, ?, ?, ?, ?)
 `
 
@@ -20,8 +20,8 @@ type CreateUserParams struct {
 	Name        string
 	Email       string
 	Password    string
-	Role        string
 	Description string
+	ImageUrl    string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
@@ -30,14 +30,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 		arg.Name,
 		arg.Email,
 		arg.Password,
-		arg.Role,
 		arg.Description,
+		arg.ImageUrl,
 	)
 	return err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, created_at, updated_at, name, email, password, role, description, image_url FROM user WHERE id = ?
+SELECT id, created_at, updated_at, name, email, password, description, image_url FROM user WHERE id = ?
 `
 
 func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
@@ -50,7 +50,6 @@ func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
 		&i.Name,
 		&i.Email,
 		&i.Password,
-		&i.Role,
 		&i.Description,
 		&i.ImageUrl,
 	)
@@ -72,6 +71,45 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 	var i GetUserByEmailRow
 	err := row.Scan(&i.ID, &i.Email, &i.Password)
 	return i, err
+}
+
+const selectApplicants = `-- name: SelectApplicants :many
+SELECT user.id, user.created_at, user.updated_at, user.name, user.email, user.password, user.description, user.image_url
+FROM user
+JOIN participation ON user.id = participation.user_id
+WHERE participation.quiz_id = ?
+`
+
+func (q *Queries) SelectApplicants(ctx context.Context, quizID string) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, selectApplicants, quizID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+			&i.Email,
+			&i.Password,
+			&i.Description,
+			&i.ImageUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateImage = `-- name: UpdateImage :exec

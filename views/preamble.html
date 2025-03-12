@@ -72,7 +72,7 @@
     {{range .PreambleProblems}} {{template "preambleProblem" .}} {{end}}
   </tbody>
 </table>
-{{else}} {{if eq .User.Role "dev"}}
+{{else}} {{if eq .User.Role "verified"}}
 <div class="flex justify-center">
   <button
     class="border rounded border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400 font-bold w-32 text-center py-2 px-4"

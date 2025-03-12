@@ -13,10 +13,10 @@ type Company struct {
 	ID          string
 	Name        string
 	Description string
-	Website     sql.NullString
+	Website     string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	ImageUrl    sql.NullString
+	ImageUrl    string
 	UserID      string
 }
 
@@ -169,7 +169,6 @@ type User struct {
 	Name        string
 	Email       string
 	Password    string
-	Role        string
 	Description string
 	ImageUrl    string
 }

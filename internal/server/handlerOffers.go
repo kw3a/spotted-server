@@ -67,3 +67,12 @@ func (DI *App) OfferArchive() http.HandlerFunc {
 		DI.Templ,
 	)
 }
+
+func (DI *App) OfferAdmin() http.HandlerFunc {
+	return offers.CreateOfferApplHandler(
+		offers.GetOfferApplInput,
+		DI.AuthService,
+		DI.Storage,
+		DI.Templ,
+	)
+}

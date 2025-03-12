@@ -12,6 +12,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
+	"github.com/kw3a/spotted-server/internal/auth"
 	"github.com/kw3a/spotted-server/internal/database"
 	"github.com/kw3a/spotted-server/internal/server/codejudge"
 	"github.com/kw3a/spotted-server/internal/server/shared"
@@ -23,9 +24,27 @@ type MysqlStorage struct {
 	db      *sql.DB
 }
 
+func (mysql *MysqlStorage) SelectApplicants(ctx context.Context, quizID string) ([]auth.AuthUser, error) {
+	applicants, err := mysql.Queries.SelectApplicants(ctx, quizID)
+	if err != nil {
+		return []auth.AuthUser{}, err
+	}
+	res := []auth.AuthUser{}
+	for _, applicant := range applicants {
+		ap := auth.AuthUser{
+			ID:       applicant.ID,
+			Name:     applicant.Name,
+			ImageURL: applicant.ImageUrl,
+			Email:    applicant.Email,
+		}
+		res = append(res, ap)
+	}
+	return res, nil
+}
+
 func (mysql *MysqlStorage) ArchiveOffer(ctx context.Context, offerID string, ownerID string) error {
 	return mysql.Queries.ArchiveOffer(ctx, database.ArchiveOfferParams{
-		ID: offerID,
+		ID:     offerID,
 		UserID: ownerID,
 	})
 }
@@ -187,8 +206,8 @@ func (mysql *MysqlStorage) GetCompanyByID(ctx context.Context, companyID string)
 		UserID:      company.UserID,
 		Name:        company.Name,
 		Description: company.Description,
-		Website:     company.Website.String,
-		ImageURL:    company.ImageUrl.String,
+		Website:     company.Website,
+		ImageURL:    company.ImageUrl,
 	}, nil
 }
 
@@ -248,8 +267,8 @@ func (mysql *MysqlStorage) GetCompanies(ctx context.Context, params shared.Compa
 			ID:          dbCompany.ID,
 			Name:        dbCompany.Name,
 			Description: dbCompany.Description,
-			Website:     dbCompany.Website.String,
-			ImageURL:    dbCompany.ImageUrl.String,
+			Website:     dbCompany.Website,
+			ImageURL:    dbCompany.ImageUrl,
 		})
 	}
 	return companies, nil
@@ -267,21 +286,19 @@ func (mysql *MysqlStorage) GetCompany(ctx context.Context, companyID, userID str
 		ID:          dbCompany.ID,
 		Name:        dbCompany.Name,
 		Description: dbCompany.Description,
-		Website:     dbCompany.Website.String,
-		ImageURL:    dbCompany.ImageUrl.String,
+		Website:     dbCompany.Website,
+		ImageURL:    dbCompany.ImageUrl,
 	}, nil
 }
 
 func (mysql *MysqlStorage) RegisterCompany(ctx context.Context, id string, userID string, name string, description string, website string, imageURL string) error {
-	nullWebsite := sql.NullString{String: website, Valid: true}
-	nullImageURL := sql.NullString{String: imageURL, Valid: true}
 	return mysql.Queries.InsertCompany(ctx, database.InsertCompanyParams{
 		ID:          id,
 		UserID:      userID,
 		Name:        name,
 		Description: description,
-		Website:     nullWebsite,
-		ImageUrl:    nullImageURL,
+		Website:     website,
+		ImageUrl:    imageURL,
 	})
 }
 
@@ -472,8 +489,8 @@ func (mysql *MysqlStorage) CreateUser(ctx context.Context, name, password, email
 		Name:        name,
 		Email:       email,
 		Password:    string(encriptedPassword),
-		Role:        "dev",
 		Description: description,
+		ImageUrl:    "",
 	})
 }
 
@@ -562,7 +579,7 @@ func (mysql *MysqlStorage) GetOffersByCompany(ctx context.Context, companyID str
 			Status:          dbOffer.Status,
 			CompanyName:     dbOffer.CompanyName,
 			CompanyID:       dbOffer.CompanyID,
-			CompanyImageURL: dbOffer.CompanyImageUrl.String,
+			CompanyImageURL: dbOffer.CompanyImageUrl,
 			MinWage:         dbOffer.MinWage,
 			MaxWage:         dbOffer.MaxWage,
 			RelativeTime:    relativeTime,
@@ -588,7 +605,7 @@ func (mysql *MysqlStorage) GetOffers(ctx context.Context) ([]shared.Offer, error
 			Status:          dbOffer.Status,
 			CompanyName:     dbOffer.CompanyName,
 			CompanyID:       dbOffer.CompanyID,
-			CompanyImageURL: dbOffer.CompanyImageUrl.String,
+			CompanyImageURL: dbOffer.CompanyImageUrl,
 			MinWage:         dbOffer.MinWage,
 			MaxWage:         dbOffer.MaxWage,
 			RelativeTime:    relativeTime,
@@ -614,7 +631,7 @@ func (mysql *MysqlStorage) GetOffersByQuery(ctx context.Context, query string) (
 			Status:          dbOffer.Status,
 			CompanyName:     dbOffer.CompanyName,
 			CompanyID:       dbOffer.CompanyID,
-			CompanyImageURL: dbOffer.CompanyImageUrl.String,
+			CompanyImageURL: dbOffer.CompanyImageUrl,
 			MinWage:         dbOffer.MinWage,
 			MaxWage:         dbOffer.MaxWage,
 			RelativeTime:    relativeTime,
@@ -710,10 +727,10 @@ func (mysql *MysqlStorage) SelectLanguages(ctx context.Context, quizID string) (
 	return res, nil
 }
 
-func (mysql *MysqlStorage) SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error) {
+func (mysql *MysqlStorage) SelectScore(ctx context.Context, userID string, problemID string) (shared.Score, error) {
 	totalTestCases, err := mysql.Queries.TotalTestCases(ctx, problemID)
 	if err != nil {
-		return ScoreData{}, err
+		return shared.Score{}, err
 	}
 	best, err := mysql.Queries.BestSubmission(ctx, database.BestSubmissionParams{
 		ProblemID: problemID,
@@ -723,10 +740,29 @@ func (mysql *MysqlStorage) SelectScore(ctx context.Context, userID string, probl
 	if err == sql.ErrNoRows {
 		acceptedTestCases = 0
 	}
-	return ScoreData{
+	return shared.Score{
 		AcceptedTestCases: acceptedTestCases,
 		TotalTestCases:    int(totalTestCases),
 	}, nil
+}
+
+func (mysql *MysqlStorage) SelectProblems(ctx context.Context, quizID string) ([]shared.Problem, error) {
+	problems, err := mysql.Queries.SelectProblems(ctx, quizID)
+	if err != nil {
+		return []shared.Problem{}, err
+	}
+	res := []shared.Problem{}
+	for _, problem := range problems {
+		p := shared.Problem{
+			ID:          problem.ID,
+			Title:       problem.Title,
+			Description: problem.Description,
+			MemoryLimit: problem.MemoryLimit,
+			TimeLimit:   problem.TimeLimit,
+		}
+		res = append(res, p)
+	}
+	return res, nil
 }
 
 func (mysql *MysqlStorage) SelectProblem(ctx context.Context, problemID string) (ProblemContent, error) {

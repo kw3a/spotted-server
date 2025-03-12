@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -18,8 +17,8 @@ func (cfg *SeedersConfig) seedCompanies(users []string) ([]string, error) {
 		UserID:      users[0],
 		Name:        "Braintrust",
 		Description: "We are a team of developers",
-		Website:     sql.NullString{String: "https://braintrust.com", Valid: true},
-		ImageUrl:    sql.NullString{String: "", Valid: false},
+		Website:     "https://braintrust.com",
+		ImageUrl:    "",
 	})
 	if err != nil {
 		return nil, err
@@ -29,8 +28,8 @@ func (cfg *SeedersConfig) seedCompanies(users []string) ([]string, error) {
 		UserID:      users[0],
 		Name:        "Launchpad Technologies Inc.",
 		Description: "We are a team of developers",
-		Website:     sql.NullString{String: "https://launch.io", Valid: true},
-		ImageUrl:    sql.NullString{String: "", Valid: false},
+		Website:     "https://launch.io",
+		ImageUrl:    "",
 	})
 	if err != nil {
 		return nil, err

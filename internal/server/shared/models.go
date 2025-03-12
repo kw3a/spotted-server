@@ -70,6 +70,7 @@ type Quiz struct {
 }
 
 type Problem struct {
+	ID          string
 	Title       string
 	Description string
 	MemoryLimit int32
@@ -86,4 +87,9 @@ type TestCase struct {
 type Example struct {
 	Input  string
 	Output string
+}
+
+type Score struct {
+	AcceptedTestCases int
+	TotalTestCases    int
 }

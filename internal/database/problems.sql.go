@@ -88,3 +88,42 @@ func (q *Queries) SelectProblemIDs(ctx context.Context, id string) ([]string, er
 	}
 	return items, nil
 }
+
+const selectProblems = `-- name: SelectProblems :many
+SELECT problem.id, problem.created_at, problem.updated_at, problem.description, problem.title, problem.memory_limit, problem.time_limit, problem.quiz_id
+FROM problem
+INNER JOIN quiz ON problem.quiz_id = quiz.id
+WHERE quiz.id = ?
+`
+
+func (q *Queries) SelectProblems(ctx context.Context, id string) ([]Problem, error) {
+	rows, err := q.db.QueryContext(ctx, selectProblems, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Problem
+	for rows.Next() {
+		var i Problem
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Description,
+			&i.Title,
+			&i.MemoryLimit,
+			&i.TimeLimit,
+			&i.QuizID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -13,7 +13,7 @@ import (
 
 type middlewareStorage struct{}
 func (m *middlewareStorage) GetUser(ctx context.Context, userID string) (database.User, error) {
-	return database.User{Role: "admin"}, nil
+	return database.User{ID: "123"}, nil
 }
 
 type invalidMiddlewareStorage struct{}
@@ -167,83 +167,3 @@ func requestWithCookies() *http.Request {
 	return r
 }
 
-func TestCreateMiddlewareEmptyCookies(t *testing.T) {
-	middleware := CreateMiddleware(&middlewareStorage{}, &middlewareAuthType{}, "/", "admin", nextFn())
-	if middleware == nil {
-		t.Errorf("expected middleware, got nil")
-	}
-	req, _:= http.NewRequest("GET", "/", nil)
-	w := httptest.NewRecorder()
-	middleware.ServeHTTP(w, req)
-	if w.Code != http.StatusSeeOther {
-		t.Errorf("expected %v, got %v", http.StatusSeeOther, w.Code)
-	}
-	if w.Header().Get("Location") != "/" {
-		t.Errorf("expected /, got %v", w.Header().Get("Location"))
-	}
-}
-
-func TestCreateMiddlewareBadStorage(t *testing.T) {
-	middleware := CreateMiddleware(&invalidMiddlewareStorage{}, &middlewareAuthType{}, "/", "admin", nextFn())
-	if middleware == nil {
-		t.Errorf("expected middleware, got nil")
-	}
-	req := requestWithCookies()
-	w := httptest.NewRecorder()
-	middleware.ServeHTTP(w, req)
-	if w.Code != http.StatusSeeOther {
-		t.Errorf("expected %v, got %v", http.StatusSeeOther, w.Code)
-	}
-	if w.Header().Get("Location") != "/" {
-		t.Errorf("expected /, got %v", w.Header().Get("Location"))
-	}
-}
-
-func TestCreateMiddlewareBadRole(t *testing.T) {
-	middleware := CreateMiddleware(&middlewareStorage{}, &middlewareAuthType{}, "/", "user", nextFn())
-	if middleware == nil {
-		t.Errorf("expected middleware, got nil")
-	}
-	req := requestWithCookies()
-	w := httptest.NewRecorder()
-	middleware.ServeHTTP(w, req)
-	if w.Code != http.StatusSeeOther {
-		t.Errorf("expected %v, got %v", http.StatusSeeOther, w.Code)
-	}
-	if w.Header().Get("Location") != "/" {
-		t.Errorf("expected /, got %v", w.Header().Get("Location"))
-	}
-}
-
-func TestCreateMiddlewareBadAuthType(t *testing.T) {
-	middleware := CreateMiddleware(&middlewareStorage{}, &invalidMiddlewareAuthType{}, "/", "user", nextFn())
-	if middleware == nil {
-		t.Errorf("expected middleware, got nil")
-	}
-	req := requestWithCookies()
-	w := httptest.NewRecorder()
-	middleware.ServeHTTP(w, req)
-	if w.Code != http.StatusSeeOther {
-		t.Errorf("expected %v, got %v", http.StatusSeeOther, w.Code)
-	}
-	if w.Header().Get("Location") != "/" {
-		t.Errorf("expected /, got %v", w.Header().Get("Location"))
-	}
-}
-
-func TestCreateMiddleware(t *testing.T) {
-	middleware := CreateMiddleware(&middlewareStorage{}, &middlewareAuthType{}, "/", "admin", nextFn())
-	if middleware == nil {
-		t.Errorf("expected middleware, got nil")
-	}
-	req := requestWithCookies()
-	w := httptest.NewRecorder()
-	middleware.ServeHTTP(w, req)
-	if w.Code != http.StatusOK {
-		t.Errorf("expected %v, got %v", http.StatusOK, w.Code)
-	}
-	res := w.Body.String()
-	if res != "OK" {
-		t.Errorf("expected OK, got %v", res)
-	}
-}

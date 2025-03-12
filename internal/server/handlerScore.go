@@ -3,14 +3,17 @@ package server
 import (
 	"context"
 	"net/http"
+
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type ScoreStorage interface {
-	SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error)
+	SelectScore(ctx context.Context, userID string, problemID string) (shared.Score, error)
 }
 type ScoreInput struct {
 	ProblemID string
 }
+
 func GetScoreInput(r *http.Request) (ScoreInput, error) {
 	problemID := r.FormValue("problemID")
 	if err := ValidateUUID(problemID); err != nil {

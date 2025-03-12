@@ -7,7 +7,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"time"
 )
 
@@ -169,7 +168,7 @@ type GetOffersRow struct {
 	MaxWage         int32
 	CompanyID       string
 	CompanyName     string
-	CompanyImageUrl sql.NullString
+	CompanyImageUrl string
 }
 
 func (q *Queries) GetOffers(ctx context.Context) ([]GetOffersRow, error) {
@@ -231,7 +230,7 @@ type GetOffersByCompanyRow struct {
 	MaxWage         int32
 	CompanyID       string
 	CompanyName     string
-	CompanyImageUrl sql.NullString
+	CompanyImageUrl string
 }
 
 func (q *Queries) GetOffersByCompany(ctx context.Context, id string) ([]GetOffersByCompanyRow, error) {
@@ -293,7 +292,7 @@ type GetOffersByQueryRow struct {
 	MaxWage         int32
 	CompanyID       string
 	CompanyName     string
-	CompanyImageUrl sql.NullString
+	CompanyImageUrl string
 }
 
 func (q *Queries) GetOffersByQuery(ctx context.Context, concat interface{}) ([]GetOffersByQueryRow, error) {
@@ -356,7 +355,7 @@ type GetOffersByUserRow struct {
 	MaxWage         int32
 	CompanyID       string
 	CompanyName     string
-	CompanyImageUrl sql.NullString
+	CompanyImageUrl string
 }
 
 func (q *Queries) GetOffersByUser(ctx context.Context, id string) ([]GetOffersByUserRow, error) {

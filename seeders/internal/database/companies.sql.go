@@ -7,7 +7,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"strings"
 )
 
@@ -42,8 +41,8 @@ type SeedCompanyParams struct {
 	UserID      string
 	Name        string
 	Description string
-	Website     sql.NullString
-	ImageUrl    sql.NullString
+	Website     string
+	ImageUrl    string
 }
 
 func (q *Queries) SeedCompany(ctx context.Context, arg SeedCompanyParams) error {

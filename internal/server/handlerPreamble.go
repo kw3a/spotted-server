@@ -39,7 +39,7 @@ type PreambleStorage interface {
 	ParticipationStatus(ctx context.Context, userID string, quizID string) (ParticipationData, error)
 	SelectProblemIDs(ctx context.Context, QuizID string) ([]string, error)
 	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
-	SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error)
+	SelectScore(ctx context.Context, userID string, problemID string) (shared.Score, error)
 	SelectOffer(ctx context.Context, id string) (shared.Offer, error)
 	SelectQuizByOffer(ctx context.Context, offerID string) (shared.Quiz, error)
 	SelectLanguages(ctx context.Context, quizID string) ([]shared.Language, error)

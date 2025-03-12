@@ -15,7 +15,7 @@ type QuizPageData struct {
 	QuizID         string
 	Problems       []ProblemSelector
 	ExpiresAt      time.Time
-	Score          ScoreData
+	Score          shared.Score
 	ProblemContent ProblemContent
 	Examples       []Example
 	EditorData     EditorData
@@ -25,11 +25,6 @@ type QuizPageData struct {
 type ProblemSelector struct {
 	ID          string
 	ProblemName string
-}
-
-type ScoreData struct {
-	AcceptedTestCases int
-	TotalTestCases    int
 }
 
 type ProblemContent struct {
@@ -65,7 +60,7 @@ func GetQuizPageInput(r *http.Request) (QuizPageInput, error) {
 type QuizPageStorage interface {
 	ParticipationStatus(ctx context.Context, userID string, quizID string) (ParticipationData, error)
 	SelectProblemIDs(ctx context.Context, quizID string) ([]string, error)
-	SelectScore(ctx context.Context, userID string, problemID string) (ScoreData, error)
+	SelectScore(ctx context.Context, userID string, problemID string) (shared.Score, error)
 	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
 	SelectExamples(ctx context.Context, problemID string) ([]Example, error)
 	SelectLanguages(ctx context.Context, quizID string) ([]shared.Language, error)

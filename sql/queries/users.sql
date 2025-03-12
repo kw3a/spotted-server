@@ -6,8 +6,14 @@ SELECT * FROM user WHERE id = ?;
 
 -- name: CreateUser :exec
 INSERT INTO user 
-(id, name, email, password, role, description) VALUES 
+(id, name, email, password, description, image_url) VALUES 
 (?, ?, ?, ?, ?, ?);
 
 -- name: UpdateImage :exec
 UPDATE user SET image_url = ? WHERE id = ?;
+
+-- name: SelectApplicants :many
+SELECT user.*
+FROM user
+JOIN participation ON user.id = participation.user_id
+WHERE participation.quiz_id = ?;

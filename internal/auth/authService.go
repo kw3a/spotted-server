@@ -9,6 +9,10 @@ import (
 	"github.com/kw3a/spotted-server/internal/database"
 )
 
+const (
+	AuthRole = "verified"
+	NotAuthRole = "visitor"
+)
 type AuthUser struct {
 	ID       string
 	Role     string
@@ -74,42 +78,6 @@ type MiddlewareAuthType interface {
 	CreateAccess(refreshToken string) (string, error)
 }
 
-func CreateMiddleware(storage MiddlewareStorage, authType MiddlewareAuthType, loginPath, role string, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		refresh_token, access_token, err := getCookies(r)
-		if err != nil {
-			http.Redirect(w, r, loginPath, http.StatusSeeOther)
-			return
-		}
-		userID, err := authType.WhoAmI(access_token)
-		if err != nil {
-			access_token, err = authType.CreateAccess(refresh_token)
-			if err != nil {
-				http.Redirect(w, r, loginPath, http.StatusSeeOther)
-				return
-			}
-			SetTokenCookie(w, "access_token", access_token)
-			userID, err = authType.WhoAmI(access_token)
-			if err != nil {
-				http.Redirect(w, r, loginPath, http.StatusSeeOther)
-				return
-			}
-		}
-		dbUser, err := storage.GetUser(r.Context(), userID)
-		if err != nil || role != dbUser.Role {
-			DeleteCookies(w)
-			http.Redirect(w, r, loginPath, http.StatusSeeOther)
-			return
-		}
-		ctx := context.WithValue(r.Context(), AuthUser{}, AuthUser{
-			ID:   userID,
-			Role: role,
-			Name: dbUser.Name,
-		})
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
 func AuthNMiddleware(storage MiddlewareStorage, authType MiddlewareAuthType, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		setContext := func(user AuthUser) {
@@ -118,31 +86,31 @@ func AuthNMiddleware(storage MiddlewareStorage, authType MiddlewareAuthType, nex
 		}
 		refresh_token, access_token, err := getCookies(r)
 		if err != nil {
-			setContext(AuthUser{Role: "visitor"})
+			setContext(AuthUser{Role: NotAuthRole})
 			return
 		}
 		userID, err := authType.WhoAmI(access_token)
 		if err != nil {
 			access_token, err = authType.CreateAccess(refresh_token)
 			if err != nil {
-				setContext(AuthUser{Role: "visitor"})
+				setContext(AuthUser{Role: NotAuthRole})
 				return
 			}
 			SetTokenCookie(w, "access_token", access_token)
 			userID, err = authType.WhoAmI(access_token)
 			if err != nil {
-				setContext(AuthUser{Role: "visitor"})
+				setContext(AuthUser{Role: NotAuthRole})
 				return
 			}
 		}
 		dbUser, err := storage.GetUser(r.Context(), userID)
 		if err != nil {
-			setContext(AuthUser{Role: "visitor"})
+			setContext(AuthUser{Role: NotAuthRole})
 			return
 		}
 		setContext(AuthUser{
 			ID:       dbUser.ID,
-			Role:     dbUser.Role,
+			Role:     AuthRole,
 			Name:     dbUser.Name,
 			ImageURL: dbUser.ImageUrl,
 			Email:    dbUser.Email,

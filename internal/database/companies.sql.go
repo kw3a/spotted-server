@@ -7,7 +7,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 )
 
 const getCompanies = `-- name: GetCompanies :many
@@ -203,8 +202,8 @@ type InsertCompanyParams struct {
 	UserID      string
 	Name        string
 	Description string
-	Website     sql.NullString
-	ImageUrl    sql.NullString
+	Website     string
+	ImageUrl    string
 }
 
 func (q *Queries) InsertCompany(ctx context.Context, arg InsertCompanyParams) error {

@@ -5,6 +5,14 @@ JOIN company ON offer.company_id = company.id
 WHERE offer.id = ?
 LIMIT 1;
 
+-- name: GetOfferByUser :one
+SELECT offer.*, company.name as company_name
+FROM offer
+JOIN company ON offer.company_id = company.id
+JOIN user ON company.user_id = user.id
+WHERE offer.id = ? AND user.id = ?
+LIMIT 1;
+
 -- name: GetOffers :many
 SELECT offer.*, company.name as company_name, company.image_url as company_image_url
 FROM offer
@@ -37,14 +45,6 @@ JOIN company ON offer.company_id = company.id
 WHERE company.id = ? 
 ORDER BY offer.created_at DESC
 LIMIT 10;
-
--- name: GetOfferByUser :one
-SELECT offer.*, company.name as company_name
-FROM offer
-JOIN company ON offer.company_id = company.id
-JOIN user ON company.user_id = user.id
-WHERE offer.id = ? AND user.id = ?
-LIMIT 1;
 
 -- name: GetOfferByQuiz :one
 SELECT offer.*

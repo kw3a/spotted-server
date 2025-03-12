@@ -3,14 +3,15 @@ package profiles
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 const (
-	errUserTaken = "El correo ya está siendo utilizado"
-	errNameLength = "Debe tener entre 3 a 255 caracteres"
+	errUserTaken         = "El correo ya está siendo utilizado"
+	errNameLength        = "Debe tener entre 3 a 255 caracteres"
 	errDescriptionLength = "Debe tener entre 20 a 500 caracteres"
 )
 
@@ -100,7 +101,14 @@ func CreateUserHandler(templ shared.TemplatesRepo, storage UserStorage, inputFn 
 		}
 		err := storage.CreateUser(r.Context(), input.Name, input.Password, input.Email, input.Description)
 		if err != nil {
-			renderErr := templ.Render(w, "userFormErrors", UserInputErrors{EmailError: errUserTaken})
+			if strings.Contains(err.Error(), "1062") {
+				renderErr := templ.Render(w, "userFormErrors", UserInputErrors{EmailError: errUserTaken})
+				if renderErr != nil {
+					http.Error(w, renderErr.Error(), http.StatusInternalServerError)
+				}
+				return
+			}
+			renderErr := templ.Render(w, "userFormErrors", UserInputErrors{EmailError: errUnexpected + err.Error()})
 			if renderErr != nil {
 				http.Error(w, renderErr.Error(), http.StatusInternalServerError)
 			}

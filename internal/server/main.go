@@ -114,8 +114,8 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 	authNMiddleware := func(next http.Handler) http.Handler {
 		return auth.AuthNMiddleware(app.Storage, app.AuthType, next)
 	}
-	authRMiddlewareDev := func(next http.Handler) http.Handler {
-		return auth.AuthRMiddleware("/login", "dev", next)
+	authRMiddleware := func(next http.Handler) http.Handler {
+		return auth.AuthRMiddleware("/login", auth.AuthRole, next)
 	}
 	fileServer := http.FileServer(http.FS(Files))
 	r.Handle("/public/*", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
@@ -149,10 +149,11 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 		r.Get("/", app.JobOffersHandler())
 		r.Get("/preamble/{quizID}", app.PreambleHandler())
 		r.Get("/offers/admin", app.OffersAdmin())
+		r.Get("/offers/admin/{offerID}", app.OfferAdmin())
 		r.Patch("/offers/archive/{offerID}", app.OfferArchive())
 	})
 
-	r.With(authNMiddleware).With(authRMiddlewareDev).Group(func(r chi.Router) {
+	r.With(authNMiddleware).With(authRMiddleware).Group(func(r chi.Router) {
 		r.Get("/quizzes/{quizID}", app.QuizPageHandler())
 		r.Get("/problems", app.ProblemsHandler())
 		r.Get("/examples", app.ExamplesHandler())
