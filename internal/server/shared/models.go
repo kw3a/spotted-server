@@ -93,3 +93,12 @@ type Score struct {
 	AcceptedTestCases int
 	TotalTestCases    int
 }
+
+type Submission struct {
+	ID                string
+	Src               string
+	AcceptedTestCases int
+	ParticipationID   string
+	LanguageID        int32
+	ProblemID         string
+}

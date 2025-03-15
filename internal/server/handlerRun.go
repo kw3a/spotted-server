@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kw3a/spotted-server/internal/server/codejudge"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type RunInput struct {
@@ -35,7 +36,7 @@ func GetRunInput(r *http.Request) (RunInput, error) {
 		return RunInput{}, fmt.Errorf("src is empty")
 	}
 	languageID := r.FormValue("languageID")
-	languageIDInt32, err := ValidateLanguageID(languageID)
+	languageIDInt32, err := shared.ValidateLanguageID(languageID)
 	if err != nil {
 		return RunInput{}, err
 	}

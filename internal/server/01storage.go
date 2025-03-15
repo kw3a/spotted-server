@@ -24,6 +24,24 @@ type MysqlStorage struct {
 	db      *sql.DB
 }
 
+func (mysql *MysqlStorage) BestSubmission(ctx context.Context, applicantID string, problemID string) (shared.Submission, error) {
+	best, err := mysql.Queries.BestSubmission(ctx, database.BestSubmissionParams{
+		ProblemID: problemID,
+		UserID:    applicantID,
+	})
+	if err != nil {
+		return shared.Submission{}, err
+	}
+	return shared.Submission{
+		ID:                best.ID,
+		Src:               best.Src,
+		AcceptedTestCases: int(best.AcceptedTestCases),
+		ParticipationID:   best.ParticipationID,
+		LanguageID:        best.LanguageID,
+		ProblemID:         best.ProblemID,
+	}, nil
+}
+
 func (mysql *MysqlStorage) SelectApplicants(ctx context.Context, quizID string) ([]auth.AuthUser, error) {
 	applicants, err := mysql.Queries.SelectApplicants(ctx, quizID)
 	if err != nil {

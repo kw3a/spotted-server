@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"net/http"
+
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type SourceStorage interface {
@@ -20,7 +22,7 @@ func GetSourceInput(r *http.Request) (SourceInput, error) {
 		return SourceInput{}, err
 	}
 	languageID := r.FormValue("languageID")
-	languageIDInt32, err := ValidateLanguageID(languageID)
+	languageIDInt32, err := shared.ValidateLanguageID(languageID)
 	if err != nil {
 		return SourceInput{}, err
 	}
@@ -57,7 +59,7 @@ func CreateSourceHandler(storage SourceStorage, authServ AuthRep, inputFn source
 	}
 }
 
-func (DI *App) SourceHandler() http.HandlerFunc {
+func (DI *App) LastSrcHandler() http.HandlerFunc {
 	return CreateSourceHandler(
 		DI.Storage,
 		DI.AuthService,

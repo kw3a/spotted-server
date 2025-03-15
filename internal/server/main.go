@@ -150,6 +150,7 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 		r.Get("/preamble/{quizID}", app.PreambleHandler())
 		r.Get("/offers/admin", app.OffersAdmin())
 		r.Get("/offers/admin/{offerID}", app.OfferAdmin())
+		r.Get("/source/{problemID}/{applicantID}", app.SourceHandler())
 		r.Patch("/offers/archive/{offerID}", app.OfferArchive())
 	})
 
@@ -157,7 +158,7 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 		r.Get("/quizzes/{quizID}", app.QuizPageHandler())
 		r.Get("/problems", app.ProblemsHandler())
 		r.Get("/examples", app.ExamplesHandler())
-		r.Get("/source", app.SourceHandler())
+		r.Get("/source", app.LastSrcHandler())
 		r.Get("/score", app.ScoreHandler())
 		r.Post("/participate", app.ParticipateHandler())
 		r.Post("/end", app.EndHandler())
