@@ -28,20 +28,16 @@ func CreateOffersAdminHandler(
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		if user.Role == "visitor" {
-			if err := templ.Render(w, "offersAdmin", OffersAdminData{}); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-			return
-		}
-		offers, err := storage.SelectOffers(r.Context(), shared.OfferQueryParams{UserID: user.ID})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
 		data := OffersAdminData{
-			User:   user,
-			Offers: offers,
+			User: user,
+		}
+		if user.Role != "visitor" {
+			offers, err := storage.SelectOffers(r.Context(), shared.OfferQueryParams{UserID: user.ID})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			data.Offers = offers
 		}
 		if err := templ.Render(w, "offersAdmin", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

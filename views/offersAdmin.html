@@ -29,93 +29,92 @@
 
 
 {{block "offerAdminCard" .}} 
-{{if eq .Status 1}}
-<div class="flex flex-col gap-2 border border-shark-900 rounded p-8">
-  <div class="relative">
-    <div class="absolute top-0 right-0">
-      <div class="relative group inline-block">
-        <button
-          hx-patch="/offers/archive/{{.ID}}"
-          hx-confirm="Estás seguro de que quieres archivar esta oferta?"
-        >
-          <img
-            src="/public/archive.svg"
-            alt="delete icon"
-            width="20"
-            height="20"
-            style="pointer-events: none"
-          />
-        </button>
-        <span
-          class="absolute right-1/2 translate-x-1/2 -top-8 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap"
-        >
-          Archivar
-        </span>
+<section class="relative">
+  {{if eq .Status 1}}
+  <div class="flex flex-col gap-2 border border-shark-900 rounded p-8">
+    <div class="relative">
+      <div class="absolute top-0 right-0">
+        <div class="relative group inline-block">
+          <button
+            hx-patch="/offers/archive/{{.ID}}"
+            hx-confirm="Estás seguro de que quieres archivar esta oferta?"
+          >
+            <img
+              src="/public/archive.svg"
+              alt="delete icon"
+              width="20"
+              height="20"
+              style="pointer-events: none"
+            />
+          </button>
+          <span
+            class="absolute right-1/2 translate-x-1/2 -top-8 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap"
+          >
+            Archivar
+          </span>
+        </div>
       </div>
     </div>
-  </div>
-{{else}}
-<div
-  class="flex flex-col gap-2 border border-shark-900 rounded p-8 opacity-50"
->
-{{end}}
-  <div class="flex items-center gap-2">
-    <img
-      class="border border-white"
-      {{if
-      .CompanyImageURL}}
-      src="{{.CompanyImageURL}}"
-      {{else}}
-      src="/public/user.svg"
-      {{end}}
-      width="20"
-      height="20"
-    />
-    <p
-      class="truncate text-shark-200 font-semibold hover:underline hover:underline-offset-1 cursor-pointer"
-      hx-get="/companies/{{.CompanyID}}"
-      hx-boost="true"
-      hx-push-url="true"
-      hx-target="body"
-    >
-      {{.CompanyName}}
-    </p>
-  </div>
-  <div>
-    <p
-      class="truncate text-shark-200 text-xl hover:underline hover:underline-offset-1 cursor-pointer"
-      hx-get="/preamble/{{.ID}}"
+  {{else}}
+  <div class="flex flex-col gap-2 border border-shark-900 rounded p-8 opacity-50">
+  {{end}}
+    <div class="flex gap-2">
+      <img
+        class="border border-gray-700 hover:border-white "
+        {{if
+        .CompanyImageURL}}
+        src="{{.CompanyImageURL}}"
+        {{else}}
+        src="/public/user.svg"
+        {{end}}
+        width="50"
+        height="50"
+      />
+      <div class="flex-1 flex flex-col justify-center">
+        <p
+          class="truncate text-shark-200 font-semibold hover:underline hover:underline-offset-1 cursor-pointer"
+          hx-get="/companies/{{.CompanyID}}"
+          hx-boost="true"
+          hx-push-url="true"
+          hx-target="body"
+        >
+          {{.CompanyName}}
+        </p>
+        <p
+          class="truncate text-shark-200 text-xl hover:underline hover:underline-offset-1 cursor-pointer"
+          hx-get="/preamble/{{.ID}}"
+          hx-trigger="click"
+          hx-push-url="true"
+          hx-target="body"
+        >
+          {{.Title}}
+        </p>
+      </div>
+    </div>
+    <div class="flex justify-between">
+      <span class="text-yellow-100">{{.MinWage}}$ - {{.MaxWage}}$</span>
+      <span class="text-shark-300 font-light">{{.RelativeTime}}</span>
+    </div>
+    <div
+      class="flex justify-center text-white gap-2 truncate bg-blue-950 hover:bg-blue-900 font-semibold cursor-pointer"
+      hx-get="/offers/admin/{{.ID}}"
       hx-trigger="click"
       hx-push-url="true"
       hx-target="body"
     >
-      {{.Title}}
-    </p>
-  </div>
-  <div class="flex justify-between">
-    <span class="text-yellow-100">{{.MinWage}}$ - {{.MaxWage}}$</span>
-    <span class="text-shark-300 font-light">{{.RelativeTime}}</span>
-  </div>
-  <hr />
-  <div
-    class="flex justify-between text-shark-200 hover:text-blue-500 cursor-pointer"
-    hx-get="/offers/admin/{{.ID}}"
-    hx-trigger="click"
-    hx-push-url="true"
-    hx-target="body"
-  >
-    <div class="flex flex-col">
-      <span class="text-sm">Aplicantes</span>
-      <span class="font-semibold text-center">0</span>
-    </div>
-    <div class="flex flex-col">
-      <span class="text-sm">Última actividad</span>
-      <span class="text-sm text-center">Hace 3 días</span>
+      <img
+        src="/public/people.svg"
+        alt="delete icon"
+        width="15"
+        height="15"
+        style="pointer-events: none"
+      />
+      Aplicantes
     </div>
   </div>
-
-{{if not (eq .Status 1)}}
-  <span class="font-semibold text-2xl text-center text-shark-200 ">Archivado</span>
-{{end}}
-</div>
+  {{if not (eq .Status 1)}}
+    <span class="absolute transform -rotate-45 select-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap font-bold text-4xl text-black">
+      Archivado</span>
+  {{end}}
+</section>
 {{end}}
