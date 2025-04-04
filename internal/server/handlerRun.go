@@ -53,7 +53,7 @@ type RunStorage interface {
 	//Also handle logic for participationID and quizz time
 	CreateSubmission(ctx context.Context, submissionID, participationID, problemID, src string, languageID int32) error
 
-	ParticipationStatus(ctx context.Context, userID string, quizID string) (ParticipationData, error)
+	ParticipationStatus(ctx context.Context, userID string, quizID string) (shared.Participation, error)
 	GetTestCases(ctx context.Context, problemID string) ([]codejudge.TestCase, error)
 }
 type JudgeService interface {

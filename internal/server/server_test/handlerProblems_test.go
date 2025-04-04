@@ -13,14 +13,14 @@ import (
 
 type problemsStorage struct{}
 
-func (p *problemsStorage) SelectProblem(ctx context.Context, problemID string) (server.ProblemContent, error) {
-	return server.ProblemContent{}, nil
+func (p *problemsStorage) SelectProblem(ctx context.Context, problemID string) (server.Problem, error) {
+	return server.Problem{}, nil
 }
 
 type invalidProblemsStorage struct{}
 
-func (i *invalidProblemsStorage) SelectProblem(ctx context.Context, problemID string) (server.ProblemContent, error) {
-	return server.ProblemContent{}, errors.New("error")
+func (i *invalidProblemsStorage) SelectProblem(ctx context.Context, problemID string) (server.Problem, error) {
+	return server.Problem{}, errors.New("error")
 }
 
 func problemsInputFn(r *http.Request) (server.ProblemsInput, error) {

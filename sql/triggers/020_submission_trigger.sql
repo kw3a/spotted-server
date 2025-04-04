@@ -23,8 +23,8 @@ BEGIN
             LEAVE loop_test_cases;
         END IF; -- IF END
 
-        INSERT INTO test_case_result (submission_id, test_case_id)
-        VALUES (NEW.id, test_case_id);
+        INSERT INTO test_case_result (submission_id, test_case_id, output)
+        VALUES (NEW.id, test_case_id, "");
     END LOOP loop_test_cases; -- LOOP END
 
     CLOSE cur_test_cases; -- CURSOR END

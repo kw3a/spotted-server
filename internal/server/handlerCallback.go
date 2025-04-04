@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"log"
 	"net/http"
@@ -33,12 +34,12 @@ func GetCallbackURLParamsInput(r *http.Request) (CallbackURLParamsInput, error) 
 }
 
 type CallbackJsonInput struct {
-	Stdout        interface{}     `json:"stdout"`
+	Stdout        string          `json:"stdout"`
 	Time          decimal.Decimal `json:"time"`
 	Memory        int32           `json:"memory"`
 	Stderr        string          `json:"stderr"`
 	Token         string          `json:"token"`
-	CompileOutput interface{}     `json:"compile_output"`
+	CompileOutput string          `json:"compile_output"`
 	Message       string          `json:"message"`
 	Status        status          `json:"status"`
 }
@@ -53,6 +54,7 @@ type CallbackStorage interface {
 
 type callbackInputFn func(r *http.Request) (CallbackURLParamsInput, error)
 type decoderFn func(r *http.Request) (CallbackJsonInput, error)
+
 func CreateCallbackHandler(storage CallbackStorage, st StreamService, decoder decoderFn, inputFn callbackInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		urlParams, err := inputFn(r)
@@ -66,6 +68,12 @@ func CreateCallbackHandler(storage CallbackStorage, st StreamService, decoder de
 			return
 		}
 		w.WriteHeader(200)
+		plainText, err := base64.StdEncoding.DecodeString(decoded.Stdout)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		decoded.Stdout = string(plainText)
 		err = storage.UpdateTestCaseResult(r.Context(), decoded, urlParams.SubmissionID, urlParams.TestCaseID)
 		if err != nil {
 			log.Println(err)

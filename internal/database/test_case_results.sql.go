@@ -19,9 +19,9 @@ VALUES (?, ?, ?, ?, ?, ?)
 
 type CreateTestCaseResultParams struct {
 	ID           sql.NullString
-	Status       sql.NullString
-	Time         sql.NullString
-	Memory       sql.NullInt32
+	Status       string
+	Time         string
+	Memory       int32
 	TestCaseID   string
 	SubmissionID string
 }
@@ -38,8 +38,64 @@ func (q *Queries) CreateTestCaseResult(ctx context.Context, arg CreateTestCaseRe
 	return err
 }
 
+const getExecutedTestCases = `-- name: GetExecutedTestCases :many
+SELECT test_case.id as tc_id, test_case.input as tc_input, test_case.output as tc_output, 
+  test_case_result.status as result_status, test_case_result.time as result_time, 
+  test_case_result.memory as result_memory, test_case_result.output as result_output
+FROM test_case
+JOIN test_case_result ON test_case.id = test_case_result.test_case_id 
+JOIN submission ON test_case_result.submission_id = submission.id
+WHERE test_case.problem_id = ? AND submission.id = ?
+`
+
+type GetExecutedTestCasesParams struct {
+	ProblemID string
+	ID        string
+}
+
+type GetExecutedTestCasesRow struct {
+	TcID         string
+	TcInput      string
+	TcOutput     string
+	ResultStatus string
+	ResultTime   string
+	ResultMemory int32
+	ResultOutput string
+}
+
+func (q *Queries) GetExecutedTestCases(ctx context.Context, arg GetExecutedTestCasesParams) ([]GetExecutedTestCasesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getExecutedTestCases, arg.ProblemID, arg.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetExecutedTestCasesRow
+	for rows.Next() {
+		var i GetExecutedTestCasesRow
+		if err := rows.Scan(
+			&i.TcID,
+			&i.TcInput,
+			&i.TcOutput,
+			&i.ResultStatus,
+			&i.ResultTime,
+			&i.ResultMemory,
+			&i.ResultOutput,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getResults = `-- name: GetResults :many
-SELECT id, created_at, updated_at, status, time, memory, test_case_id, submission_id 
+SELECT id, created_at, updated_at, output, status, time, memory, test_case_id, submission_id 
 FROM test_case_result
 WHERE id IN (/*SLICE:ids*/?)
 `
@@ -67,6 +123,7 @@ func (q *Queries) GetResults(ctx context.Context, ids []sql.NullString) ([]TestC
 			&i.ID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Output,
 			&i.Status,
 			&i.Time,
 			&i.Memory,
@@ -87,7 +144,7 @@ func (q *Queries) GetResults(ctx context.Context, ids []sql.NullString) ([]TestC
 }
 
 const getTestCaseResult = `-- name: GetTestCaseResult :one
-SELECT id, created_at, updated_at, status, time, memory, test_case_id, submission_id
+SELECT id, created_at, updated_at, output, status, time, memory, test_case_id, submission_id
 FROM test_case_result
 WHERE id =?
 `
@@ -99,6 +156,7 @@ func (q *Queries) GetTestCaseResult(ctx context.Context, id sql.NullString) (Tes
 		&i.ID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Output,
 		&i.Status,
 		&i.Time,
 		&i.Memory,
@@ -109,15 +167,16 @@ func (q *Queries) GetTestCaseResult(ctx context.Context, id sql.NullString) (Tes
 }
 
 const updateTestCaseResult = `-- name: UpdateTestCaseResult :exec
-UPDATE test_case_result SET id = ?, status = ?, time = ?, memory = ?
+UPDATE test_case_result SET id = ?, status = ?, time = ?, memory = ?, output = ?
 WHERE submission_id = ? and test_case_id = ?
 `
 
 type UpdateTestCaseResultParams struct {
 	ID           sql.NullString
-	Status       sql.NullString
-	Time         sql.NullString
-	Memory       sql.NullInt32
+	Status       string
+	Time         string
+	Memory       int32
+	Output       string
 	SubmissionID string
 	TestCaseID   string
 }
@@ -128,6 +187,7 @@ func (q *Queries) UpdateTestCaseResult(ctx context.Context, arg UpdateTestCaseRe
 		arg.Status,
 		arg.Time,
 		arg.Memory,
+		arg.Output,
 		arg.SubmissionID,
 		arg.TestCaseID,
 	)

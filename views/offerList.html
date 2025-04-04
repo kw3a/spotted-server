@@ -18,14 +18,14 @@
         <span class="text-white text-center"> Ninguna coincidencia </span>
         {{else}}
         <div class="grid grid-cols-2 gap-4 m-4">
-          {{range .Offers}} {{template "jobCard" .}} {{end}}
+          {{range .Offers}} {{template "offerCard" .}} {{end}}
         </div>
         {{end}}
       </div>
     </div>
   </body>
 </html>
-{{end}} {{block "jobCard" .}}
+{{end}} {{block "offerCard" .}}
 <div class="flex flex-col gap-2 border border-shark-900 rounded p-8">
   <div class="flex gap-2">
     <img

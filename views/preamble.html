@@ -8,6 +8,8 @@
   <script src="/static/htmx.min.js"></script>
   <link href="/static/output.css" rel="stylesheet" />
   <script src="/static/head-support.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <title></title>
 </head>
 
@@ -59,19 +61,44 @@
 </body>
 
 </html>
-{{end}} {{block "preambleProblem" .}}
-<tr class="text-shark-200">
-  <td>{{.Title}}</td>
-  <td>{{.AcceptedTestCases}}/{{.NumberOfTestCases}}</td>
-</tr>
-{{end}} {{block "participationInfo" .}} {{if .PreambleProblems}}
+{{end}} {{block "participationInfo" .}} 
+{{if .Results}}
 <p class="text-shark-200">Entregado {{.Participation.RelativeTime}}</p>
-<hr class="border-gray-500" />
-<table class="table-auto">
-  <tbody>
-    {{range .PreambleProblems}} {{template "preambleProblem" .}} {{end}}
-  </tbody>
-</table>
+
+<div class="p-8">
+    <div class="flex justify-between">
+      <span class="text-shark-200 text-xl font-semibold">Problema</span>
+      <span class="text-shark-200 text-xl font-semibold">Puntaje</span>
+    </div>
+  <div class="flex flex-col gap-2">
+    {{$applicant := .User}}
+    {{range .Results}}
+    <section class="flex gap-2">
+      <div class="flex-auto flex justify-between">
+        <span class="text-shark-200">{{.Problem.Title}}</span>
+        {{if eq .Score.AcceptedTestCases 0}}
+        <span class="text-red-500">
+        {{else}}
+          {{if eq .Score.AcceptedTestCases .Score.TotalTestCases}}
+        <span class="text-green-600">
+          {{else}}
+        <span class="text-yellow-600">
+          {{end}}
+        {{end}}
+          {{.Score.AcceptedTestCases}}/{{.Score.TotalTestCases}}</span>
+      </div>
+    </section>
+    <div 
+      class="bg-gray-900 hover:bg-gray-800 px-4 py-2 cursor-pointer"
+      hx-get="/source/{{.Problem.ID}}/{{$applicant.ID}}"
+      hx-swap="outerHTML"
+    >
+      <img src="/public/eye.svg" alt="home icon" width="15" height="15" />
+    </div>
+    {{end}}
+  </div>
+</div>
+
 {{else}} {{if eq .User.Role "verified"}}
 <div class="flex justify-center">
   <button
@@ -81,4 +108,5 @@
     Participar
   </button>
 </div>
-{{end}} {{end}} {{end}}
+{{end}} {{end}} 
+{{end}}

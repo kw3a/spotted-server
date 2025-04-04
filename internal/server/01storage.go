@@ -16,12 +16,46 @@ import (
 	"github.com/kw3a/spotted-server/internal/database"
 	"github.com/kw3a/spotted-server/internal/server/codejudge"
 	"github.com/kw3a/spotted-server/internal/server/shared"
+	"github.com/shopspring/decimal"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type MysqlStorage struct {
 	Queries *database.Queries
 	db      *sql.DB
+}
+
+func (mysql *MysqlStorage) GetExecutedTestCases(ctx context.Context, problemID, submissionID string) ([]shared.ExecutedTestCase, error) {
+	dbExecTCs, err := mysql.Queries.GetExecutedTestCases(ctx, database.GetExecutedTestCasesParams{
+		ProblemID: problemID,
+		ID:        submissionID,
+	})
+	if err != nil {
+		return []shared.ExecutedTestCase{}, err
+	}
+	execTCs := []shared.ExecutedTestCase{}
+	for _, dbExecTC := range dbExecTCs {
+		dbTime, err := decimal.NewFromString(dbExecTC.ResultTime)
+		if err != nil {
+			return []shared.ExecutedTestCase{}, err
+		}
+		dbTime = dbTime.Mul(decimal.NewFromInt32(1000))
+		execTCs = append(execTCs, shared.ExecutedTestCase{
+			TestCase: shared.TestCase{
+				ID:     dbExecTC.TcID,
+				Input:  dbExecTC.TcInput,
+				Output: dbExecTC.TcOutput,
+			},
+			Result: shared.TestCaseResult{
+				Output:     dbExecTC.ResultOutput,
+				Status:     dbExecTC.ResultStatus,
+				Time:       dbTime.IntPart(),
+				Memory:     dbExecTC.ResultMemory,
+				TestCaseID: dbExecTC.TcID,
+			},
+		})
+	}
+	return execTCs, nil
 }
 
 func (mysql *MysqlStorage) BestSubmission(ctx context.Context, applicantID string, problemID string) (shared.Submission, error) {
@@ -309,7 +343,15 @@ func (mysql *MysqlStorage) GetCompany(ctx context.Context, companyID, userID str
 	}, nil
 }
 
-func (mysql *MysqlStorage) RegisterCompany(ctx context.Context, id string, userID string, name string, description string, website string, imageURL string) error {
+func (mysql *MysqlStorage) RegisterCompany(
+	ctx context.Context,
+	id string,
+	userID string,
+	name string,
+	description string,
+	website string,
+	imageURL string,
+) error {
 	return mysql.Queries.InsertCompany(ctx, database.InsertCompanyParams{
 		ID:          id,
 		UserID:      userID,
@@ -334,7 +376,12 @@ func (mysql *MysqlStorage) DeleteEducation(ctx context.Context, userID string, e
 	})
 }
 
-func (mysql *MysqlStorage) RegisterEducation(ctx context.Context, educationID, userID, institution, degree string, start time.Time, end time.Time) error {
+func (mysql *MysqlStorage) RegisterEducation(
+	ctx context.Context,
+	educationID, userID, institution, degree string,
+	start time.Time,
+	end time.Time,
+) error {
 	return mysql.Queries.InsertEducation(ctx, database.InsertEducationParams{
 		ID:          educationID,
 		Institution: institution,
@@ -352,7 +399,12 @@ func (mysql *MysqlStorage) DeleteExperience(ctx context.Context, userID string, 
 	})
 }
 
-func (mysql *MysqlStorage) RegisterExperience(ctx context.Context, experienceID, userID, company, title string, start time.Time, end time.Time) error {
+func (mysql *MysqlStorage) RegisterExperience(
+	ctx context.Context,
+	experienceID, userID, company, title string,
+	start time.Time,
+	end time.Time,
+) error {
 	return mysql.Queries.InsertExperience(ctx, database.InsertExperienceParams{
 		ID:        experienceID,
 		Company:   company,
@@ -512,16 +564,16 @@ func (mysql *MysqlStorage) CreateUser(ctx context.Context, name, password, email
 	})
 }
 
-func (mysql *MysqlStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (ParticipationData, error) {
+func (mysql *MysqlStorage) ParticipationStatus(ctx context.Context, userID string, quizID string) (shared.Participation, error) {
 	participation, err := mysql.Queries.ParticipationStatus(ctx, database.ParticipationStatusParams{
 		UserID: userID,
 		QuizID: quizID,
 	})
 	if err != nil {
-		return ParticipationData{}, err
+		return shared.Participation{}, err
 	}
 	relativeTime := RelativeTime(participation.ExpiresAt)
-	return ParticipationData{
+	return shared.Participation{
 		ID:           participation.ID,
 		CreatedAt:    participation.CreatedAt.Time,
 		ExpiresAt:    participation.ExpiresAt,
@@ -686,6 +738,34 @@ func (mysql *MysqlStorage) GetOffersByUser(ctx context.Context, userID string) (
 	return res, nil
 }
 
+func (mysql *MysqlStorage) SelectParticipatedOffers(ctx context.Context, userID string) ([]shared.Offer, error) {
+	dbOffers, err := mysql.Queries.GetParticipatedOffers(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return []shared.Offer{}, nil
+		}
+		return []shared.Offer{}, err
+	}
+	offers := []shared.Offer{}
+	for _, dbOffer := range dbOffers {
+		offer := shared.Offer{
+			ID:           dbOffer.ID,
+			Title:        dbOffer.Title,
+			About:        dbOffer.About,
+			Requirements: dbOffer.Requirements,
+			Benefits:     dbOffer.Benefits,
+			Status:       dbOffer.Status,
+			CompanyName:  dbOffer.CompanyName,
+			CompanyID:    dbOffer.CompanyID,
+			MinWage:      dbOffer.MinWage,
+			MaxWage:      dbOffer.MaxWage,
+			RelativeTime: RelativeTime(dbOffer.CreatedAt),
+		}
+		offers = append(offers, offer)
+	}
+	return offers, nil
+}
+
 func (mysql *MysqlStorage) SelectOffers(ctx context.Context, params shared.OfferQueryParams) ([]shared.Offer, error) {
 	if params.Query != "" {
 		return mysql.GetOffersByQuery(ctx, params.Query)
@@ -783,12 +863,13 @@ func (mysql *MysqlStorage) SelectProblems(ctx context.Context, quizID string) ([
 	return res, nil
 }
 
-func (mysql *MysqlStorage) SelectProblem(ctx context.Context, problemID string) (ProblemContent, error) {
+func (mysql *MysqlStorage) SelectProblem(ctx context.Context, problemID string) (shared.Problem, error) {
 	dbProblem, err := mysql.Queries.SelectProblem(ctx, problemID)
 	if err != nil {
-		return ProblemContent{}, err
+		return shared.Problem{}, err
 	}
-	return ProblemContent{
+	return shared.Problem{
+		ID:          dbProblem.ID,
 		Title:       dbProblem.Title,
 		Description: dbProblem.Description,
 		MemoryLimit: dbProblem.MemoryLimit,
@@ -796,14 +877,14 @@ func (mysql *MysqlStorage) SelectProblem(ctx context.Context, problemID string) 
 	}, nil
 }
 
-func (mysql *MysqlStorage) SelectExamples(ctx context.Context, problemID string) ([]Example, error) {
+func (mysql *MysqlStorage) SelectExamples(ctx context.Context, problemID string) ([]shared.Example, error) {
 	dbExamples, err := mysql.Queries.SelectExamples(ctx, problemID)
 	if err != nil {
-		return []Example{}, err
+		return []shared.Example{}, err
 	}
-	res := []Example{}
+	res := []shared.Example{}
 	for _, dbExample := range dbExamples {
-		res = append(res, Example{
+		res = append(res, shared.Example{
 			Input:  dbExample.Input,
 			Output: dbExample.Output,
 		})
@@ -826,7 +907,11 @@ func (mysql *MysqlStorage) LastSrc(ctx context.Context, userID string, problemID
 	return dbLastSubmission, nil
 }
 
-func (s MysqlStorage) CreateSubmission(ctx context.Context, submissionID, participationID, problemID, src string, languageID int32) error {
+func (s MysqlStorage) CreateSubmission(
+	ctx context.Context,
+	submissionID, participationID, problemID, src string,
+	languageID int32,
+) error {
 	return s.Queries.CreateSubmission(ctx, database.CreateSubmissionParams{
 		ID:              submissionID,
 		Src:             src,
@@ -863,16 +948,22 @@ func ToTC(dbTestCases []database.GetTestCasesRow) ([]codejudge.TestCase, error) 
 }
 
 // This method must work only when TCResult is empty
-func (s MysqlStorage) UpdateTestCaseResult(ctx context.Context, input CallbackJsonInput, submissionID, testCaseID string) error {
+func (s MysqlStorage) UpdateTestCaseResult(
+	ctx context.Context,
+	input CallbackJsonInput,
+	submissionID, testCaseID string,
+) error {
 	return s.Queries.UpdateTestCaseResult(ctx, database.UpdateTestCaseResultParams{
 		ID:           sql.NullString{String: input.Token, Valid: true},
-		Status:       sql.NullString{String: input.Status.Description, Valid: true},
-		Time:         sql.NullString{String: input.Time.String(), Valid: true},
-		Memory:       sql.NullInt32{Int32: input.Memory, Valid: true},
+		Output:       input.Stdout,
+		Status:       input.Status.Description,
+		Time:         input.Time.String(),
+		Memory:       input.Memory,
 		SubmissionID: submissionID,
 		TestCaseID:   testCaseID,
 	})
 }
+
 func (s MysqlStorage) EndQuiz(ctx context.Context, userID, quizID string) (shared.Offer, error) {
 	err := s.Queries.EndParticipation(ctx, database.EndParticipationParams{
 		ExpiresAt: time.Now(),

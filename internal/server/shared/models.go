@@ -1,5 +1,7 @@
 package shared
 
+import "time"
+
 type SkillEntry struct {
 	Name string
 	ID   string
@@ -79,11 +81,6 @@ type Problem struct {
 	Examples    []Example
 }
 
-type TestCase struct {
-	Input  string
-	Output string
-}
-
 type Example struct {
 	Input  string
 	Output string
@@ -101,4 +98,33 @@ type Submission struct {
 	ParticipationID   string
 	LanguageID        int32
 	ProblemID         string
+}
+
+type Participation struct {
+	ID           string
+	CreatedAt    time.Time
+	ExpiresAt    time.Time
+	RelativeTime string
+}
+
+type TestCase struct {
+	ID        string
+	Input     string
+	Output    string
+	ProblemID string
+}
+
+type TestCaseResult struct {
+	ID           string
+	Output       string
+	Status       string
+	Time         int64
+	Memory       int32
+	SubmissionID string
+	TestCaseID   string
+}
+
+type ExecutedTestCase struct {
+	TestCase TestCase
+	Result   TestCaseResult
 }

@@ -93,7 +93,7 @@
           class="flex-1 xl:w-1/2 p-8 bg-shark-950 border border-shark-900 rounded overflow-y-auto">
           <div id="problem-info" hx-get="/problems" hx-trigger="evtproblemchange"
             hx-vals="js:{problemID: event.detail.problem_id }">
-            {{template "problem" .ProblemContent}}
+            {{template "problem" .Problem}}
           </div>
           <hr class="p-2" />
           <div id="examples" hx-get="/examples" hx-trigger="evtproblemchange"
@@ -148,29 +148,32 @@
     <span class="w-1/2 text-shark-200">Memoria límite: {{.MemoryLimit}} kb</span>
   </div>
 </div>
-{{end}} {{block "examples" .}} {{range .}}
-<div class="flex flex-row gap-4">
-  <div class="w-1/2 rounded bg-shark-900">
-    <div class="flex justify-between pl-2">
-      <span class="text-white">ENTRADA</span>
-      <button class="border border-transparent rounded hover:border-white p-1" onclick="copy('{{.Input}}')">
-        <img src="/public/copy_paste.svg" alt="copy icon" width="15" height="15" />
-      </button>
+{{end}} {{block "examples" .}} 
+<div class="flex flex-col gap-4">
+  {{range .}}
+  <div class="flex flex-row gap-4">
+    <div class="w-1/2 rounded bg-shark-900">
+      <div class="flex justify-between pl-2">
+        <span class="text-white">ENTRADA</span>
+        <button class="border border-transparent rounded hover:border-white p-1" onclick="copy('{{.Input}}')">
+          <img src="/public/copy_paste.svg" alt="copy icon" width="15" height="15" />
+        </button>
+      </div>
+      <pre class="text-shark-200 p-4">{{.Input}}</pre>
     </div>
-    <pre class="text-shark-200 p-4">{{.Input}}</pre>
-  </div>
-  <div class="w-1/2 rounded bg-shark-900">
-    <div class="flex justify-between pl-2">
-      <span class="text-white">SALIDA</span>
-      <button class="border border-transparent rounded hover:border-white p-1" onclick="copy('{{.Output}}')">
-        <img src="/public/copy_paste.svg" alt="copy icon" width="15" height="15" />
-      </button>
+    <div class="w-1/2 rounded bg-shark-900">
+      <div class="flex justify-between pl-2">
+        <span class="text-white">SALIDA</span>
+        <button class="border border-transparent rounded hover:border-white p-1" onclick="copy('{{.Output}}')">
+          <img src="/public/copy_paste.svg" alt="copy icon" width="15" height="15" />
+        </button>
+      </div>
+      <pre class="text-shark-200 p-4">{{.Output}}</pre>
     </div>
-    <pre class="text-shark-200 p-4">{{.Output}}</pre>
   </div>
+  {{end}} 
 </div>
-<br />
-{{end}} {{end}} {{block "codeEditor" .}}
+{{end}} {{block "codeEditor" .}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/loader.min.js"></script>
 <script>
   require.config({

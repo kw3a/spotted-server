@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type ExamplesStorage interface {
-	SelectExamples(ctx context.Context, problemID string) ([]Example, error)
+	SelectExamples(ctx context.Context, problemID string) ([]shared.Example, error)
 }
 
 type ExamplesInput struct {

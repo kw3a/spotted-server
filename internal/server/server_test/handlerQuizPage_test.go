@@ -45,9 +45,9 @@ func (q *quizPageStorage) SelectLanguages(ctx context.Context, quizID string) ([
 	args := q.Called(ctx, quizID)
 	return args.Get(0).([]server.LanguageSelector), args.Error(1)
 }
-func (q *quizPageStorage) SelectProblem(ctx context.Context, problemID string) (server.ProblemContent, error) {
+func (q *quizPageStorage) SelectProblem(ctx context.Context, problemID string) (server.Problem, error) {
 	args := q.Called(ctx, problemID)
-	return args.Get(0).(server.ProblemContent), args.Error(1)
+	return args.Get(0).(server.Problem), args.Error(1)
 }
 func (q *quizPageStorage) SelectProblemIDs(ctx context.Context, quizID string) ([]string, error) {
 	args := q.Called(ctx, quizID)
@@ -245,7 +245,7 @@ func TestQuizPageHandlerBadStorageSelectProblem(t *testing.T) {
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
 	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil) 
-	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, errors.New("error"))
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.Problem{}, errors.New("error"))
 	handler := server.CreateQuizPageHandler(
 		&templates{},
 		storage,
@@ -272,7 +272,7 @@ func TestQuizPageHandlerBadStorageSelectExamples(t *testing.T) {
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
 	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil) 
-	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil) 
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.Problem{}, nil) 
 	storage.On("SelectExamples", mock.Anything, mock.Anything).Return([]server.Example{}, errors.New("error"))
 	handler := server.CreateQuizPageHandler(
 		&templates{},
@@ -300,7 +300,7 @@ func TestQuizPageHandlerBadStorageSelectLanguages(t *testing.T) {
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
 	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil) 
-	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil) 
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.Problem{}, nil) 
 	storage.On("SelectExamples", mock.Anything, mock.Anything).Return([]server.Example{}, nil)
 	storage.On("SelectLanguages", mock.Anything, mock.Anything).Return([]server.LanguageSelector{}, errors.New("error"))
 	handler := server.CreateQuizPageHandler(
@@ -329,7 +329,7 @@ func TestQuizPageHandlerBadStorageLastSource(t *testing.T) {
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
 	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil) 
-	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil) 
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.Problem{}, nil) 
 	storage.On("SelectExamples", mock.Anything, mock.Anything).Return([]server.Example{}, nil)
 	storage.On("SelectLanguages", mock.Anything, mock.Anything).Return([]server.LanguageSelector{}, nil) 
 	storage.On("LastSrc", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", errors.New("error"))
@@ -359,7 +359,7 @@ func TestQuizPageHandlerBadTemplate(t *testing.T) {
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
 	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil) 
-	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil) 
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.Problem{}, nil) 
 	storage.On("SelectExamples", mock.Anything, mock.Anything).Return([]server.Example{}, nil)
 	storage.On("SelectLanguages", mock.Anything, mock.Anything).Return([]server.LanguageSelector{}, nil) 
 	storage.On("LastSrc", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
@@ -389,7 +389,7 @@ func TestQuizPageHandler(t *testing.T) {
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(inTime, nil)
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return([]string{}, nil)
 	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil) 
-	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil) 
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.Problem{}, nil) 
 	storage.On("SelectExamples", mock.Anything, mock.Anything).Return([]server.Example{}, nil)
 	storage.On("SelectLanguages", mock.Anything, mock.Anything).Return([]server.LanguageSelector{}, nil) 
 	storage.On("LastSrc", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)

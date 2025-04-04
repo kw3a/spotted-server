@@ -66,6 +66,7 @@
       {{template "experienceSection" .}}
       {{template "educationSection" .}}
       {{template "skillSection" .}}
+      {{range .Participations}} {{template "offerCard" .}} {{end}} 
     </div>
   </div>
 </body>

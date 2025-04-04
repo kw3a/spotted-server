@@ -12,31 +12,19 @@ import (
 )
 
 type QuizPageData struct {
-	QuizID         string
-	Problems       []ProblemSelector
-	ExpiresAt      time.Time
-	Score          shared.Score
-	ProblemContent ProblemContent
-	Examples       []Example
-	EditorData     EditorData
-	Languages      []shared.Language
+	QuizID     string
+	Problems   []ProblemSelector
+	ExpiresAt  time.Time
+	Score      shared.Score
+	Problem    shared.Problem
+	Examples   []shared.Example
+	EditorData EditorData
+	Languages  []shared.Language
 }
 
 type ProblemSelector struct {
 	ID          string
 	ProblemName string
-}
-
-type ProblemContent struct {
-	Title       string
-	Description string
-	MemoryLimit int32
-	TimeLimit   float64
-}
-
-type Example struct {
-	Input  string
-	Output string
 }
 
 type EditorData struct {
@@ -58,11 +46,11 @@ func GetQuizPageInput(r *http.Request) (QuizPageInput, error) {
 }
 
 type QuizPageStorage interface {
-	ParticipationStatus(ctx context.Context, userID string, quizID string) (ParticipationData, error)
+	ParticipationStatus(ctx context.Context, userID string, quizID string) (shared.Participation, error)
 	SelectProblemIDs(ctx context.Context, quizID string) ([]string, error)
 	SelectScore(ctx context.Context, userID string, problemID string) (shared.Score, error)
-	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
-	SelectExamples(ctx context.Context, problemID string) ([]Example, error)
+	SelectProblem(ctx context.Context, problemID string) (shared.Problem, error)
+	SelectExamples(ctx context.Context, problemID string) ([]shared.Example, error)
 	SelectLanguages(ctx context.Context, quizID string) ([]shared.Language, error)
 	LastSrc(ctx context.Context, userID string, problemID string, languageID int32) (string, error)
 }
@@ -131,7 +119,7 @@ func CreateQuizPageHandler(
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		problemContent, err := storage.SelectProblem(r.Context(), selectedProblem)
+		problem, err := storage.SelectProblem(r.Context(), selectedProblem)
 		if err != nil {
 			http.Error(w, "problem description not found", http.StatusInternalServerError)
 			return
@@ -152,17 +140,17 @@ func CreateQuizPageHandler(
 			http.Error(w, "src not found", http.StatusInternalServerError)
 			return
 		}
-		quizPageData := QuizPageData{
-			QuizID:         input.OfferID,
-			Problems:       enumerateProblemsFn(problemIDs),
-			ExpiresAt:      partiData.ExpiresAt,
-			Score:          score,
-			ProblemContent: problemContent,
-			Examples:       examples,
-			EditorData:     EditorData{SrcValue: lastSrc, Language: selectedLanguage.Name},
-			Languages:      languages,
+		data := QuizPageData{
+			QuizID:     input.OfferID,
+			Problems:   enumerateProblemsFn(problemIDs),
+			ExpiresAt:  partiData.ExpiresAt,
+			Score:      score,
+			Problem:    problem,
+			Examples:   examples,
+			EditorData: EditorData{SrcValue: lastSrc, Language: selectedLanguage.Name},
+			Languages:  languages,
 		}
-		err = templ.Render(w, "quizPage", quizPageData)
+		err = templ.Render(w, "quizPage", data)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("can't render quiz page: %s", err), http.StatusInternalServerError)
 		}

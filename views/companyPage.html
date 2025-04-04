@@ -41,7 +41,7 @@
           </span>
           {{if not .Offers}}
           <span class="text-white text-center"> Ninguna coincidencia </span>
-          {{else}} {{range .Offers}} {{template "jobCard" .}} {{end}} {{end}}
+          {{else}} {{range .Offers}} {{template "offerCard" .}} {{end}} {{end}}
         </div>
       </div>
     </div>

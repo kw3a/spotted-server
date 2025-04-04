@@ -3,42 +3,33 @@ package server
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/kw3a/spotted-server/internal/auth"
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type PreambleData struct {
-	User             auth.AuthUser
-	Offer            shared.Offer
-	Quiz             shared.Quiz
-	Languages        []shared.Language
-	Participation    ParticipationData
-	PreambleProblems []PreambleProblem
+	User          auth.AuthUser
+	Offer         shared.Offer
+	Quiz          shared.Quiz
+	Languages     []shared.Language
+	Participation shared.Participation
+	Results       []Result
+	Problems      []shared.Problem
 }
 
-type PreambleProblem struct {
-	Title             string
-	NumberOfTestCases int
-	AcceptedTestCases int
+type Result struct {
+	Problem shared.Problem
+	Score   shared.Score
 }
 
 type PreambleInput struct {
 	QuizID string
 }
 
-type ParticipationData struct {
-	ID           string
-	CreatedAt    time.Time
-	ExpiresAt    time.Time
-	RelativeTime string
-}
-
 type PreambleStorage interface {
-	ParticipationStatus(ctx context.Context, userID string, quizID string) (ParticipationData, error)
-	SelectProblemIDs(ctx context.Context, QuizID string) ([]string, error)
-	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
+	ParticipationStatus(ctx context.Context, userID string, quizID string) (shared.Participation, error)
+	SelectProblems(ctx context.Context, quizID string) ([]shared.Problem, error)
 	SelectScore(ctx context.Context, userID string, problemID string) (shared.Score, error)
 	SelectOffer(ctx context.Context, id string) (shared.Offer, error)
 	SelectQuizByOffer(ctx context.Context, offerID string) (shared.Quiz, error)
@@ -81,33 +72,27 @@ func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, au
 			data.Languages = languages
 			participation, err := storage.ParticipationStatus(r.Context(), user.ID, quiz.ID)
 			if err == nil {
-				problemIDs, err := storage.SelectProblemIDs(r.Context(), quiz.ID)
+				problems, err := storage.SelectProblems(r.Context(), quiz.ID)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
-				preambleProblems := make([]PreambleProblem, 0)
-				for _, problemID := range problemIDs {
-					problemContent, err := storage.SelectProblem(r.Context(), problemID)
+				results := make([]Result, 0)
+				for _, problem := range problems {
+					score, err := storage.SelectScore(r.Context(), user.ID, problem.ID)
 					if err != nil {
 						http.Error(w, err.Error(), http.StatusInternalServerError)
 						return
 					}
-					score, err := storage.SelectScore(r.Context(), user.ID, problemID)
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-						return
+					result := Result{
+						Problem: problem,
+						Score: score,
 					}
-					problem := PreambleProblem{
-						Title:             problemContent.Title,
-						NumberOfTestCases: score.TotalTestCases,
-						AcceptedTestCases: score.AcceptedTestCases,
-					}
-					preambleProblems = append(preambleProblems, problem)
+					results = append(results, result)
 				}
-				data.PreambleProblems = preambleProblems
+				data.Results = results
 				data.Participation = participation
-			} 
+			}
 		}
 		if err := templ.Render(w, "preamble", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

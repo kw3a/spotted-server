@@ -46,6 +46,16 @@ WHERE company.id = ?
 ORDER BY offer.created_at DESC
 LIMIT 10;
 
+-- name: GetParticipatedOffers :many
+SELECT offer.*, company.name as company_name, company.image_url as company_image_url
+FROM offer
+JOIN company ON offer.company_id = company.id
+JOIN quiz ON offer.id = quiz.offer_id
+JOIN participation ON quiz.id = participation.quiz_id
+WHERE participation.user_id = ?
+ORDER BY participation.expires_at DESC
+LIMIT 10;
+
 -- name: GetOfferByQuiz :one
 SELECT offer.*
 FROM offer

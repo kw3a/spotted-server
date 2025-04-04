@@ -395,6 +395,70 @@ func (q *Queries) GetOffersByUser(ctx context.Context, id string) ([]GetOffersBy
 	return items, nil
 }
 
+const getParticipatedOffers = `-- name: GetParticipatedOffers :many
+SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name, company.image_url as company_image_url
+FROM offer
+JOIN company ON offer.company_id = company.id
+JOIN quiz ON offer.id = quiz.offer_id
+JOIN participation ON quiz.id = participation.quiz_id
+WHERE participation.user_id = ?
+ORDER BY participation.expires_at DESC
+LIMIT 10
+`
+
+type GetParticipatedOffersRow struct {
+	ID              string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Title           string
+	About           string
+	Requirements    string
+	Benefits        string
+	Status          int32
+	MinWage         int32
+	MaxWage         int32
+	CompanyID       string
+	CompanyName     string
+	CompanyImageUrl string
+}
+
+func (q *Queries) GetParticipatedOffers(ctx context.Context, userID string) ([]GetParticipatedOffersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getParticipatedOffers, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetParticipatedOffersRow
+	for rows.Next() {
+		var i GetParticipatedOffersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
+			&i.About,
+			&i.Requirements,
+			&i.Benefits,
+			&i.Status,
+			&i.MinWage,
+			&i.MaxWage,
+			&i.CompanyID,
+			&i.CompanyName,
+			&i.CompanyImageUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertOffer = `-- name: InsertOffer :exec
 INSERT INTO offer
 (id, title, about, requirements, benefits, min_wage, max_wage, company_id)

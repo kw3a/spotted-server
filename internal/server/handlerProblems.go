@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+
+	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 type ProblemsStorage interface {
-	SelectProblem(ctx context.Context, problemID string) (ProblemContent, error)
+	SelectProblem(ctx context.Context, problemID string) (shared.Problem, error)
 }
 type ProblemsInput struct {
 	ProblemID string

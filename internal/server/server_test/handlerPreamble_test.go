@@ -24,9 +24,9 @@ func (s *preambleStorage) SelectProblemIDs(ctx context.Context, QuizID string) (
 	args := s.Called(ctx, QuizID)
 	return args.Get(0).([]string), args.Error(1)
 }
-func (s *preambleStorage) SelectProblem(ctx context.Context, problemID string) (server.ProblemContent, error) {
+func (s *preambleStorage) SelectProblem(ctx context.Context, problemID string) (server.Problem, error) {
 	args := s.Called(ctx, problemID)
-	return args.Get(0).(server.ProblemContent), args.Error(1)
+	return args.Get(0).(server.Problem), args.Error(1)
 }
 func (s *preambleStorage) SelectScore(ctx context.Context, userID string, problemID string) (server.ScoreData, error) {
 	args := s.Called(ctx, userID, problemID)
@@ -107,7 +107,7 @@ func TestPreambleHandlerBadStorageSelectProblem(t *testing.T) {
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(server.ParticipationData{}, nil)
 	ids := []string{"1", "2"}
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return(ids, nil)
-	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, errors.New("error"))
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.Problem{}, errors.New("error"))
 	handler := server.CreateParticipationHandler(&templates{}, storage, authRepo{}, quizPageInputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
@@ -123,7 +123,7 @@ func TestPreambleHandlerBadStorageSelectScore(t *testing.T) {
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(server.ParticipationData{}, nil)
 	ids := []string{"1", "2"}
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return(ids, nil)
-	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil)
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.Problem{}, nil)
 	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, errors.New("error"))
 	handler := server.CreateParticipationHandler(&templates{}, storage, authRepo{}, quizPageInputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
@@ -140,7 +140,7 @@ func TestPreambleHandlerBadTemplate(t *testing.T) {
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(server.ParticipationData{}, nil)
 	ids := []string{"1", "2"}
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return(ids, nil)
-	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil)
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.Problem{}, nil)
 	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil)
 	handler := server.CreateParticipationHandler(&invalidTemplates{}, storage, authRepo{}, quizPageInputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
@@ -157,7 +157,7 @@ func TestPreambleHandler(t *testing.T) {
 	storage.On("ParticipationStatus", mock.Anything, mock.Anything, mock.Anything).Return(server.ParticipationData{}, nil)
 	ids := []string{"1", "2"}
 	storage.On("SelectProblemIDs", mock.Anything, mock.Anything).Return(ids, nil)
-	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.ProblemContent{}, nil)
+	storage.On("SelectProblem", mock.Anything, mock.Anything).Return(server.Problem{}, nil)
 	storage.On("SelectScore", mock.Anything, mock.Anything, mock.Anything).Return(server.ScoreData{}, nil)
 	handler := server.CreateParticipationHandler(&templates{}, storage, authRepo{}, quizPageInputFn)
 	req, _ := http.NewRequest("GET", "/", nil)

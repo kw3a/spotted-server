@@ -11,12 +11,13 @@ import (
 )
 
 type ProfilePageData struct {
-	User        auth.AuthUser
-	Profile     Profile
-	Links       []shared.Link
-	Experiences []shared.ExperienceEntry
-	Education   []shared.EducationEntry
-	Skills      []shared.SkillEntry
+	User           auth.AuthUser
+	Profile        Profile
+	Links          []shared.Link
+	Experiences    []shared.ExperienceEntry
+	Education      []shared.EducationEntry
+	Skills         []shared.SkillEntry
+	Participations []shared.Offer
 }
 type Profile struct {
 	Name        string
@@ -44,6 +45,7 @@ type ProfilePageStorage interface {
 	SelectEducation(ctx context.Context, userID string) ([]shared.EducationEntry, error)
 	SelectSkills(ctx context.Context, userID string) ([]shared.SkillEntry, error)
 	SelectLinks(ctx context.Context, userID string) ([]shared.Link, error)
+	SelectParticipatedOffers(ctx context.Context, userID string) ([]shared.Offer, error)
 }
 
 type profilePageInputFunc func(r *http.Request) (ProfilePageInput, error)
@@ -94,22 +96,27 @@ func CreateProfilePageHandler(
 		if imageURL == "" {
 			imageURL = defaultImagePath
 		}
+		participatedOffers, err := storage.SelectParticipatedOffers(r.Context(), input.UserID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		profile := Profile{
 			Name:        dbUser.Name,
 			ImageURL:    imageURL,
 			Description: dbUser.Description,
 		}
 		data := ProfilePageData{
-			User:        user,
-			Profile:     profile,
-			Links:       links,
-			Experiences: experiences,
-			Education:   education,
-			Skills:      skills,
+			User:           user,
+			Profile:        profile,
+			Links:          links,
+			Experiences:    experiences,
+			Education:      education,
+			Skills:         skills,
+			Participations: participatedOffers,
 		}
 		if err = templ.Render(w, "profilePage", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 }
-

@@ -15,6 +15,7 @@ const (
 
 type SrcData struct {
 	Submission  shared.Submission
+	TestCases   []shared.ExecutedTestCase
 	ApplicantID string
 	ProblemID   string
 }
@@ -32,6 +33,7 @@ type SrcInput struct {
 
 type SrcStorage interface {
 	BestSubmission(ctx context.Context, applicantID, problemID string) (shared.Submission, error)
+	GetExecutedTestCases(ctx context.Context, problemID, userID string) ([]shared.ExecutedTestCase, error)
 }
 
 func GetSrcInput(r *http.Request) (SrcInput, error) {
@@ -66,9 +68,9 @@ func CreateSrcHandler(
 		if err != nil {
 			if err == sql.ErrNoRows {
 				if err := templ.Render(w, "noSourceCard", NoSrcData{
-					Msg: errNoSrc,
+					Msg:         errNoSrc,
 					ApplicantID: input.ApplicantID,
-					ProblemID: input.ProblemID,
+					ProblemID:   input.ProblemID,
 				}); err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 				}
@@ -77,8 +79,14 @@ func CreateSrcHandler(
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		executedTCs, err := storage.GetExecutedTestCases(r.Context(), input.ProblemID, subm.ID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		if err := templ.Render(w, "sourceCard", SrcData{
 			Submission:  subm,
+			TestCases:   executedTCs,
 			ApplicantID: input.ApplicantID,
 			ProblemID:   input.ProblemID,
 		}); err != nil {
