@@ -15,39 +15,121 @@
   <body class="bg-shark-950" hx-ext="head-support">
     {{template "navBar" .User}}
     <div class="flex justify-center p-4 text-shark-200">
-      <section class="sm:w-full xl:w-3/4">
-        <strong class="text-center font-semibold text-2xl"
-          >{{.Offer.Title}}</strong
-        >
-        <p class="text-shark-300 font-light">Publicado {{.Offer.RelativeTime}}</p>
-        <section class=" w-full">
-          <strong class="text-center">Detalles de la prueba</strong>
-          <p class="flex items-center text-shark-200 gap-2">
-            <img class="inline" src="/public/clock.svg" width="20" height="20" alt="clock icon" />
-            {{.Quiz.Duration}} minutos
-          </p>
-          <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full">
-            {{range .Languages}}
-            <span class="rounded border border-shark-200 text-shark-200 px-2">{{.DisplayName}}</span>
-            {{end}}
+      <section class="sm:w-full xl:w-3/4 flex flex-col gap-8">
+        <div>
+          <strong class="font-semibold text-2xl"
+            >{{.Offer.Title}}</strong
+          >
+          <p class="text-shark-300 font-light">Publicado {{.Offer.RelativeTime}}</p>
+        </div>
+
+        <section class="flex flex-col border border-black p-4 gap-4">
+          <strong class="text-shark-200 text-xl font-semibold text-center">Detalles de la prueba</strong>
+
+          <div class="flex justify-around">
+            <div class="flex justify-center">
+              <p class="flex items-center text-shark-200 gap-2 font-medium">
+                <img class="inline" src="/public/clock.svg" width="20" height="20" alt="clock icon" />
+                {{.Quiz.Duration}} minutos
+              </p>
+            </div>
+            <div class="flex justify-center rounded">
+              <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full">
+                {{range .Languages}}
+                <span class="rounded border border-shark-200 text-shark-200 px-2">{{.DisplayName}}</span>
+                {{end}}
+              </div>
+            </div>
           </div>
+
           <div class="flex flex-col">
-            <strong>Problemas</strong>
-            <section class="grid grid-cols-2 gap-4">
-              {{range .Problems}}
-              <details class="bg-shark-900 rounded" >
-                <summary class="hover:bg-gray-800 px-4 py-2 cursor-pointer">{{.Title}}</summary>
-                <div class="p-8">
-                  <pre class="whitespace-pre-wrap">{{.Description}}</pre>
-                  {{template "examples" .Examples}}
+            <div class="flex flex-col">
+              <p class="text-shark-200 text-center font-semibold">Problemas</p>
+              <section class="flex flex-wrap justify-center gap-4 overflow-x-auto">
+                {{range .Problems}}
+                <div class="bg-shark-800 rounded">
+                  <input 
+                    type="radio" 
+                    name="problem-group" 
+                    id="problem-{{.ID}}" 
+                    class="hidden peer"
+                    onclick="openModal('modal-{{.ID}}')"
+                  >
+                  <label 
+                    for="problem-{{.ID}}" 
+                    class="block w-full hover:bg-gray-800 px-4 py-2 rounded cursor-pointer text-left peer-checked:bg-gray-800"
+                  >
+                    {{.Title}}
+                  </label>
                 </div>
-              </details>
+                {{end}}
+              </section>
+            </div>
+
+            <section class="relative">
+              {{range .Problems}}
+              <div id="modal-{{.ID}}" class="w-full bg-gray-800 absolute hidden rounded overflow-y-auto shadow-sm shadow-white/50">
+                <div class="relative">
+                  <button 
+                    onclick="closeModal('modal-{{.ID}}')"
+                    class="absolute top-2 right-2 p-2 text-gray-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                  <div class="flex flex-col gap-2 p-8">
+                    <pre class="whitespace-pre-wrap">{{.Description}}</pre>
+                    <div class="flex flex-col">
+                      <span 
+                        class="text-shark-200"
+                      >
+                      Tiempo límite: {{.TimeLimit}} ms</span>
+                      <span 
+                        class="text-shark-200"
+                      >
+                      Memoria límite: {{.MemoryLimit}} kb</span>
+                    </div>
+                    {{template "examples" .Examples}}
+                  </div>
+                </div>
+              </div>
               {{end}}
             </section>
           </div>
+
         </section>
+        <script>
+          function openModal(id) {
+            document.querySelectorAll('[id^="modal-"]').forEach(modal => {
+              modal.classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+          }
+          
+          function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.body.style.overflow = '';
+            document.querySelectorAll('input[name="problem-group"]').forEach(radio => {
+              radio.checked = false;
+            });
+          }
+          
+          // Close modal when pressing Escape
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+              document.querySelectorAll('[id^="modal-"]').forEach(modal => {
+                modal.classList.add('hidden');
+              });
+              document.body.style.overflow = '';
+              document.querySelectorAll('input[name="problem-group"]').forEach(radio => {
+                radio.checked = false;
+              });
+            }
+          });
+        </script>
+
         <div class="flex flex-col gap-4">
-          <span class="text-xl">Aplicantes</span>
+          <span class="text-xl text-center">Aplicantes</span>
           {{range .Applicants}} 
           {{template "applicantCard" .}} 
           {{end}}
@@ -84,7 +166,7 @@
     <span class="text-center">{{.Applicant.Email}}</span>
   </div>
   <div class="w-3/4 p-8">
-    <span>Entregado: {{.Participation.RelativeTime}}</span>
+    <span class="text-shark-300 font-light">Entregado {{.Participation.RelativeTime}}</span>
       <div class="flex justify-between">
         <span class="text-shark-200 text-xl font-semibold">Problema</span>
         <span class="text-shark-200 text-xl font-semibold">Puntaje</span>
@@ -98,7 +180,7 @@
         <summary class="flex-auto flex hover:bg-gray-800 justify-between cursor-pointer p-2"
           hx-get="/source/{{.Problem.ID}}/{{$applicant.ID}}"
           hx-trigger="click once"
-          hx-target="#appl-{{$applicant.ID}}"
+          hx-target="#appl-{{$applicant.ID}}-{{.Problem.ID}}"
           hx-swap="outerHTML"
         >
           <span class="text-shark-200">{{.Problem.Title}}</span>
@@ -113,7 +195,7 @@
           {{end}}
             {{.Score.AcceptedTestCases}}/{{.Score.TotalTestCases}}</span>
         </summary>
-        <section id="appl-{{$applicant.ID}}"></section>
+        <section id="appl-{{$applicant.ID}}-{{.Problem.ID}}"></section>
       </details>
       {{end}}
     </div>

@@ -856,7 +856,7 @@ func (mysql *MysqlStorage) SelectProblems(ctx context.Context, quizID string) ([
 			Title:       problem.Title,
 			Description: problem.Description,
 			MemoryLimit: problem.MemoryLimit,
-			TimeLimit:   problem.TimeLimit,
+			TimeLimit:   problem.TimeLimit * 1000,
 		}
 		res = append(res, p)
 	}
