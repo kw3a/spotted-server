@@ -65,7 +65,7 @@
         .CompanyImageURL}}
         src="{{.CompanyImageURL}}"
         {{else}}
-        src="/public/user.svg"
+        src="/public/company.svg"
         {{end}}
         width="50"
         height="50"
@@ -113,7 +113,7 @@
     </div>
   </div>
   {{if not (eq .Status 1)}}
-    <span class="absolute transform -rotate-45 select-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap font-bold text-4xl text-black">
+    <span class="absolute transform -rotate-45 select-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap font-bold text-4xl text-red-500">
       Archivado</span>
   {{end}}
 </section>

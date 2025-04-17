@@ -1,7 +1,8 @@
 -- name: BestSubmission :one
-SELECT submission.*
+SELECT submission.*, language.display_name as language
 FROM submission
 JOIN participation ON submission.participation_id = participation.id
+JOIN language ON submission.language_id = language.id
 WHERE submission.problem_id = ? and participation.user_id = ?
 ORDER BY submission.accepted_test_cases DESC, submission.created_at ASC
 LIMIT 1;

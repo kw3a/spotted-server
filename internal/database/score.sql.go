@@ -7,12 +7,14 @@ package database
 
 import (
 	"context"
+	"database/sql"
 )
 
 const bestSubmission = `-- name: BestSubmission :one
-SELECT submission.id, submission.created_at, submission.updated_at, submission.src, submission.accepted_test_cases, submission.problem_id, submission.participation_id, submission.language_id
+SELECT submission.id, submission.created_at, submission.updated_at, submission.src, submission.accepted_test_cases, submission.problem_id, submission.participation_id, submission.language_id, language.display_name as language
 FROM submission
 JOIN participation ON submission.participation_id = participation.id
+JOIN language ON submission.language_id = language.id
 WHERE submission.problem_id = ? and participation.user_id = ?
 ORDER BY submission.accepted_test_cases DESC, submission.created_at ASC
 LIMIT 1
@@ -23,9 +25,21 @@ type BestSubmissionParams struct {
 	UserID    string
 }
 
-func (q *Queries) BestSubmission(ctx context.Context, arg BestSubmissionParams) (Submission, error) {
+type BestSubmissionRow struct {
+	ID                string
+	CreatedAt         sql.NullTime
+	UpdatedAt         sql.NullTime
+	Src               string
+	AcceptedTestCases uint32
+	ProblemID         string
+	ParticipationID   string
+	LanguageID        int32
+	Language          string
+}
+
+func (q *Queries) BestSubmission(ctx context.Context, arg BestSubmissionParams) (BestSubmissionRow, error) {
 	row := q.db.QueryRowContext(ctx, bestSubmission, arg.ProblemID, arg.UserID)
-	var i Submission
+	var i BestSubmissionRow
 	err := row.Scan(
 		&i.ID,
 		&i.CreatedAt,
@@ -35,6 +49,7 @@ func (q *Queries) BestSubmission(ctx context.Context, arg BestSubmissionParams) 
 		&i.ProblemID,
 		&i.ParticipationID,
 		&i.LanguageID,
+		&i.Language,
 	)
 	return i, err
 }

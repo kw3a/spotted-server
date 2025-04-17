@@ -19,7 +19,6 @@ func (DI *App) CompanyRegistrationPageHandler() http.HandlerFunc {
 	return companies.CreateRegisterCompanyPage(
 		DI.Templ,
 		DI.AuthService,
-		defaultImagePath,
 	)
 }
 
@@ -38,7 +37,6 @@ func (DI *App) CompanyPageHandler() http.HandlerFunc {
 		DI.Templ,
 		DI.AuthService,
 		DI.Storage,
-		defaultImagePath,
 		companies.GetCompanyPageInput,
 	)
 }

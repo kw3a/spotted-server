@@ -8,6 +8,7 @@
     <link href="/static/output.css" rel="stylesheet" />
     <script src="/static/htmx.min.js"></script>
     <script src="/static/head-support.js"></script>
+    <script src="/static/preview.js"></script>
   </head>
 
   <body class="bg-shark-950" hx-ext="head-support">
@@ -30,8 +31,8 @@
                 class="block w-full h-full rounded-full overflow-hidden cursor-pointer"
               >
                 <img
-                  src="{{.DefaultImage}}"
-                  class="w-full h-auto border-2 border-blue-500 aspect-square rounded-full object-cover"
+                  src="/public/company.svg"
+                  class="w-full h-auto border-2 border-gray-700 aspect-square rounded-full object-cover"
                   id="preview"
                   alt="avatar"
                 />
@@ -41,27 +42,10 @@
                 id="image"
                 type="file"
                 name="image"
-                onchange="previewImage(event)"
+                onchange='window.previewImage(event,"/public/company.svg")'
                 accept="image/*"
                 class="hidden"
               />
-
-              <script>
-                function previewImage(event) {
-                  const preview = document.getElementById("preview");
-                  const defaultImagePath = "{{.DefaultImage}}";
-
-                  if (event.target.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                      preview.src = e.target.result;
-                    };
-                    reader.readAsDataURL(event.target.files[0]);
-                  } else {
-                    preview.src = defaultImagePath;
-                  }
-                }
-              </script>
             </div>
             <span
               id="image-error"

@@ -22,6 +22,7 @@ func (cfg *SeedersConfig) seedUsers() ([]string, error) {
 		Name:     "Test User",
 		Email:    "myemail@gmail.com",
 		Password: passHashed,
+		Description: "Usuario de prueba con 2 publicaciones",
 	})
 	if err != nil {
 		return nil, err

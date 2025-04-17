@@ -17,8 +17,12 @@
       <div class="w-3/4 flex flex-row gap-4 divide-x divide-gray-600">
         <div class="w-1/2 flex flex-col justify-center gap-4 overflow-auto">
           <img
+            {{ if eq .Company.ImageURL ""}}
+            src="/public/company.svg"
+            {{else}}
             src="{{.Company.ImageURL}}"
-            class="w-1/2 h-auto border-2 border-blue-500 aspect-square rounded-full mx-auto object-cover"
+            {{end}}
+            class="w-1/2 h-auto border-2 border-gray-700 aspect-square rounded-full mx-auto object-cover"
             id="preview"
             alt="avatar"
           />

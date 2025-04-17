@@ -1,12 +1,22 @@
 {{block "linkSection" .}}
 <div>
-  <span class="text-white text-xl">Enlaces</span>
-  <button
-    class="inline text-white"
-    onclick="showAndHide('linkForm')"
-  >
-    +
-  </button>
+  <div class="flex items-center justify-center gap-3">
+    <span class="text-white text-xl font-medium">Enlaces</span>
+    <button 
+      onclick="window.showAndHide('linkForm')"
+      class="flex items-center justify-center w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
+      type="button"
+      aria-label="Añadir habilidad"
+    >
+      <img 
+        src="/public/plus.svg" 
+        alt="Añadir" 
+        width="16" 
+        height="16"
+        class="pointer-events-none"
+      />
+    </button>
+  </div>
   {{template "linkForm" .}}
   {{template "linkList" .}}
 </div>
@@ -15,15 +25,15 @@
 {{block "linkEntry" .}}
 <tr id="link_{{.ID}}">
   <td>
-    <a class="text-shark-200" target="_blank" href="{{.URL}}">{{.Name}}</a>
+    <a class="text-shark-200 hover:underline" target="_blank" href="{{.URL}}">{{.Name}}</a>
   </td>
   <td>
     <button 
       hx-delete="/links/{{.ID}}" 
       hx-target="#link_{{.ID}}"
       hx-swap="delete"
-      class="hover:border rounded hover:border-red-400  text-red-400 text-sm w-6 h-6 flex items-center justify-center">
-      x
+      class="flex items-center justify-center w-7 h-7 rounded-full hover:bg-red-400 transition-colors duration-200">
+        <img src="/public/x.svg" alt="delete icon" width="16" height="16" style="pointer-events: none" />
     </button>
   </td>
 </tr>

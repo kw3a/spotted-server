@@ -25,37 +25,49 @@ type MysqlStorage struct {
 	db      *sql.DB
 }
 
-func (mysql *MysqlStorage) GetExecutedTestCases(ctx context.Context, problemID, submissionID string) ([]shared.ExecutedTestCase, error) {
-	dbExecTCs, err := mysql.Queries.GetExecutedTestCases(ctx, database.GetExecutedTestCasesParams{
+func (mysql *MysqlStorage) SelectTestCases(ctx context.Context, problemID string) ([]shared.TestCase, error) {
+	dbTC, err := mysql.Queries.SelectTestCases(ctx, problemID)
+	if err != nil {
+		return []shared.TestCase{}, nil
+	}
+	test_cases := []shared.TestCase{}
+	for _, test_case := range dbTC {
+		tc := shared.TestCase{
+			ID:        test_case.ID,
+			Input:     test_case.Input,
+			Output:    test_case.Output,
+			ProblemID: test_case.ProblemID,
+		}
+		test_cases = append(test_cases, tc)
+	}
+	return test_cases, nil
+}
+
+func (mysql *MysqlStorage) GetResults(ctx context.Context, problemID, submissionID string) ([]shared.TestCaseResult, error) {
+	dbTCResults, err := mysql.Queries.GetResults(ctx, database.GetResultsParams{
 		ProblemID: problemID,
 		ID:        submissionID,
 	})
 	if err != nil {
-		return []shared.ExecutedTestCase{}, err
+		return []shared.TestCaseResult{}, err
 	}
-	execTCs := []shared.ExecutedTestCase{}
-	for _, dbExecTC := range dbExecTCs {
-		dbTime, err := decimal.NewFromString(dbExecTC.ResultTime)
+	tcResults := []shared.TestCaseResult{}
+	for _, dbExecTC := range dbTCResults {
+		dbTime, err := decimal.NewFromString(dbExecTC.Time)
 		if err != nil {
-			return []shared.ExecutedTestCase{}, err
+			return []shared.TestCaseResult{}, err
 		}
 		dbTime = dbTime.Mul(decimal.NewFromInt32(1000))
-		execTCs = append(execTCs, shared.ExecutedTestCase{
-			TestCase: shared.TestCase{
-				ID:     dbExecTC.TcID,
-				Input:  dbExecTC.TcInput,
-				Output: dbExecTC.TcOutput,
-			},
-			Result: shared.TestCaseResult{
-				Output:     dbExecTC.ResultOutput,
-				Status:     dbExecTC.ResultStatus,
-				Time:       dbTime.IntPart(),
-				Memory:     dbExecTC.ResultMemory,
-				TestCaseID: dbExecTC.TcID,
-			},
-		})
+		tcResults = append(tcResults, shared.TestCaseResult{
+			Output:     dbExecTC.Output,
+			Status:     dbExecTC.Status,
+			Time:       dbTime.IntPart(),
+			Memory:     dbExecTC.Memory,
+			TestCaseID: dbExecTC.TestCaseID,
+		},
+		)
 	}
-	return execTCs, nil
+	return tcResults, nil
 }
 
 func (mysql *MysqlStorage) BestSubmission(ctx context.Context, applicantID string, problemID string) (shared.Submission, error) {
@@ -64,6 +76,9 @@ func (mysql *MysqlStorage) BestSubmission(ctx context.Context, applicantID strin
 		UserID:    applicantID,
 	})
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return shared.Submission{}, nil
+		}
 		return shared.Submission{}, err
 	}
 	return shared.Submission{
@@ -73,6 +88,7 @@ func (mysql *MysqlStorage) BestSubmission(ctx context.Context, applicantID strin
 		ParticipationID:   best.ParticipationID,
 		LanguageID:        best.LanguageID,
 		ProblemID:         best.ProblemID,
+		Language:          best.Language,
 	}, nil
 }
 
@@ -84,10 +100,11 @@ func (mysql *MysqlStorage) SelectApplicants(ctx context.Context, quizID string) 
 	res := []auth.AuthUser{}
 	for _, applicant := range applicants {
 		ap := auth.AuthUser{
-			ID:       applicant.ID,
-			Name:     applicant.Name,
-			ImageURL: applicant.ImageUrl,
-			Email:    applicant.Email,
+			ID:          applicant.ID,
+			Name:        applicant.Name,
+			ImageURL:    applicant.ImageUrl,
+			Email:       applicant.Email,
+			Description: applicant.Description,
 		}
 		res = append(res, ap)
 	}

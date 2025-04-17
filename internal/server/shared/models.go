@@ -98,6 +98,7 @@ type Submission struct {
 	ParticipationID   string
 	LanguageID        int32
 	ProblemID         string
+	Language          string
 }
 
 type Participation struct {

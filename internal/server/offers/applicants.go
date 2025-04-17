@@ -25,17 +25,14 @@ type OfferApplData struct {
 type Application struct {
 	Applicant     auth.AuthUser
 	Participation shared.Participation
-	Results       []Result
+	Summary       []Summary
 }
 
-type Result struct {
-	Problem SimplePrb
-	Score   shared.Score
-}
-
-type SimplePrb struct {
-	ID    string
-	Title string
+type Summary struct {
+	Title      string
+	Score      shared.Score
+	Submission shared.Submission
+	Results    []shared.TestCaseResult
 }
 
 type OfferApplStorage interface {
@@ -47,6 +44,9 @@ type OfferApplStorage interface {
 	SelectScore(ctx context.Context, userID string, problemID string) (shared.Score, error)
 	SelectLanguages(ctx context.Context, quizID string) ([]shared.Language, error)
 	SelectExamples(ctx context.Context, problemID string) ([]shared.Example, error)
+	SelectTestCases(ctx context.Context, problemID string) ([]shared.TestCase, error)
+	BestSubmission(ctx context.Context, applicantID, problemID string) (shared.Submission, error)
+	GetResults(ctx context.Context, problemID, submissionID string) ([]shared.TestCaseResult, error)
 }
 
 func GetOfferApplInput(r *http.Request) (OfferApplInput, error) {
@@ -111,7 +111,13 @@ func CreateOfferApplHandler(
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			test_cases, err := storage.SelectTestCases(r.Context(), problem.ID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			problem.Examples = examples
+			problem.TestCases = test_cases
 		}
 		data := OfferApplData{
 			User:      user,
@@ -128,7 +134,7 @@ func CreateOfferApplHandler(
 				return
 			}
 			apl := Application{
-				Applicant: applicant,
+				Applicant:     applicant,
 				Participation: participation,
 			}
 			for _, problem := range problems {
@@ -137,9 +143,21 @@ func CreateOfferApplHandler(
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
-				apl.Results = append(apl.Results, Result{
-					Problem: SimplePrb{ID: problem.ID, Title: problem.Title},
-					Score:   score,
+				subm, err := storage.BestSubmission(r.Context(), applicant.ID, problem.ID)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				results, err := storage.GetResults(r.Context(), problem.ID, subm.ID)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				apl.Summary = append(apl.Summary, Summary{
+					Title:      problem.Title,
+					Score:      score,
+					Submission: subm,
+					Results:    results,
 				})
 			}
 			data.Applicants = append(data.Applicants, apl)

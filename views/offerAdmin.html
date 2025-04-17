@@ -9,74 +9,63 @@
     <link href="/static/output.css" rel="stylesheet" />
     <script src="/static/head-support.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="/static/offerAdmin.js" type="module" defer></script>
   </head>
 
   <body class="bg-shark-950" hx-ext="head-support">
-    {{template "navBar" .User}}
-    <div class="flex justify-center p-4 text-shark-200">
-      <section class="sm:w-full xl:w-3/4 flex flex-col gap-8">
-        <div>
+    <section class="h-screen flex flex-col font-mono">
+      {{template "navBar" .User}}
+      <div class="flex-1 w-full flex flex-col xl:flex-row sm:gap-8 xl:gap-0 text-shark-200 overflow-hidden">
+        <section class="xl:w-1/2 overflow-y-auto p-8">
           <strong class="font-semibold text-2xl"
             >{{.Offer.Title}}</strong
           >
-          <p class="text-shark-300 font-light">Publicado {{.Offer.RelativeTime}}</p>
-        </div>
+          <span class="text-shark-300 font-light">Publicado {{.Offer.RelativeTime}}</span>
 
-        <section class="flex flex-col border border-black p-4 gap-4">
-          <strong class="text-shark-200 text-xl font-semibold text-center">Detalles de la prueba</strong>
-
-          <div class="flex justify-around">
-            <div class="flex justify-center">
-              <p class="flex items-center text-shark-200 gap-2 font-medium">
-                <img class="inline" src="/public/clock.svg" width="20" height="20" alt="clock icon" />
-                {{.Quiz.Duration}} minutos
-              </p>
+          <section class="flex flex-col gap-4">
+            <strong class="text-shark-200 text-xl font-semibold">Detalles de la prueba</strong>
+            <p class="flex items-center text-shark-200 gap-2 font-medium">
+              Duración:
+              <img class="inline" src="/public/clock.svg" width="20" height="20" alt="clock icon" />
+              {{.Quiz.Duration}} minutos
+            </p>
+            <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full">
+              <span class="font-medium">Lenguajes permitidos:</span>
+              {{range .Languages}}
+              <span class="rounded border border-shark-200 text-shark-200 px-2">{{.DisplayName}}</span>
+              {{end}}
             </div>
-            <div class="flex justify-center rounded">
-              <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full">
-                {{range .Languages}}
-                <span class="rounded border border-shark-200 text-shark-200 px-2">{{.DisplayName}}</span>
-                {{end}}
-              </div>
-            </div>
-          </div>
 
-          <div class="flex flex-col">
             <div class="flex flex-col">
-              <p class="text-shark-200 text-center font-semibold">Problemas</p>
-              <section class="flex flex-wrap justify-center gap-4 overflow-x-auto">
+              <p class="text-shark-200 font-semibold">Problemas</p>
+              <section class="flex flex-wrap gap-4 overflow-x-auto">
+                {{ $first := true }}
                 {{range .Problems}}
-                <div class="bg-shark-800 rounded">
+                <div class="bg-shark-900 rounded">
                   <input 
                     type="radio" 
                     name="problem-group" 
                     id="problem-{{.ID}}" 
                     class="hidden peer"
-                    onclick="openModal('modal-{{.ID}}')"
-                  >
+                    onclick="window.openModal('modal-{{.ID}}')"
+                  {{if $first}} checked {{end}}>
                   <label 
                     for="problem-{{.ID}}" 
-                    class="block w-full hover:bg-gray-800 px-4 py-2 rounded cursor-pointer text-left peer-checked:bg-gray-800"
+                    class="block w-full font-semibold hover:bg-gray-900 px-4 py-2 rounded cursor-pointer text-left peer-checked:bg-gray-900 select-none"
                   >
                     {{.Title}}
                   </label>
                 </div>
+                {{ $first = false }}
                 {{end}}
               </section>
-            </div>
 
-            <section class="relative">
-              {{range .Problems}}
-              <div id="modal-{{.ID}}" class="w-full bg-gray-800 absolute hidden rounded overflow-y-auto shadow-sm shadow-white/50">
-                <div class="relative">
-                  <button 
-                    onclick="closeModal('modal-{{.ID}}')"
-                    class="absolute top-2 right-2 p-2 text-gray-400 hover:text-white"
-                  >
-                    ✕
-                  </button>
-                  <div class="flex flex-col gap-2 p-8">
+              <section class="">
+                {{ $first := true }}
+                {{range .Problems}}
+                <div id="modal-{{.ID}}" class="w-full bg-gray-900 rounded 
+                  {{if not $first}} hidden {{end}}">
+                  <div class="flex flex-col gap-8 p-8">
                     <pre class="whitespace-pre-wrap">{{.Description}}</pre>
                     <div class="flex flex-col">
                       <span 
@@ -88,102 +77,103 @@
                       >
                       Memoria límite: {{.MemoryLimit}} kb</span>
                     </div>
-                    {{template "examples" .Examples}}
+
+                    <div class="flex flex-col gap-4 bg-gray-800 p-2">
+                      <span class="text-center font-medium">Casos de prueba</span>
+                      {{range $index, $testCase := .TestCases}}
+                      <details class="rounded">
+                        <summary class="bg-sky-600 select-none cursor-pointer hover:bg-sky-500 list-none">
+                          <div class="flex justify-between p-2 font-mono">
+                            <span class="text-white font-medium">TC {{add $index 1}}</span>
+                            <span class="text-white opacity-50">{{$testCase.ID}}</span>
+                          </div>
+                        </summary>
+                        <div class="flex flex-row divide-x divide-sky-600">
+                          <div class="w-1/2 bg-shark-700">
+                            <span class="text-white px-2">ENTRADA</span>
+                            <pre class="text-shark-200 p-4">{{$testCase.Input}}</pre>
+                          </div>
+                          <div class="w-1/2 bg-shark-700">
+                            <span class="text-white px-2">SALIDA ESPERADA</span>
+                            <pre class="text-shark-200 p-4">{{$testCase.Output}}</pre>
+                          </div>
+                        </div>
+                      </details>
+                      {{end}}
+                    </div>
+
+                    <div class="flex flex-col gap-4 bg-gray-800 p-2">
+                      <span class="text-center font-medium">Ejemplos</span>
+                      {{range .Examples}}
+                      <div class="flex flex-row divide-x divide-gray-800">
+                        <div class="w-1/2 bg-shark-700">
+                          <span class="text-white px-2">ENTRADA</span>
+                          <pre class="text-shark-200 p-4">{{.Input}}</pre>
+                        </div>
+                        <div class="w-1/2 bg-shark-700">
+                          <span class="text-white px-2">SALIDA</span>
+                          <pre class="text-shark-200 p-4">{{.Output}}</pre>
+                        </div>
+                      </div>
+                      {{end}} 
+                    </div>
                   </div>
                 </div>
-              </div>
-              {{end}}
-            </section>
-          </div>
-
+                {{ $first = false }}
+                {{end}}
+              </section>
+            </div>
+          </section>
         </section>
-        <script>
-          function openModal(id) {
-            document.querySelectorAll('[id^="modal-"]').forEach(modal => {
-              modal.classList.add('hidden');
-            });
-            document.getElementById(id).classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-          }
-          
-          function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-            document.body.style.overflow = '';
-            document.querySelectorAll('input[name="problem-group"]').forEach(radio => {
-              radio.checked = false;
-            });
-          }
-          
-          // Close modal when pressing Escape
-          document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-              document.querySelectorAll('[id^="modal-"]').forEach(modal => {
-                modal.classList.add('hidden');
-              });
-              document.body.style.overflow = '';
-              document.querySelectorAll('input[name="problem-group"]').forEach(radio => {
-                radio.checked = false;
-              });
-            }
-          });
-        </script>
-
-        <div class="flex flex-col gap-4">
+        <div class="xl:w-1/2 overflow-y-auto flex flex-col gap-4 p-8">
           <span class="text-xl text-center">Aplicantes</span>
           {{range .Applicants}} 
           {{template "applicantCard" .}} 
           {{end}}
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   </body>
 </html>
 {{end}} 
 
 {{block "applicantCard" .}}
-<div class="flex flex-row rounded border border-shark-900 p-4">
-  <div class="w-1/4 flex flex-col justify-center gap-2">
-    <div class="flex flex-row justify-center">
-      <img
-        class="w-1/2 h-auto border border-gray-700 hover:border-white aspect-square mx-auto object-cover cursor-pointer"
-        hx-get="/profile/{{.Applicant.ID}}"
-        hx-push-url="true"
-        hx-target="body"
-        hx-boost="true"
-        {{if
-        .Applicant.ImageURL}}
-        src="{{.Applicant.ImageURL}}"
-        {{else}}
-        src="/public/user.svg"
-        {{end}}
-        width="40"
-        height="40"
-      />
-    </div>
-    <span class="text-center font-semibold text-xl"
-      >{{.Applicant.Name}}</span
-    >
-    <span class="text-center">{{.Applicant.Email}}</span>
-  </div>
-  <div class="w-3/4 p-8">
-    <span class="text-shark-300 font-light">Entregado {{.Participation.RelativeTime}}</span>
-      <div class="flex justify-between">
-        <span class="text-shark-200 text-xl font-semibold">Problema</span>
-        <span class="text-shark-200 text-xl font-semibold">Puntaje</span>
+<div class="rounded border border-shark-900 p-4">
+  <div class="w-full p-8">
+    <div class="flex flex-wrap justify-between">
+      <div class="flex gap-2 truncate items-center">
+        <div class="flex-shrink-0"> 
+          <img
+            class="border border-gray-700 hover:border-white cursor-pointer object-cover aspect-square" 
+            hx-get="/profile/{{.Applicant.ID}}"
+            hx-push-url="true"
+            hx-target="body"
+            hx-boost="true"
+            {{if .Applicant.ImageURL}}
+              src="{{.Applicant.ImageURL}}"
+            {{else}}
+              src="/public/user.svg"
+            {{end}}
+            width="40"
+            height="40"
+          />
+        </div>
+        <div class="flex flex-col flex-1 justify-center min-w-0"> 
+          <span class="font-semibold text-xl truncate">{{.Applicant.Name}}</span>
+          <span class="truncate">{{.Applicant.Description}}</span>
+        </div>
       </div>
+      <span class="text-shark-300 font-light">Entregado {{.Participation.RelativeTime}}</span>
+    </div>
+
     <div class="flex flex-col gap-2">
       {{ $applicant := .Applicant }}
-      {{range .Results}}
+      {{range .Summary}}
       <details
         class="bg-gray-900"
       >
-        <summary class="flex-auto flex hover:bg-gray-800 justify-between cursor-pointer p-2"
-          hx-get="/source/{{.Problem.ID}}/{{$applicant.ID}}"
-          hx-trigger="click once"
-          hx-target="#appl-{{$applicant.ID}}-{{.Problem.ID}}"
-          hx-swap="outerHTML"
-        >
-          <span class="text-shark-200">{{.Problem.Title}}</span>
+        <summary class="flex-auto flex hover:bg-gray-800 justify-between cursor-pointer px-4 py-2">
+          <span class="text-shark-200">{{.Title}}</span>
           {{if eq .Score.AcceptedTestCases 0}}
           <span class="text-red-500">
           {{else}}
@@ -195,7 +185,7 @@
           {{end}}
             {{.Score.AcceptedTestCases}}/{{.Score.TotalTestCases}}</span>
         </summary>
-        <section id="appl-{{$applicant.ID}}-{{.Problem.ID}}"></section>
+        {{template "sourceCard" .}}
       </details>
       {{end}}
     </div>
@@ -204,50 +194,41 @@
 {{end}}
 
 {{block "sourceCard" .}}
+{{if eq .Submission.ID ""}}
+<section class="px-4 py-2 rounded bg-gray-900">
+  <span class="text-sm">No se ha respondido esta pregunta</span>
+</section>
+{{else}}
 <section class="p-4">
-  <pre id="sbm-{{.Submission.ID}}">
+  <span class="text-sm opacity-50">{{.Submission.Language}}</span>
+  <pre>
     <code>{{.Submission.Src | html}}
     </code>
   </pre>
-  <span>Casos de prueba</span>
   <div class="flex flex-col gap-4">
-  {{range .TestCases}}
-    <details class="p-2">
-      <summary class="flex bg-shark-950 hover:bg-gray-800 p-2">
-        {{if eq .Result.Status "Accepted"}}
-        <span class="w-1/3 text-green-600">{{.Result.Status}}</span>
+  {{range $index, $tc := .Results}}
+    <details class="">
+      <summary class="flex flex-wrap font-mono justify-between text-white bg-sky-600 hover:bg-sky-500 p-2 cursor-pointer select-none">
+        <span class="font-medium">TC {{add $index 1}}</span>
+        {{if eq $tc.Status "Accepted"}}
+        <span class="text-green-400 font-semibold">{{$tc.Status}}</span>
         {{else}}
-        <span class="w-1/3 text-red-500">{{.Result.Status}}</span>
+        <span class="text-red-600 font-semibold">{{$tc.Status}}</span>
         {{end}}
-        <span class="w-1/3 flex items-center gap-2">
+        <span class="flex items-center gap-2">
           <img class="inline" src="/public/clock.svg" width="20" height="20" alt="clock icon" />
-          {{.Result.Time}} ms
+          {{$tc.Time}} ms
         </span>
-        <span class="w-1/3">{{.Result.Memory}} Kb</span>
+        <span class="">{{$tc.Memory}} Kb</span>
+        <span class="opacity-50">{{$tc.TestCaseID}}</span>
       </summary>
-      <div class="flex">
-        <div class="w-1/2 flex flex-col p-4">
-          <span>Entrada</span>
-          <pre class="bg-shark-950 p-2">{{.TestCase.Input}}</pre>
-          <span>Salida esperada</span>
-          <pre class="bg-shark-950 p-2">{{.TestCase.Output}}</pre>
-        </div>
-        <div class="w-1/2 flex flex-col p-4">
-          <div>
-            <span>Salida obtenida</span>
-            <pre class="bg-shark-950 p-2">{{.Result.Output}}</pre>
-          </div>
-        </div>
+      <div class="w-full bg-shark-700">
+        <span class="text-white px-2">SALIDA OBTENIDA</span>
+        <pre class="text-shark-200 p-4">{{$tc.Output}}</pre>
       </div>
     </details>
   {{end}}
   </div>
-  <script>hljs.highlightElement(document.getElementById("sbm-{{.Submission.ID}}"));</script>
 </section>
 {{end}}
-
-{{block "noSourceCard" .}}
-<div class="flex flex-col px-4 py-2 rounded bg-gray-900">
-  <span>{{.Msg}}</span>
-</div>
 {{end}}

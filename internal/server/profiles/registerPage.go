@@ -8,13 +8,10 @@ import (
 )
 
 type UserFormData struct {
-	User         auth.AuthUser
-	DefaultImage string
+	User auth.AuthUser
 }
 
-const defaultImagePath = "/public/user.svg"
-
-func CreateUserPageHandler(defaultImage string, authService shared.AuthRep, templ shared.TemplatesRepo) http.HandlerFunc {
+func CreateUserPageHandler(authService shared.AuthRep, templ shared.TemplatesRepo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := authService.GetUser(r)
 		if err != nil {
@@ -22,12 +19,10 @@ func CreateUserPageHandler(defaultImage string, authService shared.AuthRep, temp
 			return
 		}
 		err = templ.Render(w, "userCreation", UserFormData{
-			User:         user,
-			DefaultImage: defaultImage,
+			User: user,
 		})
 		if err != nil {
 			http.Error(w, "can't render user page", http.StatusInternalServerError)
 		}
 	}
 }
-

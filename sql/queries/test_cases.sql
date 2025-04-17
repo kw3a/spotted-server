@@ -9,3 +9,8 @@ WHERE problem_id = ?;
 INSERT INTO test_case
 (id, problem_id, input, output)
 VALUES (?, ?, ?, ?);
+
+-- name: SelectTestCases :many
+SELECT *
+FROM test_case
+WHERE problem_id = ?;

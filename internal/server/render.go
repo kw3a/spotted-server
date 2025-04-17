@@ -22,8 +22,17 @@ func viewsPath() (string, error) {
 	return filepath.Join(absPath, "views", "*.html"), nil
 }
 
+var templateFuncs = template.FuncMap{
+	"add": func(a, b int) int { return a + b },
+	"inc": func(i int) int { return i + 1 },
+}
+
 func newTemplates(views string) *Templates {
-	templates := template.Must(template.ParseGlob(views))
+	templates := template.Must(
+		template.New("").
+			Funcs(templateFuncs).
+			ParseGlob(views),
+	)
 	return &Templates{templates: templates}
 }
 

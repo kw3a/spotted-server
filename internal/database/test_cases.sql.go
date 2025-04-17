@@ -76,3 +76,39 @@ func (q *Queries) InsertTestCase(ctx context.Context, arg InsertTestCaseParams) 
 	)
 	return err
 }
+
+const selectTestCases = `-- name: SelectTestCases :many
+SELECT id, created_at, updated_at, input, output, problem_id
+FROM test_case
+WHERE problem_id = ?
+`
+
+func (q *Queries) SelectTestCases(ctx context.Context, problemID string) ([]TestCase, error) {
+	rows, err := q.db.QueryContext(ctx, selectTestCases, problemID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TestCase
+	for rows.Next() {
+		var i TestCase
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Input,
+			&i.Output,
+			&i.ProblemID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -40,7 +40,6 @@ func CreateCompanyPageHandler(
 	templ shared.TemplatesRepo,
 	authService shared.AuthRep,
 	storage CompanyPageStorage,
-	defaultImg string,
 	inputFn companyPageInputFn,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -58,9 +57,6 @@ func CreateCompanyPageHandler(
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
-		}
-		if company.ImageURL == "" {
-			company.ImageURL = defaultImg
 		}
 		query := shared.OfferQueryParams{CompanyID: input.CompanyID}
 		offers, err := storage.SelectOffers(r.Context(), query)

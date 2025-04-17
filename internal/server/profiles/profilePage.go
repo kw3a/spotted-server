@@ -92,10 +92,6 @@ func CreateProfilePageHandler(
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		imageURL := dbUser.ImageUrl
-		if imageURL == "" {
-			imageURL = defaultImagePath
-		}
 		participatedOffers, err := storage.SelectParticipatedOffers(r.Context(), input.UserID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -103,7 +99,7 @@ func CreateProfilePageHandler(
 		}
 		profile := Profile{
 			Name:        dbUser.Name,
-			ImageURL:    imageURL,
+			ImageURL:    dbUser.ImageUrl,
 			Description: dbUser.Description,
 		}
 		data := ProfilePageData{

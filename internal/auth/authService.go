@@ -10,15 +10,17 @@ import (
 )
 
 const (
-	AuthRole = "verified"
+	AuthRole    = "verified"
 	NotAuthRole = "visitor"
 )
+
 type AuthUser struct {
-	ID       string
-	Role     string
-	Name     string
-	ImageURL string
-	Email    string
+	ID          string
+	Role        string
+	Name        string
+	ImageURL    string
+	Email       string
+	Description string
 }
 type AuthService struct{}
 
@@ -109,11 +111,12 @@ func AuthNMiddleware(storage MiddlewareStorage, authType MiddlewareAuthType, nex
 			return
 		}
 		setContext(AuthUser{
-			ID:       dbUser.ID,
-			Role:     AuthRole,
-			Name:     dbUser.Name,
-			ImageURL: dbUser.ImageUrl,
-			Email:    dbUser.Email,
+			ID:          dbUser.ID,
+			Role:        AuthRole,
+			Name:        dbUser.Name,
+			ImageURL:    dbUser.ImageUrl,
+			Email:       dbUser.Email,
+			Description: dbUser.Description,
 		})
 	})
 }

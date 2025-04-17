@@ -6,8 +6,6 @@ import (
 	"github.com/kw3a/spotted-server/internal/server/profiles"
 )
 
-const defaultImagePath = "/public/user.svg"
-
 func (DI *App) ProfilePageHandler() http.HandlerFunc {
 	return profiles.CreateProfilePageHandler(
 		DI.AuthService,
@@ -90,7 +88,7 @@ func (DI *App) UserHandler() http.HandlerFunc {
 }
 
 func (DI *App) UserPageHandler() http.HandlerFunc {
-	return profiles.CreateUserPageHandler(defaultImagePath, DI.AuthService, DI.Templ)
+	return profiles.CreateUserPageHandler(DI.AuthService, DI.Templ)
 }
 
 func (DI *App) SkillRegisterHandler() http.HandlerFunc {

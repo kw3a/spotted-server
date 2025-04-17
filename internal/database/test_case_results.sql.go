@@ -8,7 +8,6 @@ package database
 import (
 	"context"
 	"database/sql"
-	"strings"
 )
 
 const createTestCaseResult = `-- name: CreateTestCaseResult :exec
@@ -38,80 +37,21 @@ func (q *Queries) CreateTestCaseResult(ctx context.Context, arg CreateTestCaseRe
 	return err
 }
 
-const getExecutedTestCases = `-- name: GetExecutedTestCases :many
-SELECT test_case.id as tc_id, test_case.input as tc_input, test_case.output as tc_output, 
-  test_case_result.status as result_status, test_case_result.time as result_time, 
-  test_case_result.memory as result_memory, test_case_result.output as result_output
-FROM test_case
-JOIN test_case_result ON test_case.id = test_case_result.test_case_id 
+const getResults = `-- name: GetResults :many
+SELECT test_case_result.id, test_case_result.created_at, test_case_result.updated_at, test_case_result.output, test_case_result.status, test_case_result.time, test_case_result.memory, test_case_result.test_case_id, test_case_result.submission_id 
+FROM test_case_result
 JOIN submission ON test_case_result.submission_id = submission.id
+JOIN test_case ON test_case_result.test_case_id = test_case.id
 WHERE test_case.problem_id = ? AND submission.id = ?
 `
 
-type GetExecutedTestCasesParams struct {
+type GetResultsParams struct {
 	ProblemID string
 	ID        string
 }
 
-type GetExecutedTestCasesRow struct {
-	TcID         string
-	TcInput      string
-	TcOutput     string
-	ResultStatus string
-	ResultTime   string
-	ResultMemory int32
-	ResultOutput string
-}
-
-func (q *Queries) GetExecutedTestCases(ctx context.Context, arg GetExecutedTestCasesParams) ([]GetExecutedTestCasesRow, error) {
-	rows, err := q.db.QueryContext(ctx, getExecutedTestCases, arg.ProblemID, arg.ID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetExecutedTestCasesRow
-	for rows.Next() {
-		var i GetExecutedTestCasesRow
-		if err := rows.Scan(
-			&i.TcID,
-			&i.TcInput,
-			&i.TcOutput,
-			&i.ResultStatus,
-			&i.ResultTime,
-			&i.ResultMemory,
-			&i.ResultOutput,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getResults = `-- name: GetResults :many
-SELECT id, created_at, updated_at, output, status, time, memory, test_case_id, submission_id 
-FROM test_case_result
-WHERE id IN (/*SLICE:ids*/?)
-`
-
-func (q *Queries) GetResults(ctx context.Context, ids []sql.NullString) ([]TestCaseResult, error) {
-	query := getResults
-	var queryParams []interface{}
-	if len(ids) > 0 {
-		for _, v := range ids {
-			queryParams = append(queryParams, v)
-		}
-		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
-	} else {
-		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
-	}
-	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+func (q *Queries) GetResults(ctx context.Context, arg GetResultsParams) ([]TestCaseResult, error) {
+	rows, err := q.db.QueryContext(ctx, getResults, arg.ProblemID, arg.ID)
 	if err != nil {
 		return nil, err
 	}
