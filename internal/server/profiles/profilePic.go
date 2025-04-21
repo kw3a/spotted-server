@@ -42,17 +42,21 @@ func CreateProfilePicHandler(storage ProfilePicStorage, auth shared.AuthRep, clo
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		input, err := GetProfilePicInput(r, cloudinaryService)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if user.Role != "visitor" {
+			input, err := GetProfilePicInput(r, cloudinaryService)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			err = storage.UpdateProfilePic(r.Context(), user.ID, input.ImageURL)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+		} else {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		err = storage.UpdateProfilePic(r.Context(), user.ID, input.ImageURL)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
 	}
 }
-

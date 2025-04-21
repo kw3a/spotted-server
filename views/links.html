@@ -1,7 +1,8 @@
 {{block "linkSection" .}}
 <div>
-  <div class="flex items-center justify-center gap-3">
-    <span class="text-white text-xl font-medium">Enlaces</span>
+  <div class="flex items-center justify-center gap-1">
+    <span class="text-white text-lg">Enlaces</span>
+  {{if .Owner}}
     <button 
       onclick="window.showAndHide('linkForm')"
       class="flex items-center justify-center w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
@@ -18,32 +19,47 @@
     </button>
   </div>
   {{template "linkForm" .}}
+  {{else}}
+  </div>
+  {{end}}
   {{template "linkList" .}}
 </div>
 {{end}}
 
 {{block "linkEntry" .}}
-<tr id="link_{{.ID}}">
-  <td>
-    <a class="text-shark-200 hover:underline" target="_blank" href="{{.URL}}">{{.Name}}</a>
-  </td>
-  <td>
-    <button 
-      hx-delete="/links/{{.ID}}" 
-      hx-target="#link_{{.ID}}"
-      hx-swap="delete"
-      class="flex items-center justify-center w-7 h-7 rounded-full hover:bg-red-400 transition-colors duration-200">
-        <img src="/public/x.svg" alt="delete icon" width="16" height="16" style="pointer-events: none" />
-    </button>
-  </td>
-</tr>
+<div id="link_{{.ID}}" class="flex items-center">
+  <a class="p-2 rounded-full hover:bg-gray-700 transition-colors duration-200 flex items-center justify-center" target="_blank" href="{{.URL}}">
+    <img src="/public/link.svg" alt="link icon" width="16" height="16" style="pointer-events: none" />
+  </a>
+  <span class="text-shark-400 text-base">{{.Name}}</span>
+  <button 
+    hx-delete="/links/{{.ID}}" 
+    hx-target="#link_{{.ID}}"
+    hx-swap="delete"
+    class="flex items-center justify-center w-7 h-7 rounded-full hover:bg-red-500 transition-colors duration-200"
+  >
+    <img src="/public/delete.svg" alt="delete icon" width="16" height="16" style="pointer-events: none" />
+  </button>
+</div>
+{{end}}
 
-{{end}} 
+{{block "simpleLink" .}}
+<div id="link_{{.ID}}" class="flex items-center">
+  <a class="p-2 rounded-full hover:bg-gray-700 transition-colors duration-200 flex items-center justify-center" target="_blank" href="{{.URL}}">
+    <img src="/public/link.svg" alt="link icon" width="16" height="16" style="pointer-events: none" />
+  </a>
+  <span class="text-shark-400 text-base">{{.Name}}</span>
+</div>
+{{end}}
 
 {{block "linkList" .}} 
-<table id="link_list" class="border-separate border-spacing-2 ">
+<div id="link_list" class="flex flex-wrap justify-center gap-6">
+  {{if .Owner}}
   {{range .Links}} {{template "linkEntry" .}} {{end}}
-</table>
+  {{else}}
+  {{range .Links}} {{template "simpleLink" .}} {{end}}
+  {{end}}
+</div>
 {{if not .Links}}
 <span class="text-shark-200">No hay enlaces para mostrar</span>
 {{end}} 
@@ -55,34 +71,40 @@
     hx-post="/links" 
     hx-target="#link_list" 
     hx-swap="beforeend"
-    class="flex items-end gap-4 bg-shark-900 rounded p-4"
+    class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-800 rounded-lg p-6 shadow-lg"
   >
-    <div>
-      <label for="link-name" class="block text-shark-200">Nombre</label>
+    <div class="flex flex-col gap-2">
+      <label for="link-name" class="text-gray-300 font-medium">Nombre</label>
       <input
         id="link-name"
-        class="border border-gray-300 rounded "
+        class="border border-gray-600 rounded-lg p-3 bg-gray-900 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         type="text"
         name="name"
+        placeholder="Ejemplo: GitHub"
         required
       />
+      <span id="link-name-error" class="text-red-500 text-sm"></span>
     </div>
-    <div>
-      <label for="link-url" class="block text-shark-200">Url</label>
+    <div class="flex flex-col gap-2">
+      <label for="link-url" class="text-gray-300 font-medium">URL</label>
       <input
         id="link-url"
-        class="border border-gray-300 rounded"
+        class="border border-gray-600 rounded-lg p-3 bg-gray-900 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         type="url"
         name="url"
+        placeholder="Ejemplo: https://github.com"
         required
       />
+      <span id="link-url-error" class="text-red-500 text-sm"></span>
     </div>
-    <button
-      class="w-28 h-7 border rounded border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400"
-      type="submit"
-    >
-      Agregar
-    </button>
+    <div class="md:col-span-2 flex justify-end">
+      <button
+        class="px-4 py-1 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+        type="submit"
+      >
+        Agregar
+      </button>
+    </div>
   </form>
 </div>
 {{end}}

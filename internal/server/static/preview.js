@@ -8,10 +8,12 @@ function previewImage(event, defaultImagePath) {
       preview.src = e.target.result;
     };
     reader.readAsDataURL(event.target.files[0]);
-    document.getElementById("save-image").classList.remove("hidden");
-    document.getElementById("cancel").classList.remove("hidden");
+    document.getElementById("edit-options").classList.remove("hidden");
   } else {
     preview.src = defaultImagePath;
+    const fileInput = document.getElementById("image");
+    fileInput.value = "";
+    document.getElementById("edit-options").classList.add("hidden");
   }
 }
 
@@ -21,8 +23,7 @@ function editionCancel(evt, defaultImagePath) {
   const fileInput = document.getElementById("image");
   preview.src = defaultImagePath;
   fileInput.value = "";
-  document.getElementById("save-image").classList.add("hidden");
-  document.getElementById("cancel").classList.add("hidden");
+  document.getElementById("edit-options").classList.add("hidden");
 }
 
 function showAndHide(formId) {

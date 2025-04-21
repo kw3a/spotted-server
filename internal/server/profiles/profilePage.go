@@ -12,17 +12,13 @@ import (
 
 type ProfilePageData struct {
 	User           auth.AuthUser
-	Profile        Profile
+	Profile        auth.AuthUser
 	Links          []shared.Link
 	Experiences    []shared.ExperienceEntry
 	Education      []shared.EducationEntry
 	Skills         []shared.SkillEntry
 	Participations []shared.Offer
-}
-type Profile struct {
-	Name        string
-	ImageURL    string
-	Description string
+	Owner          bool
 }
 type ProfilePageInput struct {
 	UserID string
@@ -67,7 +63,7 @@ func CreateProfilePageHandler(
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		dbUser, err := storage.GetUser(r.Context(), input.UserID)
+		dbProfile, err := storage.GetUser(r.Context(), input.UserID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -97,10 +93,12 @@ func CreateProfilePageHandler(
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		profile := Profile{
-			Name:        dbUser.Name,
-			ImageURL:    dbUser.ImageUrl,
-			Description: dbUser.Description,
+		profile := auth.AuthUser{
+			ID:          dbProfile.ID,
+			Name:        dbProfile.Name,
+			ImageURL:    dbProfile.ImageUrl,
+			Description: dbProfile.Description,
+			Email:       dbProfile.Email,
 		}
 		data := ProfilePageData{
 			User:           user,
@@ -110,6 +108,7 @@ func CreateProfilePageHandler(
 			Education:      education,
 			Skills:         skills,
 			Participations: participatedOffers,
+			Owner:          profile.ID == user.ID,
 		}
 		if err = templ.Render(w, "profilePage", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

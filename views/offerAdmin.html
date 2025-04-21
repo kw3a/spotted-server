@@ -38,35 +38,28 @@
 
             <div class="flex flex-col">
               <p class="text-shark-200 font-semibold">Problemas</p>
-              <section class="flex flex-wrap gap-4 overflow-x-auto">
+              <fieldset class="flex flex-wrap gap-4 overflow-x-auto">
                 {{ $first := true }}
-                {{range .Problems}}
-                <div class="bg-shark-900 rounded">
-                  <input 
-                    type="radio" 
-                    name="problem-group" 
-                    id="problem-{{.ID}}" 
-                    class="hidden peer"
-                    onclick="window.openModal('modal-{{.ID}}')"
-                  {{if $first}} checked {{end}}>
-                  <label 
-                    for="problem-{{.ID}}" 
-                    class="block w-full font-semibold hover:bg-gray-900 px-4 py-2 rounded cursor-pointer text-left peer-checked:bg-gray-900 select-none"
-                  >
-                    {{.Title}}
-                  </label>
-                </div>
-                {{ $first = false }}
+                {{range $i, $problem := .Problems}}
+                <input 
+                  type="radio" 
+                  name="problem-group" 
+                  id="p{{$i}}" 
+                  class="hidden peer/p{{$i}}"
+                {{if $first}} checked {{end}}>
+                <label 
+                  for="p{{$i}}" 
+                  class="peer-checked/p{{$i}}:bg-gray-900 bg-shark-900 font-semibold hover:bg-gray-900 px-4 py-2 rounded cursor-pointer text-left select-none"
+                >
+                  {{$problem.Title}}
+                </label>
+                {{$first = false}}
                 {{end}}
-              </section>
 
-              <section class="">
-                {{ $first := true }}
-                {{range .Problems}}
-                <div id="modal-{{.ID}}" class="w-full bg-gray-900 rounded 
-                  {{if not $first}} hidden {{end}}">
+                {{range $i, $problem := .Problems}}
+                <div class="hidden peer-checked/p{{$i}}:block w-full bg-gray-900 rounded">
                   <div class="flex flex-col gap-8 p-8">
-                    <pre class="whitespace-pre-wrap">{{.Description}}</pre>
+                    <pre class="whitespace-pre-wrap">{{$problem.Description}}</pre>
                     <div class="flex flex-col">
                       <span 
                         class="text-shark-200"
@@ -119,9 +112,8 @@
                     </div>
                   </div>
                 </div>
-                {{ $first = false }}
                 {{end}}
-              </section>
+              </fieldset>
             </div>
           </section>
         </section>

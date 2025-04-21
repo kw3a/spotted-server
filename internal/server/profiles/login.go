@@ -35,13 +35,6 @@ func EmailValidation(email string) string {
 	return ""
 }
 
-func PasswordValidation(password string) string {
-	if len(password) < 5 || len(password) > 30 {
-		return errPasswordLength
-	}
-	return ""
-}
-
 func GetLoginInput(r *http.Request) (LoginInput, LoginErr, bool) {
 	errFound := false
 	loginErr := LoginErr{}
@@ -51,8 +44,8 @@ func GetLoginInput(r *http.Request) (LoginInput, LoginErr, bool) {
 		loginErr.EmailErr = strErr
 		errFound = true
 	}
-	if strErr := PasswordValidation(password); strErr != "" {
-		loginErr.PasswordErr = strErr
+	if len(password) < 5 || len(password) > 30 {
+		loginErr.PasswordErr = shared.ErrLength(5, 30)
 		errFound = true
 	}
 	return LoginInput{

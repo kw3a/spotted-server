@@ -397,14 +397,14 @@ func (mysql *MysqlStorage) RegisterEducation(
 	ctx context.Context,
 	educationID, userID, institution, degree string,
 	start time.Time,
-	end time.Time,
+	end sql.NullTime,
 ) error {
 	return mysql.Queries.InsertEducation(ctx, database.InsertEducationParams{
 		ID:          educationID,
 		Institution: institution,
 		Degree:      degree,
 		StartDate:   start,
-		EndDate:     sql.NullTime{Time: end, Valid: true},
+		EndDate:     end,
 		UserID:      userID,
 	})
 }
@@ -420,14 +420,14 @@ func (mysql *MysqlStorage) RegisterExperience(
 	ctx context.Context,
 	experienceID, userID, company, title string,
 	start time.Time,
-	end time.Time,
+	end sql.NullTime,
 ) error {
 	return mysql.Queries.InsertExperience(ctx, database.InsertExperienceParams{
 		ID:        experienceID,
 		Company:   company,
 		Title:     title,
 		StartDate: start,
-		EndDate:   sql.NullTime{Time: end, Valid: true},
+		EndDate:   end,
 		UserID:    userID,
 	})
 }
@@ -473,15 +473,15 @@ func (mysql *MysqlStorage) SelectEducation(ctx context.Context, userID string) (
 		return nil, err
 	}
 	for _, entry := range education {
-		endDate := "actualmente"
-		if entry.EndDate.Valid {
-			endDate = entry.EndDate.Time.Format("2006-01")
-		}
+		startDate := shared.DateSpanishFormat(sql.NullTime{Valid: true, Time: entry.StartDate})
+
+		endDate := shared.DateSpanishFormat(entry.EndDate)
+
 		res = append(res, shared.EducationEntry{
 			ID:          entry.ID,
 			Degree:      entry.Degree,
 			Institution: entry.Institution,
-			StartDate:   entry.StartDate.Format("2006-01"),
+			StartDate:   startDate,
 			EndDate:     endDate,
 		})
 	}
@@ -498,16 +498,15 @@ func (mysql *MysqlStorage) SelectExperiences(ctx context.Context, userID string)
 		return nil, err
 	}
 	for _, entry := range experiences {
-		endDate := "actualmente"
-		if entry.EndDate.Valid {
-			endDate = entry.EndDate.Time.Format("2006-01")
-		}
+		startDate := shared.DateSpanishFormat(sql.NullTime{Valid: true, Time: entry.StartDate})
+		endDate := shared.DateSpanishFormat(entry.EndDate)
 		res = append(res, shared.ExperienceEntry{
-			ID:        entry.ID,
-			Title:     entry.Title,
-			Company:   entry.Company,
-			StartDate: entry.StartDate.Format("2006-01"),
-			EndDate:   endDate,
+			ID:           entry.ID,
+			Title:        entry.Title,
+			Company:      entry.Company,
+			StartDate:    startDate,
+			EndDate:      endDate,
+			TimeInterval: shared.TimeInterval(entry.StartDate, entry.EndDate),
 		})
 	}
 	return res, nil

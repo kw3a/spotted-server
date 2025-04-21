@@ -2,7 +2,7 @@ package profiles
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -15,36 +15,60 @@ type EducationRegisterInput struct {
 	Institution string
 	Degree      string
 	Start       time.Time
-	End         time.Time
+	End         sql.NullTime
 }
 
 type EducationDeleteInput struct {
 	EducationID string
 }
 
-func GetEducationRegisterInput(r *http.Request) (EducationRegisterInput, error) {
+type EducationRegErrors struct {
+	InstitutionError string
+	DegreeError      string
+	StartError       string
+	EndError         string
+}
+
+func GetEducationRegisterInput(r *http.Request) (EducationRegisterInput, EducationRegErrors, bool) {
+	inputErrors := EducationRegErrors{}
+	errFound := false
+
 	institution := r.FormValue("institution")
-	if institution == "" {
-		return EducationRegisterInput{}, fmt.Errorf("institution is required")
+	if len(institution) < 5 || len(institution) > 128 {
+		inputErrors.InstitutionError = shared.ErrLength(5, 128)
+		errFound = true
 	}
+
 	degree := r.FormValue("degree")
-	if degree == "" {
-		return EducationRegisterInput{}, fmt.Errorf("degree is required")
+	if len(degree) < 5 || len(degree) > 128 {
+		inputErrors.DegreeError = shared.ErrLength(5, 128)
+		errFound = true
 	}
+
 	start, err := time.Parse("2006-01", r.FormValue("start"))
 	if err != nil {
-		return EducationRegisterInput{}, fmt.Errorf("start is required")
+		inputErrors.StartError = errInvalidDate
+		errFound = true
 	}
-	end, err := time.Parse("2006-01", r.FormValue("end"))
-	if err != nil {
-		return EducationRegisterInput{}, fmt.Errorf("end is required")
+
+	end := r.FormValue("end")
+	dateEnd := sql.NullTime{Valid: false}
+	if end != "" {
+		parsedEnd, err := time.Parse("2006-01", end)
+		if err != nil {
+			inputErrors.EndError = errInvalidDate
+			errFound = true
+		} else {
+			dateEnd = sql.NullTime{Time: parsedEnd, Valid: true}
+		}
 	}
+
 	return EducationRegisterInput{
 		Institution: institution,
 		Degree:      degree,
 		Start:       start,
-		End:         end,
-	}, nil
+		End:         dateEnd,
+	}, inputErrors, errFound
 }
 
 func GetEducationDeleteInput(r *http.Request) (EducationDeleteInput, error) {
@@ -58,11 +82,11 @@ func GetEducationDeleteInput(r *http.Request) (EducationDeleteInput, error) {
 }
 
 type EducationStorage interface {
-	RegisterEducation(ctx context.Context, educationID, userID, institution, degree string, start, end time.Time) error
+	RegisterEducation(ctx context.Context, educationID, userID, institution, degree string, start time.Time, end sql.NullTime) error
 	DeleteEducation(ctx context.Context, userID, educationID string) error
 }
 
-type registerEducationInputFn func(r *http.Request) (EducationRegisterInput, error)
+type registerEducationInputFn func(r *http.Request) (EducationRegisterInput, EducationRegErrors, bool)
 
 func CreateRegisterEducationHandler(templ shared.TemplatesRepo, auth shared.AuthRep, storage EducationStorage, inputFn registerEducationInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -71,9 +95,11 @@ func CreateRegisterEducationHandler(templ shared.TemplatesRepo, auth shared.Auth
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		input, err := inputFn(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		input, inputErr, errFound := inputFn(r)
+		if errFound {
+			if err := templ.Render(w, "edErrors", inputErr); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		educationID := uuid.New().String()
@@ -84,8 +110,8 @@ func CreateRegisterEducationHandler(templ shared.TemplatesRepo, auth shared.Auth
 		data := shared.EducationEntry{
 			Institution: input.Institution,
 			Degree:      input.Degree,
-			StartDate:   input.Start.Format("2006-01"),
-			EndDate:     input.End.Format("2006-01"),
+			StartDate:   shared.DateSpanishFormat(sql.NullTime{Time: input.Start, Valid: true}),
+			EndDate:     shared.DateSpanishFormat(input.End),
 			ID:          educationID,
 		}
 		if err := templ.Render(w, "educationEntry", data); err != nil {
@@ -114,4 +140,3 @@ func CreateDeleteEducationHandler(auth shared.AuthRep, storage EducationStorage,
 		}
 	}
 }
-

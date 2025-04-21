@@ -12,19 +12,21 @@ type Link struct {
 	ID   string
 }
 type ExperienceEntry struct {
-	ID          string
-	Title       string
-	Company     string
-	StartDate   string
-	EndDate     string
-	Description string
+	ID           string
+	Title        string
+	Company      string
+	StartDate    string
+	EndDate      string
+	Description  string
+	TimeInterval string
 }
 type EducationEntry struct {
-	ID          string
-	Degree      string
-	Institution string
-	StartDate   string
-	EndDate     string
+	ID           string
+	Degree       string
+	Institution  string
+	StartDate    string
+	EndDate      string
+	TimeInterval string
 }
 
 type Company struct {

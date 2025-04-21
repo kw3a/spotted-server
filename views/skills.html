@@ -1,7 +1,8 @@
 {{block "skillSection" .}}
 <div>
-  <div class="flex items-center justify-center gap-3">
-    <span class="text-white text-xl font-medium">Habilidades</span>
+  <div class="flex items-center justify-center gap-1">
+    <span class="text-white text-lg">Habilidades</span>
+    {{if .Owner}}
     <button 
       onclick="window.showAndHide('skillForm')"
       class="flex items-center justify-center w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
@@ -18,32 +19,40 @@
     </button>
   </div>
   {{template "skillForm" .}}
+  {{else}}
+  </div>
+  {{end}}
   {{template "skillList" .}}
 </div>
 {{end}}
 
 {{block "skillEntry" .}}
-<tr id="skill_{{.ID}}">
-  <td>
-    <span class="text-shark-200">{{.Name}}</span>
-  </td>
-  <td>
-    <button 
-      hx-delete="/skills/{{.ID}}" 
-      hx-target="#skill_{{.ID}}"
-      hx-swap="delete"
-      class="flex items-center justify-center w-7 h-7 rounded-full hover:bg-red-400 transition-colors duration-200">
-        <img src="/public/x.svg" alt="delete icon" width="16" height="16" style="pointer-events: none" />
-    </button>
-  </td>
-</tr>
+<div id="skill_{{.ID}}" class="flex">
+  <span class="text-shark-400 text-base">{{.Name}}</span>
+  <button 
+    hx-delete="/skills/{{.ID}}" 
+    hx-target="#skill_{{.ID}}"
+    hx-swap="delete"
+    class="flex items-center justify-center w-7 h-7 rounded-full hover:bg-red-400 transition-colors duration-200">
+      <img src="/public/delete.svg" alt="delete icon" width="16" height="16" style="pointer-events: none" />
+  </button>
+</div>
+{{end}} 
 
+{{block "simpleSkill" .}}
+<div id="skill_{{.ID}}" class="flex">
+  <span class="text-shark-400 text-base">{{.Name}}</span>
+</div>
 {{end}} 
 
 {{block "skillList" .}} 
-<table id="skill_list" class="border-separate border-spacing-2 ">
+<div id="skill_list" class="flex flex-wrap gap-6 justify-center">
+  {{if .Owner}}
   {{range .Skills}} {{template "skillEntry" .}} {{end}}
-</table>
+  {{else}}
+  {{range .Skills}} {{template "simpleSkill" .}} {{end}}
+  {{end}}
+</div>
 {{if not .Skills}}
 <span class="text-shark-200">No hay habilidades para mostrar</span>
 {{end}} 
@@ -55,24 +64,28 @@
     hx-post="/skills" 
     hx-target="#skill_list" 
     hx-swap="beforeend"
-    class="flex items-end gap-4 bg-shark-900 rounded p-4"
+    class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-800 rounded-lg p-6 shadow-lg"
   >
-    <div>
-      <label for="skill-name" class="block text-shark-200">Habilidad</label>
+    <div class="flex flex-col gap-2">
+      <label for="skill-name" class="text-gray-300 font-medium">Habilidad</label>
       <input
         id="skill-name"
-        class="border border-gray-300 rounded "
+        class="border border-gray-600 rounded-lg p-3 bg-gray-900 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
         type="text"
         name="name"
+        placeholder="Ejemplo: Programación"
         required
       />
+      <span id="skill-name-error" class="text-red-500 text-sm"></span>
     </div>
-    <button
-      class="w-28 h-7 border rounded border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400"
-      type="submit"
-    >
-      Agregar
-    </button>
+    <div class="md:col-span-2 flex justify-end">
+      <button
+        class="px-4 py-1 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+        type="submit"
+      >
+        Agregar
+      </button>
+    </div>
   </form>
 </div>
 {{end}}

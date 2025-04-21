@@ -33,20 +33,6 @@ type UserInputErrors struct {
 	DescriptionError string
 }
 
-func NameValidation(name string) string {
-	if len(name) < 3 || len(name) > 255 {
-		return errNameLength
-	}
-	return ""
-}
-
-func DescriptionValidation(description string) string {
-	if len(description) < 20 || len(description) > 500 {
-		return errDescriptionLength
-	}
-	return ""
-}
-
 type CloudinaryService interface {
 	Upload(
 		ctx context.Context,
@@ -59,13 +45,13 @@ func GetUserInput(r *http.Request) (UserInput, UserInputErrors, bool) {
 	inputErrors := UserInputErrors{}
 	inputErrFound := false
 	name := r.FormValue("name")
-	if strErr := NameValidation(name); strErr != "" {
-		inputErrors.NameError = strErr
+	if len(name) < 3 || len(name) > 255 {
+		inputErrors.NameError = shared.ErrLength(3, 255)
 		inputErrFound = true
 	}
 	password := r.FormValue("password")
-	if strErr := PasswordValidation(password); strErr != "" {
-		inputErrors.PasswordError = strErr
+	if len(password) < 5 || len(password) > 30 {
+		inputErrors.PasswordError = shared.ErrLength(5, 30)
 		inputErrFound = true
 	}
 	email := r.FormValue("email")
@@ -74,8 +60,8 @@ func GetUserInput(r *http.Request) (UserInput, UserInputErrors, bool) {
 		inputErrFound = true
 	}
 	description := r.FormValue("description")
-	if strErr := DescriptionValidation(description); strErr != "" {
-		inputErrors.DescriptionError = strErr
+	if len(description) < 200 || len(description) > 500 {
+		inputErrors.DescriptionError = shared.ErrLength(200, 500)
 		inputErrFound = true
 	}
 

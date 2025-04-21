@@ -2,7 +2,7 @@ package profiles
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -11,41 +11,64 @@ import (
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
-type ExperienceRegisterInput struct {
+const (
+	errInvalidDate = "Fecha inválida"
+)
+
+type ExpRegInput struct {
 	Company string
 	Title   string
 	Start   time.Time
-	End     time.Time
+	End     sql.NullTime
 }
 
 type ExperienceDeleteInput struct {
 	ExperienceID string
 }
 
+type ExpRegErrors struct {
+	TitleError string
+	CompError  string
+	StartError string
+	EndError   string
+}
 
-func GetExperienceRegisterInput(r *http.Request) (ExperienceRegisterInput, error) {
+func GetExperienceRegisterInput(r *http.Request) (ExpRegInput, ExpRegErrors, bool) {
+	inputErrors := ExpRegErrors{}
+	errFound := false
 	company := r.FormValue("company")
-	if company == "" {
-		return ExperienceRegisterInput{}, fmt.Errorf("company is required")
+	if len(company) > 64 || company == "" {
+		inputErrors.CompError = shared.ErrLength(1, 64)
+		errFound = true
 	}
 	title := r.FormValue("title")
-	if title == "" {
-		return ExperienceRegisterInput{}, fmt.Errorf("title is required")
+	if len(title) < 5 || len(title) > 256 {
+		inputErrors.TitleError = shared.ErrLength(5, 256)
+		errFound = true
 	}
 	start, err := time.Parse("2006-01", r.FormValue("start"))
 	if err != nil {
-		return ExperienceRegisterInput{}, fmt.Errorf("start is required")
+		inputErrors.StartError = errInvalidDate
+		errFound = true
 	}
-	end, err := time.Parse("2006-01", r.FormValue("end"))
-	if err != nil {
-		return ExperienceRegisterInput{}, fmt.Errorf("end is required")
+	dateEnd := sql.NullTime{Valid: false}
+	end := r.FormValue("end")
+	if end != "" {
+		parsedEnd, err := time.Parse("2006-01", end)
+		if err != nil {
+			inputErrors.EndError = errInvalidDate
+			errFound = true
+		} else {
+			dateEnd.Valid = true
+			dateEnd.Time = parsedEnd
+		}
 	}
-	return ExperienceRegisterInput{
+	return ExpRegInput{
 		Company: company,
 		Title:   title,
 		Start:   start,
-		End:     end,
-	}, nil
+		End:     dateEnd,
+	}, inputErrors, errFound
 }
 
 func GetExperienceDeleteInput(r *http.Request) (ExperienceDeleteInput, error) {
@@ -59,11 +82,16 @@ func GetExperienceDeleteInput(r *http.Request) (ExperienceDeleteInput, error) {
 }
 
 type ExperienceStorage interface {
-	RegisterExperience(ctx context.Context, experienceID, userID, company, title string, start, end time.Time) error
+	RegisterExperience(
+		ctx context.Context,
+		experienceID, userID, company, title string,
+		start time.Time,
+		end sql.NullTime,
+	) error
 	DeleteExperience(ctx context.Context, userID, experienceID string) error
 }
 
-type registerExperienceInputFn func(r *http.Request) (ExperienceRegisterInput, error)
+type registerExperienceInputFn func(r *http.Request) (ExpRegInput, ExpRegErrors, bool)
 
 func CreateRegisterExperienceHandler(templ shared.TemplatesRepo, auth shared.AuthRep, storage ExperienceStorage, inputFn registerExperienceInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -72,22 +100,34 @@ func CreateRegisterExperienceHandler(templ shared.TemplatesRepo, auth shared.Aut
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		input, err := inputFn(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		input, inputErr, errFound := inputFn(r)
+		if errFound {
+			renderErr := templ.Render(w, "expErrors", inputErr)
+			if renderErr != nil {
+				http.Error(w, renderErr.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		experienceID := uuid.New().String()
-		if err := storage.RegisterExperience(r.Context(), experienceID, user.ID, input.Company, input.Title, input.Start, input.End); err != nil {
+		if err := storage.RegisterExperience(
+			r.Context(),
+			experienceID,
+			user.ID,
+			input.Company,
+			input.Title,
+			input.Start,
+			input.End,
+		); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		data := shared.ExperienceEntry{
-			Company:     input.Company,
-			Title:       input.Title,
-			StartDate:   input.Start.Format("2006-01"),
-			EndDate:     input.End.Format("2006-01"),
-			ID:          experienceID,
+			Company:      input.Company,
+			Title:        input.Title,
+			StartDate:    shared.DateSpanishFormat(sql.NullTime{Valid: true, Time: input.Start}),
+			EndDate:      shared.DateSpanishFormat(input.End),
+			TimeInterval: shared.TimeInterval(input.Start, input.End),
+			ID:           experienceID,
 		}
 		if err := templ.Render(w, "experienceEntry", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -116,4 +156,3 @@ func CreateDeleteExperienceHandler(auth shared.AuthRep, storage ExperienceStorag
 		w.WriteHeader(http.StatusOK)
 	}
 }
-
