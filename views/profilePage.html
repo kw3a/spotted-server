@@ -83,9 +83,64 @@
           {{end}}
 
           <span id="image-error" class="block text-center text-red-500 text-sm mt-2"></span>
-          <span class="text-center text-shark-200 text-4xl font-bold">{{.Profile.Name}}</span>
-          <span class="text-shark-200 text-center">{{.Profile.Description}}</span>
         </form>
+
+        <span class="text-center text-shark-200 text-4xl font-bold">{{.Profile.Name}}</span>
+        <div class="flex justify-center justify-items-center">
+          <pre id="pDesc" class="text-shark-200 whitespace-pre-wrap">{{.Profile.Description}}</pre>
+          {{if .Owner}}
+          <span id="descr-error" class="block text-center text-red-500 text-sm"></span>
+          <div class="flex-none flex flex-col justify-center">
+            <div class="flex-none flex justify-center">
+              <button 
+                id="edit-descr-btn"
+                class="hover:bg-gray-600 p-2 rounded-full cursor-pointer transition-all"
+                onclick="window.showAndHide('edit-descr', 'edit-descr-btn'); window.toggleEditable('pDesc');"
+              >
+                <img src="/public/edit.svg" class="w-6 h-6" alt="Edit Description">
+              </button>
+            </div>
+            <section id="edit-descr" class="hidden">
+              <div class="flex justify-center gap-2">
+                <button 
+                  class="flex justify-center justify-items-center w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
+                  hx-patch="/descriptions"
+                  hx-vals="js:{description : window.getText('pDesc')}"
+                  hx-target="#pDesc"
+                  hx-on::after-request="
+                    window.showAndHide('edit-descr', 'edit-descr-btn'); 
+                    window.toggleEditable('pDesc');
+                    window.updatePDesc('pDesc');
+                    "
+                >
+                  <img 
+                    src="/public/check.svg" 
+                    alt="Añadir" 
+                    width="16" 
+                    height="16"
+                    class="pointer-events-none"
+                  />
+                </button>
+                <button 
+                  class="flex justify-center justify-items-center w-7 h-7 rounded-full hover:bg-red-400 transition-colors duration-200"
+                  onclick="
+                    window.resetPDesc('pDesc');
+                    window.showAndHide('edit-descr', 'edit-descr-btn'); 
+                    window.toggleEditable('pDesc');"
+                >
+                  <img 
+                    src="/public/x.svg" 
+                    alt="Añadir" 
+                    width="16" 
+                    height="16"
+                    class="pointer-events-none"
+                  />
+                </button>
+              </div>
+            </section>
+          </div>
+          {{end}}
+        </div>
 
         {{if .Owner}}
         <!-- Section toggles -->
@@ -141,4 +196,10 @@
 </body>
 
 </html>
+{{end}}
+
+{{block "descrEntry" .}}{{.Description}}{{end}}
+
+{{block "descrErrors" .}}
+<div hx-swap-oob="innerHTML" id="desc-error">{{.DescrError}}</div>
 {{end}}

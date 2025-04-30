@@ -142,6 +142,7 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 		r.Delete("/experiences/{experienceID}", app.ExperienceDeleteHandler())
 		r.Post("/education", app.EducationRegisterHandler())
 		r.Delete("/education/{educationID}", app.EducationDeleteHandler())
+		r.Patch("/descriptions", app.DescrUpdateHandler())
 		r.Get("/login", app.LoginPageHandler())
 		r.Post("/login", app.LoginHandler())
 		r.Post("/logout", app.LogoutHandler())

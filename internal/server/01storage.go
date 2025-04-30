@@ -25,6 +25,13 @@ type MysqlStorage struct {
 	db      *sql.DB
 }
 
+func (mysql *MysqlStorage) UpdateDescription(ctx context.Context, userID, description string) error {
+	return mysql.Queries.UpdateUserDescription(ctx, database.UpdateUserDescriptionParams{
+		ID:          userID,
+		Description: description,
+	})
+}
+
 func (mysql *MysqlStorage) SelectTestCases(ctx context.Context, problemID string) ([]shared.TestCase, error) {
 	dbTC, err := mysql.Queries.SelectTestCases(ctx, problemID)
 	if err != nil {

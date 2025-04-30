@@ -26,11 +26,46 @@ function editionCancel(evt, defaultImagePath) {
   document.getElementById("edit-options").classList.add("hidden");
 }
 
-function showAndHide(formId) {
-  const form = document.getElementById(formId);
-  form.classList.toggle("hidden");
+function showAndHide(...IDs) {
+  IDs.forEach(id => {
+    const form = document.getElementById(id);
+    form?.classList.toggle("hidden");
+  });
 }
 
+function toggleEditable(...IDs) {
+  IDs.forEach(id => {
+    const form = document.getElementById(id);
+    form?.toggleAttribute("contenteditable");
+  });
+}
+
+function getText(ID) {
+  const tag = document.getElementById(ID);
+  if (tag) {
+    return tag.textContent.trim();
+  }
+  return ""
+}
+
+let savedPDesc = getText('pDesc')
+function resetPDesc(ID) {
+  const tag = document.getElementById(ID);
+  if (tag) {
+    tag.textContent = savedPDesc
+  }
+}
+
+function updatePDesc(ID) {
+  const tag = document.getElementById(ID);
+  if (tag) {
+    savedPDesc = tag.textContent.trim();
+  }
+}
 window.previewImage = previewImage;
 window.editionCancel = editionCancel;
 window.showAndHide = showAndHide;
+window.toggleEditable = toggleEditable;
+window.getText = getText;
+window.resetPDesc = resetPDesc;
+window.updatePDesc = updatePDesc;

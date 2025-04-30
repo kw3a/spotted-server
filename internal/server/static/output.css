@@ -1802,7 +1802,7 @@ video {
   display: block;
 }
 
-.peer\/\{\{\.ID\}\}:checked ~ .peer-checked\/\{\{\.ID\}\}\:block {
+.peer\/p\{\{\$i\}\}:checked ~ .peer-checked\/p\{\{\$i\}\}\:block {
   display: block;
 }
 
@@ -1821,7 +1821,7 @@ video {
   border-color: rgb(96 165 250 / var(--tw-border-opacity));
 }
 
-.peer\/\{\{\.ID\}\}:checked ~ .peer-checked\/\{\{\.ID\}\}\:bg-gray-900 {
+.peer\/p\{\{\$i\}\}:checked ~ .peer-checked\/p\{\{\$i\}\}\:bg-gray-900 {
   --tw-bg-opacity: 1;
   background-color: rgb(17 24 39 / var(--tw-bg-opacity));
 }

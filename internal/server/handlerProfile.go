@@ -98,3 +98,12 @@ func (DI *App) SkillRegisterHandler() http.HandlerFunc {
 func (DI *App) SkillDeleteHandler() http.HandlerFunc {
 	return profiles.CreateDeleteSkillHandler(DI.AuthService, DI.Storage, profiles.GetSkillDeleteInput)
 }
+
+func (DI *App) DescrUpdateHandler() http.HandlerFunc {
+	return profiles.CreateDescUpdateHandler(
+		DI.Templ,
+		DI.AuthService,
+		DI.Storage,
+		profiles.GetDescUpdateInput,
+	)
+}

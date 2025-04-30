@@ -125,3 +125,17 @@ func (q *Queries) UpdateImage(ctx context.Context, arg UpdateImageParams) error 
 	_, err := q.db.ExecContext(ctx, updateImage, arg.ImageUrl, arg.ID)
 	return err
 }
+
+const updateUserDescription = `-- name: UpdateUserDescription :exec
+UPDATE user SET description = ? WHERE id = ?
+`
+
+type UpdateUserDescriptionParams struct {
+	Description string
+	ID          string
+}
+
+func (q *Queries) UpdateUserDescription(ctx context.Context, arg UpdateUserDescriptionParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserDescription, arg.Description, arg.ID)
+	return err
+}
