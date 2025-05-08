@@ -53,6 +53,7 @@ func CreateProfilePicHandler(storage ProfilePicStorage, auth shared.AuthRep, clo
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			w.Header().Set("HX-Trigger", "image-changed")
 			w.WriteHeader(http.StatusOK)
 		} else {
 			http.Error(w, err.Error(), http.StatusUnauthorized)

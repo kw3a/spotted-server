@@ -4,7 +4,7 @@
     <span class="text-white text-xl font-medium">Formación</span>
     {{if .Owner}}
     <button 
-      onclick="window.showAndHide('educationForm')"
+      onclick="window.showAndHide('ed-form')"
       class="flex items-center justify-center w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
       type="button"
       aria-label="Añadir habilidad"
@@ -59,10 +59,13 @@
   {{range .Education}} {{template "simpleEducation" .}} {{end}}
   {{end}}
 </ol>
+{{if not .Education}}
+<span class="text-shark-200" id="empty-ed">Sin registrar</span>
+{{end}} 
 {{end}} 
 
 {{block "educationForm" .}}
-<div id="educationForm" class="hidden">
+<div id="ed-form" class="hidden">
   <form 
     hx-post="/education" 
     hx-target="#education_list" 

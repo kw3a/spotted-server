@@ -5,113 +5,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>User</title>
+  <title>{{.Profile.Name}}</title>
   <link href="/static/output.css" rel="stylesheet" />
   <script src="/static/htmx.min.js"></script>
   <script src="/static/head-support.js"></script>
   <script src="/static/preview.js" type="module" defer></script>
 </head>
 
-<body class="bg-shark-950" hx-ext="head-support">
-  <section class="h-screen flex flex-col font-mono">
+<body class="" hx-ext="head-support" >
+  <section class="bg-shark-950 h-screen flex flex-col font-mono">
     {{template "navBar" .User}}
-    <div class="flex flex-row justify-center overflow-y-auto">
-      <div class="w-full xl:w-1/2 flex flex-col p-4 gap-8">
-        <!-- Profile Information -->
-        <form class="relative flex flex-col gap-2 select-none" hx-patch="/pictures" hx-encoding="multipart/form-data" hx-target="#image-error">
-          <div class="relative w-1/4 mx-auto aspect-square ">
-            <div class="mx-auto aspect-square rounded-full border-2 border-gray-700 overflow-hidden">
-              <img 
-                {{if eq .Profile.ImageURL ""}}
-                src="/public/user.svg"
-                {{else}}
-                src="{{.Profile.ImageURL}}"
-                {{end}}
-                class="w-full h-full object-cover"
-                id="preview"
-                alt="avatar"
-              />
+    <div class="flex-1 flex flex-col justify-between overflow-y-auto">
+      <main class="flex flex-row justify-center">
+        <div class="w-full xl:w-1/2 flex flex-col p-4 gap-8">
+          <!-- Profile Information -->
+          <form class="relative flex flex-col gap-2 select-none" hx-patch="/pictures" hx-encoding="multipart/form-data" hx-target="#image-error">
+            <div class="relative w-1/4 mx-auto aspect-square ">
+              <div class="mx-auto aspect-square rounded-full border-2 border-gray-700 overflow-hidden">
+                <img 
+                  {{if eq .Profile.ImageURL ""}}
+                  src="/public/user.svg"
+                  {{else}}
+                  src="{{.Profile.ImageURL}}"
+                  {{end}}
+                  class="w-full h-full object-cover"
+                  id="preview"
+                  alt="avatar"
+                />
+              </div>
+              {{if .Owner}}
+              <label 
+                for="preview-input" 
+                class="absolute bottom-0 right-2 bg-gray-700 hover:bg-gray-600 p-2 rounded-full cursor-pointer transition-all"
+              >
+                <img src="/public/edit.svg" class="w-6 h-6" alt="Edit">
+              </label>
+              {{end}}
             </div>
             {{if .Owner}}
-            <label 
-              for="image" 
-              class="absolute bottom-0 right-2 bg-gray-700 hover:bg-gray-600 p-2 rounded-full cursor-pointer transition-all"
+            <input 
+              type="file" 
+              name="image" 
+              id="preview-input" 
+              accept="image/*" 
+              class="hidden" 
             >
-              <img src="/public/edit.svg" class="w-6 h-6" alt="Edit">
-            </label>
-            {{end}}
-          </div>
-          {{if .Owner}}
-          <input 
-            type="file" 
-            name="image" 
-            id="image" 
-            accept="image/*" 
-            class="hidden" 
-            onchange='window.previewImage(event, "/public/user.svg")'
-          >
-          <section id="edit-options" class="hidden">
-            <div class="flex justify-center gap-2">
-              <button 
-                id="save-image"
-                class="flex justify-center justify-items-center w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
-                type="submit"
-              >
-                <img 
-                  src="/public/check.svg" 
-                  alt="Añadir" 
-                  width="16" 
-                  height="16"
-                  class="pointer-events-none"
-                />
-              </button>
-              <button 
-                id="cancel"
-                class="flex justify-center justify-items-center w-7 h-7 rounded-full hover:bg-red-400 transition-colors duration-200"
-                onclick='window.editionCancel(event, "/public/user.svg")'
-              >
-                <img 
-                  src="/public/x.svg" 
-                  alt="Añadir" 
-                  width="16" 
-                  height="16"
-                  class="pointer-events-none"
-                />
-              </button>
-            </div>
-          </section>
-          {{end}}
-
-          <span id="image-error" class="block text-center text-red-500 text-sm mt-2"></span>
-        </form>
-
-        <span class="text-center text-shark-200 text-4xl font-bold">{{.Profile.Name}}</span>
-        <div class="flex justify-center justify-items-center">
-          <pre id="pDesc" class="text-shark-200 whitespace-pre-wrap">{{.Profile.Description}}</pre>
-          {{if .Owner}}
-          <span id="descr-error" class="block text-center text-red-500 text-sm"></span>
-          <div class="flex-none flex flex-col justify-center">
-            <div class="flex-none flex justify-center">
-              <button 
-                id="edit-descr-btn"
-                class="hover:bg-gray-600 p-2 rounded-full cursor-pointer transition-all"
-                onclick="window.showAndHide('edit-descr', 'edit-descr-btn'); window.toggleEditable('pDesc');"
-              >
-                <img src="/public/edit.svg" class="w-6 h-6" alt="Edit Description">
-              </button>
-            </div>
-            <section id="edit-descr" class="hidden">
+            <section id="edit-options" class="hidden">
               <div class="flex justify-center gap-2">
                 <button 
+                  id="save-image"
                   class="flex justify-center justify-items-center w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
-                  hx-patch="/descriptions"
-                  hx-vals="js:{description : window.getText('pDesc')}"
-                  hx-target="#pDesc"
-                  hx-on::after-request="
-                    window.showAndHide('edit-descr', 'edit-descr-btn'); 
-                    window.toggleEditable('pDesc');
-                    window.updatePDesc('pDesc');
-                    "
+                  type="submit"
                 >
                   <img 
                     src="/public/check.svg" 
@@ -122,11 +66,8 @@
                   />
                 </button>
                 <button 
+                  id="cancel"
                   class="flex justify-center justify-items-center w-7 h-7 rounded-full hover:bg-red-400 transition-colors duration-200"
-                  onclick="
-                    window.resetPDesc('pDesc');
-                    window.showAndHide('edit-descr', 'edit-descr-btn'); 
-                    window.toggleEditable('pDesc');"
                 >
                   <img 
                     src="/public/x.svg" 
@@ -138,24 +79,54 @@
                 </button>
               </div>
             </section>
-          </div>
-          {{end}}
-        </div>
+            {{end}}
 
-        {{if .Owner}}
-        <!-- Section toggles -->
-        <fieldset class="flex flex-wrap justify-center gap-4">
-          <input id="pdata" class="peer/pdata hidden" type="radio" name="sect" checked />
-          <label for="pdata" class="peer-checked/pdata:border-gray-600 px-4 py-2 text-gray-500 border-b 
-              hover:border-gray-600 border-transparent transition-colors duration-200 cursor-pointer">
-            Datos personales</label>
-          <input id="prt" class="peer/prt hidden" type="radio" name="sect" />
-          <label for="prt" class="peer-checked/prt:border-gray-600 px-4 py-2 text-gray-500 border-b 
-              hover:border-gray-600 border-transparent transition-colors duration-200 cursor-pointer">
-            Participaciones</label>
+            <span id="image-error" class="block text-center text-red-500 text-sm mt-2"></span>
+          </form>
 
-          <div class="hidden w-full peer-checked/pdata:block">
+          <span class="text-center text-shark-200 text-4xl font-bold">{{.Profile.Name}}</span>
+          {{template "pDescription" .}}
+
+          {{if .Owner}}
+          <!-- Section toggles -->
+          <fieldset class="flex flex-wrap justify-center gap-4">
+            <input id="pdata" class="peer/pdata hidden" type="radio" name="sect" checked />
+            <label for="pdata" class="peer-checked/pdata:border-gray-600 px-4 py-2 text-gray-500 text-xl border-b 
+                hover:border-gray-600 border-transparent transition-colors duration-200 cursor-pointer">
+              Datos personales</label>
+            <input id="prt" class="peer/prt hidden" type="radio" name="sect" />
+            <label for="prt" class="peer-checked/prt:border-gray-600 px-4 py-2 text-gray-500 text-xl border-b 
+                hover:border-gray-600 border-transparent transition-colors duration-200 cursor-pointer">
+              Participaciones</label>
+
+            <div class="hidden w-full peer-checked/pdata:block">
+              <div class="flex flex-col gap-8">
+                {{template "contactSection" .}}
+                {{template "linkSection" .}}
+                {{template "skillSection" .}}
+                <div class="flex flex-row divide-x divide-black">
+                  <div class="flex w-1/2 justify-center">
+                    {{template "experienceSection" .}}
+                  </div>
+                  <div class="flex w-1/2 justify-center">
+                    {{template "educationSection" .}}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="hidden w-full peer-checked/prt:block">
+              {{if .Participations}}
+              {{range .Participations}} {{template "offerCard" .}} {{end}}
+              {{else}}
+              <span class="text-center text-shark-200">Todavía no ha participado en ninguna prueba</span>
+              {{end}}
+            </div>
+          </fieldset>
+          {{else}}
+          <div class="w-full">
             <div class="flex flex-col gap-8">
+              {{template "contactSection" .}}
               {{template "linkSection" .}}
               {{template "skillSection" .}}
               <div class="flex flex-row divide-x divide-black">
@@ -168,38 +139,12 @@
               </div>
             </div>
           </div>
+          {{end}}
 
-          <div class="hidden w-full peer-checked/prt:block">
-            {{range .Participations}} {{template "offerCard" .}} {{end}}
-          </div>
-        </fieldset>
-        {{else}}
-        <div class="w-full">
-          <div class="flex flex-col gap-8">
-            {{template "linkSection" .}}
-            {{template "skillSection" .}}
-            <div class="flex flex-row divide-x divide-black">
-              <div class="flex w-1/2 justify-center">
-                {{template "experienceSection" .}}
-              </div>
-              <div class="flex w-1/2 justify-center">
-                {{template "educationSection" .}}
-              </div>
-            </div>
-          </div>
         </div>
-        {{end}}
-
-      </div>
+      </main>
     </div>
   </section>
 </body>
-
 </html>
-{{end}}
-
-{{block "descrEntry" .}}{{.Description}}{{end}}
-
-{{block "descrErrors" .}}
-<div hx-swap-oob="innerHTML" id="desc-error">{{.DescrError}}</div>
 {{end}}

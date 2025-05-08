@@ -1,13 +1,13 @@
--- name: GetUserByEmail :one
-SELECT id, email, password FROM user WHERE email = ?;
+-- name: GetUserByNick :one
+SELECT id, nick, password FROM user WHERE nick = ?;
 
 -- name: GetUser :one
 SELECT * FROM user WHERE id = ?;
 
 -- name: CreateUser :exec
 INSERT INTO user 
-(id, name, email, password, description, image_url) VALUES 
-(?, ?, ?, ?, ?, ?);
+(id, nick, name, password) VALUES 
+(?, ?, ?, ?);
 
 -- name: UpdateImage :exec
 UPDATE user SET image_url = ? WHERE id = ?;
@@ -20,3 +20,9 @@ WHERE participation.quiz_id = ?;
 
 -- name: UpdateUserDescription :exec
 UPDATE user SET description = ? WHERE id = ?;
+
+-- name: UpdateEmail :exec
+UPDATE user SET email = ? WHERE id = ?;
+
+-- name: UpdateCell :exec
+UPDATE user SET number = ? WHERE id = ?;

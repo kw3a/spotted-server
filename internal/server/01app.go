@@ -13,7 +13,7 @@ type App struct {
 	AuthType    *auth.JWTAuth
 	Stream      *codejudge.Stream
 	Judge       codejudge.Judge0
-	Cld 			 *cloudinary.Cloudinary
+	Cld         *cloudinary.Cloudinary
 }
 
 func NewApp(envVars EnvVariables) (*App, error) {
@@ -29,7 +29,7 @@ func NewApp(envVars EnvVariables) (*App, error) {
 	cloudinaryService, err := cloudinary.New()
 	if err != nil {
 		return nil, err
-	} 
+	}
 	authType := auth.NewJWTAuth(envVars.jwtSecret)
 	authService := &auth.AuthService{}
 	stream := codejudge.NewStream()
@@ -47,6 +47,6 @@ func NewApp(envVars EnvVariables) (*App, error) {
 		AuthType:    authType,
 		Stream:      stream,
 		Judge:       judge,
-		Cld:				 cloudinaryService,
+		Cld:         cloudinaryService,
 	}, nil
 }

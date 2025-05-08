@@ -67,6 +67,7 @@ func CreateRegisterSkillHandler(templ shared.TemplatesRepo, auth shared.AuthRep,
 			Name: input.Name,
 			ID:   skillID,
 		}
+		w.Header().Set("HX-Trigger", "skill-added")
 		if err := templ.Render(w, "skillEntry", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

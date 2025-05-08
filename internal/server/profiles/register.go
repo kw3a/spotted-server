@@ -6,31 +6,32 @@ import (
 	"strings"
 
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
+	"github.com/google/uuid"
+	"github.com/kw3a/spotted-server/internal/auth"
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 const (
-	errUserTaken         = "El correo ya está siendo utilizado"
+	errUserTaken         = "Nombre de usuario no disponible"
 	errNameLength        = "Debe tener entre 3 a 255 caracteres"
 	errDescriptionLength = "Debe tener entre 20 a 500 caracteres"
 )
 
 type UserStorage interface {
-	CreateUser(ctx context.Context, name, password, email, description string) error
+	CreateUser(ctx context.Context, id, nick, name, password string) error
+	Save(ctx context.Context, refreshToken string) error
 }
 
 type UserInput struct {
-	Name        string
-	Password    string
-	Email       string
-	Description string
+	Name     string
+	Password string
+	Nick     string
 }
 
 type UserInputErrors struct {
-	NameError        string
-	PasswordError    string
-	EmailError       string
-	DescriptionError string
+	NameError     string
+	PasswordError string
+	NickError     string
 }
 
 type CloudinaryService interface {
@@ -54,28 +55,28 @@ func GetUserInput(r *http.Request) (UserInput, UserInputErrors, bool) {
 		inputErrors.PasswordError = shared.ErrLength(5, 30)
 		inputErrFound = true
 	}
-	email := r.FormValue("email")
-	if strErr := EmailValidation(email); strErr != "" {
-		inputErrors.EmailError = strErr
-		inputErrFound = true
-	}
-	description := r.FormValue("description")
-	if len(description) < 200 || len(description) > 500 {
-		inputErrors.DescriptionError = shared.ErrLength(200, 500)
+	nick := r.FormValue("nick")
+	if len(nick) < 3 || len(nick) > 32 {
+		inputErrors.NickError = shared.ErrLength(3, 32)
 		inputErrFound = true
 	}
 
 	return UserInput{
-		Name:        name,
-		Password:    password,
-		Email:       email,
-		Description: description,
+		Name:     name,
+		Password: password,
+		Nick:     nick,
 	}, inputErrors, inputErrFound
 }
 
 type userInputFunc func(*http.Request) (UserInput, UserInputErrors, bool)
 
-func CreateUserHandler(templ shared.TemplatesRepo, storage UserStorage, inputFn userInputFunc, redirection string) http.HandlerFunc {
+func CreateUserHandler(
+	authType LoginAuthType,
+	templ shared.TemplatesRepo,
+	storage UserStorage,
+	inputFn userInputFunc,
+	redirection string,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		input, inputErr, errorExists := inputFn(r)
 		if errorExists {
@@ -85,22 +86,42 @@ func CreateUserHandler(templ shared.TemplatesRepo, storage UserStorage, inputFn 
 			}
 			return
 		}
-		err := storage.CreateUser(r.Context(), input.Name, input.Password, input.Email, input.Description)
+		userID := uuid.NewString()
+		err := storage.CreateUser(r.Context(), userID, input.Nick, input.Name, input.Password)
 		if err != nil {
 			if strings.Contains(err.Error(), "1062") {
-				renderErr := templ.Render(w, "userFormErrors", UserInputErrors{EmailError: errUserTaken})
+				renderErr := templ.Render(w, "userFormErrors", UserInputErrors{NickError: errUserTaken})
 				if renderErr != nil {
 					http.Error(w, renderErr.Error(), http.StatusInternalServerError)
 				}
 				return
 			}
-			renderErr := templ.Render(w, "userFormErrors", UserInputErrors{EmailError: errUnexpected + err.Error()})
+			renderErr := templ.Render(w, "userFormErrors", UserInputErrors{NickError: errUnexpected + err.Error()})
 			if renderErr != nil {
 				http.Error(w, renderErr.Error(), http.StatusInternalServerError)
 			}
 			return
 		}
-		w.Header().Set("HX-Redirect", redirection)
+		refreshToken, accessToken, err := authType.CreateTokens(userID)
+		if err != nil {
+			inputErr.NickError = errUnexpected
+			if err := templ.Render(w, "userFormErrors", inputErr); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+		err = storage.Save(r.Context(), refreshToken)
+		if err != nil {
+			inputErr.NickError = errUnexpected
+			if err := templ.Render(w, "userFormErrors", inputErr); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+		auth.SetTokenCookie(w, "refresh_token", refreshToken)
+		auth.SetTokenCookie(w, "access_token", accessToken)
+		redirRoute := redirection + userID
+		w.Header().Set("HX-Redirect", redirRoute)
 		w.WriteHeader(http.StatusCreated)
 	}
 }

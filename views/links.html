@@ -4,7 +4,7 @@
     <span class="text-white text-lg">Enlaces</span>
   {{if .Owner}}
     <button 
-      onclick="window.showAndHide('linkForm')"
+      onclick="window.showAndHide('link-form')"
       class="flex items-center justify-center w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
       type="button"
       aria-label="Añadir habilidad"
@@ -53,20 +53,20 @@
 {{end}}
 
 {{block "linkList" .}} 
-<div id="link_list" class="flex flex-wrap justify-center gap-6">
+<div id="link_list" class="flex flex-wrap justify-center gap-6" >
+  {{if not .Links}}
+  <span class="text-shark-200" id="empty-links">Sin registrar</span>
+  {{end}} 
   {{if .Owner}}
   {{range .Links}} {{template "linkEntry" .}} {{end}}
   {{else}}
   {{range .Links}} {{template "simpleLink" .}} {{end}}
   {{end}}
 </div>
-{{if not .Links}}
-<span class="text-shark-200">No hay enlaces para mostrar</span>
-{{end}} 
 {{end}} 
 
 {{block "linkForm" .}}
-<div id="linkForm" class="hidden">
+<div id="link-form" class="hidden">
   <form 
     hx-post="/links" 
     hx-target="#link_list" 
@@ -81,6 +81,7 @@
         type="text"
         name="name"
         placeholder="Ejemplo: GitHub"
+        autocomplete="off"
         required
       />
       <span id="link-name-error" class="text-red-500 text-sm"></span>

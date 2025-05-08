@@ -25,6 +25,14 @@ type MysqlStorage struct {
 	db      *sql.DB
 }
 
+func (mysql *MysqlStorage) UpdateCell(ctx context.Context, userID string, cell string) error {
+	return mysql.Queries.UpdateCell(ctx, database.UpdateCellParams{ID: userID, Number: cell})
+}
+
+func (mysql *MysqlStorage) UpdateEmail(ctx context.Context, userID string, email string) error {
+	return mysql.Queries.UpdateEmail(ctx, database.UpdateEmailParams{ID: userID, Email: email})
+}
+
 func (mysql *MysqlStorage) UpdateDescription(ctx context.Context, userID, description string) error {
 	return mysql.Queries.UpdateUserDescription(ctx, database.UpdateUserDescriptionParams{
 		ID:          userID,
@@ -572,18 +580,16 @@ func NewMysqlStorage(dbURL string) (*MysqlStorage, error) {
 	return &MysqlStorage{Queries: queries, db: db}, nil
 }
 
-func (mysql *MysqlStorage) CreateUser(ctx context.Context, name, password, email, description string) error {
+func (mysql *MysqlStorage) CreateUser(ctx context.Context, id, nick, name, password string) error {
 	encriptedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 	return mysql.Queries.CreateUser(ctx, database.CreateUserParams{
-		ID:          uuid.New().String(),
-		Name:        name,
-		Email:       email,
-		Password:    string(encriptedPassword),
-		Description: description,
-		ImageUrl:    "",
+		ID:       id,
+		Nick:     nick,
+		Name:     name,
+		Password: string(encriptedPassword),
 	})
 }
 
@@ -1005,14 +1011,14 @@ func (s MysqlStorage) EndQuiz(ctx context.Context, userID, quizID string) (share
 func CheckPasswordHash(hashedPassword, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
-func (s *MysqlStorage) GetUserID(ctx context.Context, email, password string) (string, error) {
-	dbUser, err := s.Queries.GetUserByEmail(ctx, email)
+func (s *MysqlStorage) GetUserID(ctx context.Context, nick, password string) (string, error) {
+	dbUser, err := s.Queries.GetUserByNick(ctx, nick)
 	if err != nil {
-		return "", errors.New("email and password do not match")
+		return "", errors.New(shared.ErrNotRegistered)
 	}
 	err = CheckPasswordHash(dbUser.Password, password)
 	if err != nil {
-		return "", errors.New("email and password do not match")
+		return "", errors.New(shared.ErrNotMatch)
 	}
 	return dbUser.ID, nil
 }

@@ -134,6 +134,8 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 		r.Get("/register/offers", app.OfferRegistrationPage())
 		r.Post("/register/offers", app.OfferRegistration())
 		r.Patch("/pictures", app.ProfilePicHandler())
+		r.Patch("/email", app.UpdateEmail())
+		r.Patch("/cell", app.UpdateCell())
 		r.Post("/links", app.LinkRegisterHandler())
 		r.Delete("/links/{linkID}", app.LinkDeleteHandler())
 		r.Post("/skills", app.SkillRegisterHandler())

@@ -99,6 +99,7 @@ func CreateProfilePageHandler(
 			ImageURL:    dbProfile.ImageUrl,
 			Description: dbProfile.Description,
 			Email:       dbProfile.Email,
+			Cell:        dbProfile.Number,
 		}
 		data := ProfilePageData{
 			User:           user,

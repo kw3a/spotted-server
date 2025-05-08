@@ -16,10 +16,6 @@ type DescUpdateErrors struct {
 	DescrError string
 }
 
-type DescUpdateData struct {
-	Description string
-}
-
 type DescrStorage interface {
 	UpdateDescription(ctx context.Context, userID, description string) error
 }
@@ -30,7 +26,7 @@ func GetDescUpdateInput(r *http.Request) (DescUpdateInput, DescUpdateErrors, boo
 	res := DescUpdateInput{}
 
 	description := r.FormValue("description")
-	if len(description) > 164 || len(description) < 1{
+	if len(description) > 164 || len(description) < 1 {
 		inputErrors.DescrError = shared.ErrLength(5, 128)
 		errFound = true
 		res.Description = ""
@@ -39,7 +35,6 @@ func GetDescUpdateInput(r *http.Request) (DescUpdateInput, DescUpdateErrors, boo
 		res.Description = description
 	}
 	return res, inputErrors, errFound
-
 }
 
 type descUpdateInputFn func(r *http.Request) (DescUpdateInput, DescUpdateErrors, bool)
@@ -58,19 +53,18 @@ func CreateDescUpdateHandler(
 		}
 		input, inputErr, errFound := inputFn(r)
 		if errFound {
-			if err := templ.Render(w, "descrErrors", inputErr); err != nil {
+			if err := templ.Render(w, "descrAlerts", shared.Alert{Ok: false, Msg: inputErr.DescrError}); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
 		}
 		if err := storage.UpdateDescription(r.Context(), user.ID, input.Description); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			if err := templ.Render(w, "descrAlerts", shared.Alert{Ok: false, Msg: errUnexpected}); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
-		data := DescUpdateData{
-			Description: input.Description,
-		}
-		if err := templ.Render(w, "descrEntry", data); err != nil {
+		if err := templ.Render(w, "descrAlerts", shared.Alert{Ok: true, Msg: shared.MsgSaved}); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}

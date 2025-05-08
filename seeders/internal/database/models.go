@@ -155,9 +155,10 @@ type TestCaseResult struct {
 	ID           sql.NullString
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
-	Status       sql.NullString
-	Time         sql.NullString
-	Memory       sql.NullInt32
+	Output       string
+	Status       string
+	Time         string
+	Memory       int32
 	TestCaseID   string
 	SubmissionID string
 }
@@ -166,9 +167,11 @@ type User struct {
 	ID          string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	Nick        string
+	Password    string
 	Name        string
 	Email       string
-	Password    string
 	Description string
 	ImageUrl    string
+	Number      string
 }

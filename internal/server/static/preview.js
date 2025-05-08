@@ -1,71 +1,69 @@
-function previewImage(event, defaultImagePath) {
-  event.preventDefault();
-  const preview = document.getElementById("preview");
-
-  if (event.target.files[0]) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      preview.src = e.target.result;
-    };
-    reader.readAsDataURL(event.target.files[0]);
-    document.getElementById("edit-options").classList.remove("hidden");
-  } else {
-    preview.src = defaultImagePath;
-    const fileInput = document.getElementById("image");
-    fileInput.value = "";
-    document.getElementById("edit-options").classList.add("hidden");
-  }
-}
-
-function editionCancel(evt, defaultImagePath) {
-  evt.preventDefault();
-  const preview = document.getElementById("preview");
-  const fileInput = document.getElementById("image");
-  preview.src = defaultImagePath;
-  fileInput.value = "";
-  document.getElementById("edit-options").classList.add("hidden");
-}
+const $ = (el) => document.querySelector(el);
 
 function showAndHide(...IDs) {
-  IDs.forEach(id => {
-    const form = document.getElementById(id);
-    form?.classList.toggle("hidden");
+  IDs.forEach((id) => {
+    const tag = document.getElementById(id);
+    tag?.classList.toggle("hidden");
   });
 }
 
-function toggleEditable(...IDs) {
-  IDs.forEach(id => {
-    const form = document.getElementById(id);
-    form?.toggleAttribute("contenteditable");
+function triggers() {
+  const events = [
+    { event: "link-added", selector: "#empty-links", form: "#link-form" },
+    { event: "skill-added", selector: "#empty-skills", form: "#skill-form" },
+    { event: "ed-added", selector: "#empty-ed", form: "#ed-form" },
+    { event: "exp-added", selector: "#empty-exp", form: "#exp-form" },
+  ];
+  events.forEach(({ event, selector, form }) => {
+    if ($(selector) !== null) {
+      document.body.addEventListener(event, () => {
+        $(selector)?.classList.add("hidden");
+        $(form)?.classList.add("hidden");
+      });
+    }
   });
 }
 
-function getText(ID) {
-  const tag = document.getElementById(ID);
-  if (tag) {
-    return tag.textContent.trim();
-  }
-  return ""
-}
+document.addEventListener("DOMContentLoaded", () => {
+  const preview = $("#preview");
+  if (preview) {
+    let imageUrl = preview.src;
+    let currentUserImgPath = imageUrl || "/public/user.svg";
 
-let savedPDesc = getText('pDesc')
-function resetPDesc(ID) {
-  const tag = document.getElementById(ID);
-  if (tag) {
-    tag.textContent = savedPDesc
-  }
-}
+    const previewInput = $("#preview-input");
+    if (previewInput) {
+      previewInput.onchange = (event) => {
+        event.preventDefault();
+        const preview = $("#preview");
+        if (event.target.files[0]) {
+          const reader = new FileReader();
+          reader.onload = (e) => { preview.src = e.target.result; };
+          reader.readAsDataURL(event.target.files[0]);
+          $("#edit-options")?.classList.remove("hidden");
+        } else {
+          preview.src = currentUserImgPath;
+          previewInput.value = "";
+          $("#edit-options")?.classList.add("hidden");
+        }
+      };
+    }
 
-function updatePDesc(ID) {
-  const tag = document.getElementById(ID);
-  if (tag) {
-    savedPDesc = tag.textContent.trim();
+    const cancel = $("#cancel");
+    if (cancel) {
+      cancel.onclick = (evt) => {
+        evt.preventDefault();
+        $("#preview").src = currentUserImgPath;
+        if (previewInput) previewInput.value = "";
+        $("#edit-options")?.classList.add("hidden");
+      };
+    }
+
+    document.body.addEventListener("image-changed", () => {
+      currentUserImgPath = $("#preview")?.src;
+      $("#edit-options")?.classList.add("hidden");
+    });
   }
-}
-window.previewImage = previewImage;
-window.editionCancel = editionCancel;
+  triggers();
+});
+
 window.showAndHide = showAndHide;
-window.toggleEditable = toggleEditable;
-window.getText = getText;
-window.resetPDesc = resetPDesc;
-window.updatePDesc = updatePDesc;

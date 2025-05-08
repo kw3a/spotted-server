@@ -1,19 +1,18 @@
 {{block "navBar" .}}
-
-<nav class="flex flex-row text-white p-4 bg-shark-900">
+<nav class="flex flex-row text-white p-2 bg-shark-900">
   <div class="w-1/2 flex justify-around">
-    <div class="flex items-end gap-4">
+    <div class="flex items-center gap-4">
       <button
-        class="inline-block rounded"
+        class="inline-block p-1 hover:border-white border-b border-transparent"
         hx-get="/"
         hx-target="body"
         hx-push-url="true"
         hx-boost="true"
       >
-        <img src="/public/jobs.svg" alt="home icon" width="30" height="30" />
+        <img src="/public/jobs.svg" alt="home icon" width="40" height="40" />
       </button>
       <form
-        id="company-filters"
+        id="search-field"
         hx-get="/"
         hx-target="body"
         hx-boost="true"
@@ -24,7 +23,7 @@
           class="absolute inset-y-0 start-0 flex items-center ps-2 pointer-events-none"
         >
           <img
-            src="/public/search.svg"
+            src="/public/find.svg"
             alt="home icon"
             width="20"
             height="20"
@@ -34,18 +33,19 @@
           id="f-query"
           type="text"
           name="q"
-          class="bg-shark-950 ps-8 rounded text-shark-200 block w-full focus:outline-none focus:ring focus:ring-blue-500"
+          class="bg-white ps-8 rounded text-black block w-full focus:outline-none focus:ring focus:ring-blue-500"
+
         />
       </form>
     </div>
     <button
-      class="rounded font-semibold text-white"
+      class="p-1 hover:border-white border-b border-transparent"
       hx-get="/companies"
       hx-target="body"
       hx-push-url="true"
       hx-boost="true"
     >
-      <img src="/public/company.svg" alt="home icon" width="30" height="30" />
+      <img src="/public/company.svg" alt="home icon" width="40" height="40" />
     </button>
   </div>
   <div class="w-1/2 flex flex-row justify-center">
@@ -55,7 +55,7 @@
 {{end}} {{block "userIcon" .}}
 
 <div class="relative group">
-  <div class="rounded text-white cursor-pointer">
+  <div class="rounded cursor-pointer">
     <img
       class="aspect-square rounded-full mx-auto object-cover inline"
       {{if
@@ -65,8 +65,8 @@
       src="/public/user.svg"
       {{end}}
       alt="user icon"
-      width="30"
-      height="30"
+      width="40"
+      height="40"
     />
   </div>
   <div
@@ -99,8 +99,7 @@
     </ul>
     {{else}}
     <div class="px-4 py-3 text-sm text-white">
-      <div class="truncate">{{.Name}}</div>
-      <div class="font-medium truncate">{{.Email}}</div>
+      <div class="truncate text-lg">{{.Name}}</div>
     </div>
 
     <ul class="py-2 text-sm text-gray-200">
@@ -137,7 +136,7 @@
         hx-boost="true"
       >
         <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white"
-          >Registrar empresa</span
+          >Registrar compañía</span
         >
       </li>
       <li
@@ -148,7 +147,7 @@
         hx-boost="true"
       >
         <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white"
-          >Mis empresas</span
+          >Mis compañías</span
         >
       </li>
     </ul>

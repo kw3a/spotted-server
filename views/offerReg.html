@@ -13,223 +13,225 @@
   <script src="/static/offers.js" defer></script>
 </head>
 
-<body class="bg-shark-950" hx-ext="head-support">
-  {{template "navBar" .User}}
-  <div class="flex flex-row justify-center relative">
-    <form id="offer-form-container" class="w-1/2 flex flex-col gap-4 py-4" hx-ext="json-enc-custom"
-      hx-post="/register/offers" hx-trigger="evtsubmitoffer" hx-target="#offer-form-errors" hx-swap="none"
-      hx-on::response-error="showToast(event.detail.xhr.responseText)">
-      <section id="offer-form" class="flex flex-col gap-4">
-        <h1 class="text-xl font-bold text-white">Oferta</h1>
-        <div class="flex gap-4">
-          <div class="w-1/2">
-            <input id="f-title" type="text" name="offer[title]" placeholder="Título"
-              class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
-              autocomplete="off" />
-            <span id="f-title-error" class="text-red-500 text-sm"></span>
-          </div>
-          <div class="w-1/2">
-            <select id="f-companies" name="offer[companyID]" placeholder="Empresa"
-              class="rounded bg-gray-700 block w-full p-2 text-shark-200 focus:outline-none focus:ring focus:ring-blue-500">
-              {{range .Companies}}
-              <option value="{{.ID}}" class="text-white">{{.Name}}</option>
-              {{end}}
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <div class="flex flex-col gap-2">
-            <span class="text-shark-200 text-center">Rango salarial</span>
-            <div class="flex items-center gap-2">
-              <input id="f-min-wage" type="number" name="offer[minWage]" placeholder="Mínimo"
-                class="w-full rounded bg-gray-700 text-shark-200 text-center p-2 focus:outline-none focus:ring focus:ring-blue-500" />
-              <span class="text-white font-bold">-</span>
-              <input id="f-max-wage" type="number" name="offer[maxWage]" placeholder="Máximo"
-                class="w-full rounded bg-gray-700 text-shark-200 text-center p-2 focus:outline-none focus:ring focus:ring-blue-500" />
+<body class="" hx-ext="head-support">
+  <section class="bg-shark-950 h-screen flex flex-col font-mono">
+    {{template "navBar" .User}}
+    <div class="flex flex-row justify-center relative overflow-y-auto">
+      <form id="offer-form-container" class="w-1/2 flex flex-col gap-4 py-4" hx-ext="json-enc-custom"
+        hx-post="/register/offers" hx-trigger="evtsubmitoffer" hx-target="#offer-form-errors" hx-swap="none"
+        hx-on::response-error="showToast(event.detail.xhr.responseText)">
+        <section id="offer-form" class="flex flex-col gap-4">
+          <h1 class="text-xl font-bold text-white">Oferta</h1>
+          <div class="flex gap-4">
+            <div class="w-1/2">
+              <input id="f-title" type="text" name="offer[title]" placeholder="Título"
+                class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
+                autocomplete="off" />
+              <span id="f-title-error" class="text-red-500 text-sm"></span>
+            </div>
+            <div class="w-1/2">
+              <select id="f-companies" name="offer[companyID]" placeholder="Compañía"
+                class="rounded bg-gray-700 block w-full p-2 text-shark-200 focus:outline-none focus:ring focus:ring-blue-500">
+                {{range .Companies}}
+                <option value="{{.ID}}" class="text-white">{{.Name}}</option>
+                {{end}}
+              </select>
             </div>
           </div>
 
-          <span id="f-wage-error" class="block text-center text-red-500 text-sm"></span>
-        </div>
-
-        <div>
-          <textarea id="f-about" name="offer[about]" placeholder="Sobre el trabajo"
-            class="auto-resize-textarea bg-gray-700 text-shark-200 w-full rounded p-2 focus:outline-none focus:ring focus:ring-blue-500"></textarea>
-          <span id="f-about-error" class="text-red-500 text-sm"></span>
-        </div>
-
-        <div>
-          <textarea id="f-requirements" name="offer[requirements]" placeholder="Requisitos"
-            class="auto-resize-textarea bg-gray-700 text-shark-200 w-full rounded p-2 focus:outline-none focus:ring focus:ring-blue-500"></textarea>
-          <span id="f-requirements-error" class="text-red-500 text-sm"></span>
-        </div>
-
-        <div>
-          <textarea id="f-benefits" name="offer[benefits]" placeholder="Beneficios"
-            class="auto-resize-textarea bg-gray-700 text-shark-200 w-full rounded p-2 focus:outline-none focus:ring focus:ring-blue-500"></textarea>
-          <span id="f-benefits-error" class="text-red-500 text-sm"></span>
-        </div>
-      </section>
-
-      <div class="flex flex-col gap-4 container rounded-lg shadow-lg">
-        <!-- Problems Container -->
-        <section class="flex flex-col gap-4 rounded border border-shark-900 p-2">
-          <h1 class="text-xl font-bold text-white text-center">Prueba</h1>
-          {{template "f-quiz" .}}
-          <section id="problems-container">
-            <details class="flex flex-col gap-2 problem border border-gray-400 p-4 select-none" open>
-              <summary class="flex justify-between items-center text-lg font-semibold text-white"
-                onclick="event.preventDefault()">
-                <div class="flex grow gap-2 items-center">
-                  <button class="edit-title border border-transparent hover:border-white p-2"
-                    onclick="toggleDetails(event)" type="button">
-                    <img src="/public/chevron.svg" alt="chevron icon" width="20" height="20"
-                      style="pointer-events: none" />
-                  </button>
-                  <div class="grow">
-                    <input
-                      class="bg-transparent w-full text-white border-b border-gray-400 select-none font-semibold px-1 focus:outline-none focus:border-blue-500"
-                      type="text" name="problems[0][title]" placeholder="Nombre del problema" spellcheck="false"
-                      autocomplete="off" />
-                    <span class="block text-xs text-red-500"></span>
-                  </div>
-                </div>
-                <button class="delete-problem border border-transparent hover:border-red-500 p-2"
-                  onclick="handleDeleteProblem(event)" type="button">
-                  <img src="/public/x.svg" alt="delete icon" width="20" height="20" style="pointer-events: none" />
-                </button>
-              </summary>
-
-              <!-- Problem Fields -->
-              <section class="flex flex-col gap-2">
-                <div>
-                  <textarea name="problems[0][description]" placeholder="Descripción"
-                    class="w-full bg-gray-700 text-shark-200 auto-resize-textarea p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
-                  <span class="text-xs text-red-500"></span>
-                </div>
-                <div class="relative mb-6">
-                  <label for="f-time-limit" class="block text-sm text-shark-200">
-                    Límite de tiempo
-                  </label>
-                  <input id="f-time-limit" type="range" name="problems[0][time_limit]" value="1000" min="500" max="2000"
-                    step="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700" />
-                  <span class="text-sm text-gray-400 absolute start-0 -bottom-6">500 ms</span>
-                  <span
-                    class="text-sm text-gray-400 absolute start-1/3 -translate-x-1/2 rtl:translate-x-1/2 -bottom-6">1000
-                    ms</span>
-                  <span
-                    class="text-sm text-gray-400 absolute start-2/3 -translate-x-1/2 rtl:translate-x-1/2 -bottom-6">1500
-                    ms</span>
-                  <span class="text-sm text-gray-400 absolute end-0 -bottom-6">2000 ms</span>
-                  <span id="f-problem-time-limit-error" class="text-red-500 text-sm"></span>
-                </div>
-              </section>
-
-              <div id="cases" class="flex flex-row">
-                <!-- Test Cases Section -->
-                <div id="test-cases" class="w-1/2 space-y-2 p-2">
-                  <div class="test-case-group flex flex-col gap-4">
-                    <div class="flex justify-between items-center">
-                      <h4 class="text-sm font-semibold text-shark-200">
-                        Casos de prueba
-                      </h4>
-                      <!-- Add Test Cases -->
-                      <button onclick="handleAddTestCase(event)"
-                        class="add-test-case border border-transparent p-2 hover:border-green-600" type="button">
-                        <img src="/public/plus.svg" alt="login icon" width="20" height="20"
-                          style="pointer-events: none" />
-                      </button>
-                    </div>
-                    <div class="test-case flex flex-row rounded gap-2">
-                      <div class="w-full relative tc">
-                        <button onclick="handleDeleteTestCase(event)"
-                          class="delete-test-case absolute top-0 right-0 border border-transparent hover:border-red-500 p-2"
-                          type="button">
-                          <img src="/public/x.svg" alt="login icon" width="20" height="20"
-                            style="pointer-events: none" />
-                        </button>
-                        <div class="pt-6 pr-6">
-                          <div>
-                            <textarea name="problems[0][test_cases][0][input]" placeholder="Entrada"
-                              class="w-full auto-resize-textarea bg-gray-700 text-shark-200 p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
-                            <span class="block text-xs text-red-500"></span>
-                          </div>
-                          <div>
-                            <textarea name="problems[0][test_cases][0][output]" placeholder="Salida esperada"
-                              class="w-full auto-resize-textarea bg-gray-700 text-shark-200 p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
-                            <span class="block text-xs text-red-500"></span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Examples Section -->
-                <div id="examples" class="w-1/2 space-y-2 p-2">
-                  <div class="example-group flex flex-col gap-4">
-                    <div class="flex justify-between items-center">
-                      <h4 class="text-sm font-semibold text-shark-200">
-                        Ejemplos
-                      </h4>
-                      <!-- Add Examples-->
-                      <button onclick="handleAddExample(event)"
-                        class="add-example border border-transparent p-2 hover:border-green-600" type="button">
-                        <img src="/public/plus.svg" alt="login icon" width="20" height="20"
-                          style="pointer-events: none" />
-                      </button>
-                    </div>
-                    <div class="example flex flex-row rounded gap-2">
-                      <div class="w-full relative ex">
-                        <button onclick="handleDeleteExample(event)"
-                          class="delete-example absolute top-0 right-0 border border-transparent hover:border-red-500 p-2"
-                          type="button">
-                          <img src="/public/x.svg" alt="login icon" width="20" height="20"
-                            style="pointer-events: none" />
-                        </button>
-                        <div class="pt-6 pr-6">
-                          <div>
-                            <textarea name="problems[0][examples][0][input]" placeholder="Entrada"
-                              class="auto-resize-textarea bg-gray-700 text-shark-200 w-full p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
-                            <span class="block text-xs text-red-500"></span>
-                          </div>
-                          <div>
-                            <textarea name="problems[0][examples][0][output]" placeholder="Salida esperada"
-                              class="auto-resize-textarea bg-gray-700 text-shark-200 w-full p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
-                            <span class="block text-xs text-red-500"></span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </details>
-          </section>
-
-          <!-- Add Problem Button -->
           <div>
-            <button id="add-problem"
-              class="border border-green-500 text-green-500 text-sm py-2 px-6 hover:border-green-600 hover:text-green-600"
-              onclick="handleAddProblem(event)" type="button">
-              Nuevo problema
-            </button>
-            <span id="add-problem-error" class="block text-xs text-red-500"></span>
+            <div class="flex flex-col gap-2">
+              <span class="text-shark-200 text-center">Rango salarial (anual)</span>
+              <div class="flex items-center gap-2">
+                <input id="f-min-wage" type="number" name="offer[minWage]" placeholder="Mínimo"
+                  class="w-full rounded bg-gray-700 text-shark-200 text-center p-2 focus:outline-none focus:ring focus:ring-blue-500" />
+                <span class="text-white font-bold">-</span>
+                <input id="f-max-wage" type="number" name="offer[maxWage]" placeholder="Máximo"
+                  class="w-full rounded bg-gray-700 text-shark-200 text-center p-2 focus:outline-none focus:ring focus:ring-blue-500" />
+              </div>
+            </div>
+
+            <span id="f-wage-error" class="block text-center text-red-500 text-sm"></span>
+          </div>
+
+          <div>
+            <textarea id="f-about" name="offer[about]" placeholder="Sobre el trabajo"
+              class="auto-resize-textarea bg-gray-700 text-shark-200 w-full rounded p-2 focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+            <span id="f-about-error" class="text-red-500 text-sm"></span>
+          </div>
+
+          <div>
+            <textarea id="f-requirements" name="offer[requirements]" placeholder="Requisitos"
+              class="auto-resize-textarea bg-gray-700 text-shark-200 w-full rounded p-2 focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+            <span id="f-requirements-error" class="text-red-500 text-sm"></span>
+          </div>
+
+          <div>
+            <textarea id="f-benefits" name="offer[benefits]" placeholder="Beneficios"
+              class="auto-resize-textarea bg-gray-700 text-shark-200 w-full rounded p-2 focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+            <span id="f-benefits-error" class="text-red-500 text-sm"></span>
           </div>
         </section>
 
-        <div class="flex justify-center">
-          <button id="submit-offer-btn" type="button" onclick="submitForm(event)"
-            class="border border-blue-500 text-blue-500 py-2 px-6 rounded hover:border-blue-600 hover:text-blue-500">
-            Publicar oferta
-          </button>
+        <div class="flex flex-col gap-4 container rounded-lg shadow-lg">
+          <!-- Problems Container -->
+          <section class="flex flex-col gap-4 rounded border border-shark-900 p-2">
+            <h1 class="text-xl font-bold text-white text-center">Prueba</h1>
+            {{template "f-quiz" .}}
+            <section id="problems-container">
+              <details class="flex flex-col gap-2 problem border border-gray-400 p-4 select-none" open>
+                <summary class="flex justify-between items-center text-lg font-semibold text-white"
+                  onclick="event.preventDefault()">
+                  <div class="flex grow gap-2 items-center">
+                    <button class="edit-title border border-transparent hover:border-white p-2"
+                      onclick="toggleDetails(event)" type="button">
+                      <img src="/public/chevron.svg" alt="chevron icon" width="20" height="20"
+                        style="pointer-events: none" />
+                    </button>
+                    <div class="grow">
+                      <input
+                        class="bg-transparent w-full text-white border-b border-gray-400 select-none font-semibold px-1 focus:outline-none focus:border-blue-500"
+                        type="text" name="problems[0][title]" placeholder="Nombre del problema" spellcheck="false"
+                        autocomplete="off" />
+                      <span class="block text-xs text-red-500"></span>
+                    </div>
+                  </div>
+                  <button class="delete-problem border border-transparent hover:border-red-500 p-2"
+                    onclick="handleDeleteProblem(event)" type="button">
+                    <img src="/public/x.svg" alt="delete icon" width="20" height="20" style="pointer-events: none" />
+                  </button>
+                </summary>
+
+                <!-- Problem Fields -->
+                <section class="flex flex-col gap-2">
+                  <div>
+                    <textarea name="problems[0][description]" placeholder="Descripción"
+                      class="w-full bg-gray-700 text-shark-200 auto-resize-textarea p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+                    <span class="text-xs text-red-500"></span>
+                  </div>
+                  <div class="relative mb-6">
+                    <label for="f-time-limit" class="block text-sm text-shark-200">
+                      Límite de tiempo
+                    </label>
+                    <input id="f-time-limit" type="range" name="problems[0][time_limit]" value="1000" min="500"
+                      max="2000" step="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-700" />
+                    <span class="text-sm text-gray-400 absolute start-0 -bottom-6">500 ms</span>
+                    <span
+                      class="text-sm text-gray-400 absolute start-1/3 -translate-x-1/2 rtl:translate-x-1/2 -bottom-6">1000
+                      ms</span>
+                    <span
+                      class="text-sm text-gray-400 absolute start-2/3 -translate-x-1/2 rtl:translate-x-1/2 -bottom-6">1500
+                      ms</span>
+                    <span class="text-sm text-gray-400 absolute end-0 -bottom-6">2000 ms</span>
+                    <span id="f-problem-time-limit-error" class="text-red-500 text-sm"></span>
+                  </div>
+                </section>
+
+                <div id="cases" class="flex flex-row">
+                  <!-- Test Cases Section -->
+                  <div id="test-cases" class="w-1/2 space-y-2 p-2">
+                    <div class="test-case-group flex flex-col gap-4">
+                      <div class="flex justify-between items-center">
+                        <h4 class="text-sm font-semibold text-shark-200">
+                          Casos de prueba
+                        </h4>
+                        <!-- Add Test Cases -->
+                        <button onclick="handleAddTestCase(event)"
+                          class="add-test-case border border-transparent p-2 hover:border-green-600" type="button">
+                          <img src="/public/plus.svg" alt="login icon" width="20" height="20"
+                            style="pointer-events: none" />
+                        </button>
+                      </div>
+                      <div class="test-case flex flex-row rounded gap-2">
+                        <div class="w-full relative tc">
+                          <button onclick="handleDeleteTestCase(event)"
+                            class="delete-test-case absolute top-0 right-0 border border-transparent hover:border-red-500 p-2"
+                            type="button">
+                            <img src="/public/x.svg" alt="login icon" width="20" height="20"
+                              style="pointer-events: none" />
+                          </button>
+                          <div class="pt-6 pr-6">
+                            <div>
+                              <textarea name="problems[0][test_cases][0][input]" placeholder="Entrada"
+                                class="w-full auto-resize-textarea bg-gray-700 text-shark-200 p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+                              <span class="block text-xs text-red-500"></span>
+                            </div>
+                            <div>
+                              <textarea name="problems[0][test_cases][0][output]" placeholder="Salida esperada"
+                                class="w-full auto-resize-textarea bg-gray-700 text-shark-200 p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+                              <span class="block text-xs text-red-500"></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Examples Section -->
+                  <div id="examples" class="w-1/2 space-y-2 p-2">
+                    <div class="example-group flex flex-col gap-4">
+                      <div class="flex justify-between items-center">
+                        <h4 class="text-sm font-semibold text-shark-200">
+                          Ejemplos
+                        </h4>
+                        <!-- Add Examples-->
+                        <button onclick="handleAddExample(event)"
+                          class="add-example border border-transparent p-2 hover:border-green-600" type="button">
+                          <img src="/public/plus.svg" alt="login icon" width="20" height="20"
+                            style="pointer-events: none" />
+                        </button>
+                      </div>
+                      <div class="example flex flex-row rounded gap-2">
+                        <div class="w-full relative ex">
+                          <button onclick="handleDeleteExample(event)"
+                            class="delete-example absolute top-0 right-0 border border-transparent hover:border-red-500 p-2"
+                            type="button">
+                            <img src="/public/x.svg" alt="login icon" width="20" height="20"
+                              style="pointer-events: none" />
+                          </button>
+                          <div class="pt-6 pr-6">
+                            <div>
+                              <textarea name="problems[0][examples][0][input]" placeholder="Entrada"
+                                class="auto-resize-textarea bg-gray-700 text-shark-200 w-full p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+                              <span class="block text-xs text-red-500"></span>
+                            </div>
+                            <div>
+                              <textarea name="problems[0][examples][0][output]" placeholder="Salida esperada"
+                                class="auto-resize-textarea bg-gray-700 text-shark-200 w-full p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+                              <span class="block text-xs text-red-500"></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </section>
+
+            <!-- Add Problem Button -->
+            <div>
+              <button id="add-problem"
+                class="border border-green-500 text-green-500 text-sm py-2 px-6 hover:border-green-600 hover:text-green-600"
+                onclick="handleAddProblem(event)" type="button">
+                Nuevo problema
+              </button>
+              <span id="add-problem-error" class="block text-xs text-red-500"></span>
+            </div>
+          </section>
+
+          <div class="flex justify-center">
+            <button id="submit-offer-btn" type="button" onclick="submitForm(event)"
+              class="border border-blue-500 text-blue-500 py-2 px-6 rounded hover:border-blue-600 hover:text-blue-500">
+              Publicar oferta
+            </button>
+          </div>
+          <div id="offer-form-errors"></div>
         </div>
-        <div id="offer-form-errors"></div>
-      </div>
-    </form>
-    <div id="toast" class="fixed bottom-8 right-8 flex flex-col gap-4 justify-center"></div>
-  </div>
+      </form>
+      <div id="toast" class="fixed bottom-8 right-8 flex flex-col gap-4 justify-center"></div>
+    </div>
+  </section>
 </body>
 
 </html>

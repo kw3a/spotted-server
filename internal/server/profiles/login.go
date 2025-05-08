@@ -3,45 +3,34 @@ package profiles
 import (
 	"context"
 	"net/http"
-	"regexp"
 
 	"github.com/kw3a/spotted-server/internal/auth"
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
 const (
-	errEmailInvalid = "Correo inválido"
+	errEmailInvalid   = "Correo inválido"
 	errPasswordLength = "Debe tener entre 5 a 30 caracteres"
-	errNotFound = "El correo y la contraseña no coinciden"
-	errUnexpected = "Error inesperado, inténtelo de nuevo"
+	errUnexpected     = "Error inesperado, inténtelo de nuevo"
 )
 
 type LoginInput struct {
-	Email    string
+	Nick     string
 	Password string
 }
 
 type LoginErr struct {
-	EmailErr    string
+	NickErr     string
 	PasswordErr string
-}
-
-func EmailValidation(email string) string {
-	exp := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
-	compiledRegExp := regexp.MustCompile(exp)
-	if !compiledRegExp.MatchString(email) {
-		return errEmailInvalid
-	}
-	return ""
 }
 
 func GetLoginInput(r *http.Request) (LoginInput, LoginErr, bool) {
 	errFound := false
 	loginErr := LoginErr{}
-	email := r.FormValue("email")
+	nick := r.FormValue("nick")
 	password := r.FormValue("password")
-	if strErr := EmailValidation(email); strErr != "" {
-		loginErr.EmailErr = strErr
+	if len(nick) < 3 || len(nick) > 32 {
+		loginErr.NickErr = shared.ErrLength(3, 32)
 		errFound = true
 	}
 	if len(password) < 5 || len(password) > 30 {
@@ -49,13 +38,13 @@ func GetLoginInput(r *http.Request) (LoginInput, LoginErr, bool) {
 		errFound = true
 	}
 	return LoginInput{
-		Email:    email,
+		Nick:     nick,
 		Password: password,
 	}, loginErr, errFound
 }
 
 type LoginStorage interface {
-	GetUserID(ctx context.Context, email, password string) (string, error)
+	GetUserID(ctx context.Context, nick, password string) (string, error)
 	Save(ctx context.Context, refreshToken string) error
 }
 type LoginAuthType interface {
@@ -77,9 +66,9 @@ func CreateLoginHandler(
 			}
 			return
 		}
-		userID, err := storage.GetUserID(r.Context(), input.Email, input.Password)
+		userID, err := storage.GetUserID(r.Context(), input.Nick, input.Password)
 		if err != nil {
-			inputErrors.EmailErr = errNotFound
+			inputErrors.NickErr = err.Error()
 			if err := templ.Render(w, "loginFormErrors", inputErrors); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
@@ -87,7 +76,7 @@ func CreateLoginHandler(
 		}
 		refreshToken, accessToken, err := authType.CreateTokens(userID)
 		if err != nil {
-			inputErrors.EmailErr = errUnexpected
+			inputErrors.NickErr = errUnexpected
 			if err := templ.Render(w, "loginFormErrors", inputErrors); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
@@ -95,7 +84,7 @@ func CreateLoginHandler(
 		}
 		err = storage.Save(r.Context(), refreshToken)
 		if err != nil {
-			inputErrors.EmailErr = errUnexpected
+			inputErrors.NickErr = errUnexpected
 			if err := templ.Render(w, "loginFormErrors", inputErrors); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}

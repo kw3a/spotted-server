@@ -1,9 +1,10 @@
-package server
+package offers
 
 import (
 	"context"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/kw3a/spotted-server/internal/auth"
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
@@ -14,8 +15,6 @@ type PreambleData struct {
 	Quiz          shared.Quiz
 	Languages     []shared.Language
 	Participation shared.Participation
-	Results       []Result
-	Problems      []shared.Problem
 }
 
 type Result struct {
@@ -24,19 +23,29 @@ type Result struct {
 }
 
 type PreambleInput struct {
-	QuizID string
+	OfferID string
+}
+
+func GetPreambleInput(r *http.Request) (PreambleInput, error) {
+	quizID := chi.URLParam(r, "quizID")
+	if err := shared.ValidateUUID(quizID); err != nil {
+		return PreambleInput{}, err
+	}
+	return PreambleInput{
+		OfferID: quizID,
+	}, nil
 }
 
 type PreambleStorage interface {
 	ParticipationStatus(ctx context.Context, userID string, quizID string) (shared.Participation, error)
-	SelectProblems(ctx context.Context, quizID string) ([]shared.Problem, error)
-	SelectScore(ctx context.Context, userID string, problemID string) (shared.Score, error)
 	SelectOffer(ctx context.Context, id string) (shared.Offer, error)
 	SelectQuizByOffer(ctx context.Context, offerID string) (shared.Quiz, error)
 	SelectLanguages(ctx context.Context, quizID string) ([]shared.Language, error)
 }
 
-func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, authService AuthRep, inputFn quizPageInputFunc) http.HandlerFunc {
+type preambleInputFunc = func(r *http.Request) (PreambleInput, error)
+
+func CreateParticipationHandler(templ shared.TemplatesRepo, storage PreambleStorage, authService shared.AuthRep, inputFn preambleInputFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := authService.GetUser(r)
 		if err != nil {
@@ -72,25 +81,6 @@ func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, au
 			data.Languages = languages
 			participation, err := storage.ParticipationStatus(r.Context(), user.ID, quiz.ID)
 			if err == nil {
-				problems, err := storage.SelectProblems(r.Context(), quiz.ID)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				results := make([]Result, 0)
-				for _, problem := range problems {
-					score, err := storage.SelectScore(r.Context(), user.ID, problem.ID)
-					if err != nil {
-						http.Error(w, err.Error(), http.StatusInternalServerError)
-						return
-					}
-					result := Result{
-						Problem: problem,
-						Score: score,
-					}
-					results = append(results, result)
-				}
-				data.Results = results
 				data.Participation = participation
 			}
 		}
@@ -98,8 +88,4 @@ func CreateParticipationHandler(templ TemplatesRepo, storage PreambleStorage, au
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
-}
-
-func (app *App) PreambleHandler() http.HandlerFunc {
-	return CreateParticipationHandler(app.Templ, app.Storage, app.AuthService, GetQuizPageInput)
 }

@@ -32,26 +32,30 @@ func (q *Queries) DeleteUsers(ctx context.Context, ids []string) error {
 
 const seedUser = `-- name: SeedUser :exec
 INSERT INTO user 
-(id, name, email, password, description, image_url) VALUES
-(?, ?, ?, ?, ?, ?)
+(id, nick, name, email, password, description, number, image_url) VALUES
+(?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type SeedUserParams struct {
 	ID          string
+	Nick        string
 	Name        string
 	Email       string
 	Password    string
 	Description string
+	Number      string
 	ImageUrl    string
 }
 
 func (q *Queries) SeedUser(ctx context.Context, arg SeedUserParams) error {
 	_, err := q.db.ExecContext(ctx, seedUser,
 		arg.ID,
+		arg.Nick,
 		arg.Name,
 		arg.Email,
 		arg.Password,
 		arg.Description,
+		arg.Number,
 		arg.ImageUrl,
 	)
 	return err

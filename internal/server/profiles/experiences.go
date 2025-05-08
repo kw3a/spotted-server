@@ -129,6 +129,7 @@ func CreateRegisterExperienceHandler(templ shared.TemplatesRepo, auth shared.Aut
 			TimeInterval: shared.TimeInterval(input.Start, input.End),
 			ID:           experienceID,
 		}
+		w.Header().Set("HX-Trigger", "exp-added")
 		if err := templ.Render(w, "experienceEntry", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

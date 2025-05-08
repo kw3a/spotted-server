@@ -15,6 +15,15 @@ func (DI *App) JobOffersHandler() http.HandlerFunc {
 	)
 }
 
+func (app *App) PreambleHandler() http.HandlerFunc {
+	return offers.CreateParticipationHandler(
+		app.Templ,
+		app.Storage,
+		app.AuthService,
+		offers.GetPreambleInput,
+	)
+}
+
 func (DI *App) OfferRegistrationPage() http.HandlerFunc {
 	return offers.CreateRegisterOfferPage(
 		DI.AuthService,

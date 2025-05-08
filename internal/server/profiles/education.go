@@ -114,6 +114,7 @@ func CreateRegisterEducationHandler(templ shared.TemplatesRepo, auth shared.Auth
 			EndDate:     shared.DateSpanishFormat(input.End),
 			ID:          educationID,
 		}
+		w.Header().Set("HX-Trigger", "ed-added")
 		if err := templ.Render(w, "educationEntry", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

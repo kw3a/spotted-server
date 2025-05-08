@@ -81,6 +81,8 @@ func CreateRegisterLinkHandler(templ shared.TemplatesRepo, auth shared.AuthRep, 
 			Name: input.Name,
 			ID:   linkID,
 		}
+
+		w.Header().Set("HX-Trigger", "link-added")
 		if err := templ.Render(w, "linkEntry", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -109,4 +111,3 @@ func CreateDeleteLinkHandler(auth shared.AuthRep, storage LinkStorage, inputFn d
 		w.WriteHeader(http.StatusOK)
 	}
 }
-

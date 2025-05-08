@@ -18,10 +18,12 @@ func (cfg *SeedersConfig) seedUsers() ([]string, error) {
 	}
 	passHashed := string(pass)
 	err = cfg.DB.SeedUser(cfg.Ctx, database.SeedUserParams{
-		ID:       IDs[0],
-		Name:     "Test User",
-		Email:    "myemail@gmail.com",
-		Password: passHashed,
+		ID:          IDs[0],
+		Nick:        "genericBoss",
+		Name:        "Beñat Beniju",
+		Email:       "myemail@gmail.com",
+		Number:      "+591 69546920",
+		Password:    passHashed,
 		Description: "Usuario de prueba con 2 publicaciones",
 	})
 	if err != nil {

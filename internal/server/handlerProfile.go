@@ -80,10 +80,11 @@ func (DI *App) ProfilePicHandler() http.HandlerFunc {
 
 func (DI *App) UserHandler() http.HandlerFunc {
 	return profiles.CreateUserHandler(
+		DI.AuthType,
 		DI.Templ,
 		DI.Storage,
 		profiles.GetUserInput,
-		"/login",
+		"/profile/",
 	)
 }
 
@@ -105,5 +106,23 @@ func (DI *App) DescrUpdateHandler() http.HandlerFunc {
 		DI.AuthService,
 		DI.Storage,
 		profiles.GetDescUpdateInput,
+	)
+}
+
+func (DI *App) UpdateEmail() http.HandlerFunc {
+	return profiles.CreateUpdateEmailHandler(
+		DI.Templ,
+		DI.AuthService,
+		DI.Storage,
+		profiles.GetEmailUpdateInput,
+	)
+}
+
+func (DI *App) UpdateCell() http.HandlerFunc {
+	return profiles.CreateUpdateCellHandler(
+		DI.Templ,
+		DI.AuthService,
+		DI.Storage,
+		profiles.GetUpdateCellInput,
 	)
 }

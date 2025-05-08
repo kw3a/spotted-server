@@ -1,0 +1,131 @@
+{{block "contactSection" .}}
+{{if .Owner}}
+<div class="flex flex-row justify-evenly">
+  <div class="flex flex-col">
+    <form class="flex flex-row gap-2" hx-patch="/email" hx-swap="none">
+      <label for="pEmail" class="">
+        <img
+          src="/public/email.svg"
+          alt="email"
+          width="25"
+          height="25"
+          class="pointer-events-none"
+        />
+      </label>
+      <input
+        id="pEmail"
+        class="bg-shark-950 border-b border-shark-300 text-shark-300"
+        name="email"
+        type="text"
+        value="{{.Profile.Email}}"
+        placeholder="Ej: mycorreo@gmail.com"
+        autocomplete="off"
+      />
+      <button
+        id="pEmail-save"
+        class="flex justify-center justify-items-center w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
+      >
+        <img
+          src="/public/check.svg"
+          alt="Guardar"
+          width="16"
+          height="16"
+          class="pointer-events-none"
+        />
+      </button>
+    </form>
+    <span id="pEmail-msg" class="text-red-500 text-sm"></span>
+  </div>
+  <div class="flex flex-col">
+    <form class="flex flex-row gap-2" hx-patch="/cell" hx-swap="none">
+      <label for="pCell" class="text-center text-shark-200">
+        <img
+          src="/public/phone.svg"
+          alt="teléfono"
+          width="25"
+          height="25"
+          class="pointer-events-none"
+        />
+      </label>
+      <input
+        id="pCell"
+        class="bg-shark-950 border-b border-shark-300 text-shark-300"
+        name="cell"
+        type="text"
+        value="{{.Profile.Cell}}"
+        placeholder="Ej: 69542010"
+        autocomplete="off"
+      />
+      <button
+        id="pCell-save"
+        class="flex justify-center justify-items-center w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
+      >
+        <img
+          src="/public/check.svg"
+          alt="Guardar"
+          width="16"
+          height="16"
+          class="pointer-events-none"
+        />
+      </button>
+    </form>
+    <span id="pCell-msg" class="text-red-500 text-sm"></span>
+  </div>
+</div>
+{{else}}
+<div class="flex flex-row">
+  <div class="w-1/2 flex flex-row gap-2 justify-center">
+    <img
+      src="/public/email.svg"
+      alt="email"
+      width="25"
+      height="25"
+      class="pointer-events-none"
+    />
+    <span
+      id="pEmail"
+      class="text-shark-300">
+    {{if .Profile.Email}}
+    {{.Profile.Email}}
+    {{else}}
+      No registrado
+    {{end}}
+    </span>
+  </div>
+  <div class="w-1/2 flex flex-row gap-2 justify-center">
+    <img
+      src="/public/phone.svg"
+      alt="teléfono"
+      width="25"
+      height="25"
+      class="pointer-events-none"
+    />
+    <span
+      id="pCell"
+      class="text-shark-300">
+    {{if .Profile.Cell}}
+      {{.Profile.Cell}}
+    {{else}}
+      No registrado
+    {{end}}
+    </span>
+  </div>
+</div>
+{{end}}
+{{end}}
+
+{{block "cellAlerts" .}}
+{{if .Ok}}
+<span id="pCell-msg" class="text-green-400 text-sm" hx-swap-oob="outerHTML">{{.Msg}}</span>
+{{else}}
+<span id="pCell-msg" class="text-red-500 text-sm" hx-swap-oob="outerHTML">{{.Msg}}</span>
+{{end}}
+{{end}}
+
+{{block "emailAlerts" .}}
+{{if .Ok}}
+<span id="pEmail-msg" class="text-green-400 text-sm" hx-swap-oob="outerHTML">{{.Msg}}</span>
+{{else}}
+<span id="pEmail-msg" class="text-red-500 text-sm" hx-swap-oob="outerHTML">{{.Msg}}</span>
+{{end}}
+{{end}}

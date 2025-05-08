@@ -1,97 +1,58 @@
 {{block "userCreation" .}}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Creating profile</title>
-    <link href="/static/output.css" rel="stylesheet" />
-    <script src="/static/htmx.min.js"></script>
-    <script src="/static/head-support.js"></script>
-  </head>
 
-  <body class="bg-shark-950" hx-ext="head-support">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Creating profile</title>
+  <link href="/static/output.css" rel="stylesheet" />
+  <script src="/static/htmx.min.js"></script>
+  <script src="/static/head-support.js"></script>
+</head>
+
+<body class="" hx-ext="head-support">
+  <section class="bg-shark-950 h-screen flex flex-col font-mono">
     {{template "navBar" .User}}
-    <div
-      class="bg-shark-950 border border-shark-900 rounded max-w-lg mx-auto my-10"
-    >
-      <form
-        id="user-data-form"
-        class="border border-black rounded p-4 space-y-4"
-        hx-post="/register"
-        hx-swap="none"
-      >
-        <h1 class="text-white text-center font-bold text-lg">Registro</h1>
-        <div>
-          <label for="name" class="text-shark-200 block text-sm font-medium"
-            >Nombre</label
-          >
-          <input
-            class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
-            type="text"
-            name="name"
-          />
-          <span id="name-error" class="text-red-500 text-sm"></span>
-        </div>
-
-        <div>
-          <label for="email" class="text-shark-200 block text-sm font-medium"
-            >Correo</label
-          >
-          <input
-            class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
-            type="email"
-            name="email"
-            id="email"
-          />
-          <span id="email-error" class="text-red-500 text-sm"></span>
-        </div>
-
-        <div>
-          <label for="password" class="block text-shark-200 text-sm font-medium"
-            >Contraseña</label
-          >
-          <input
-            class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
-            type="password"
-            name="password"
-            id="password"
-          />
-          <span id="password-error" class="text-red-500 text-sm"></span>
-        </div>
-
-        <div>
-          <label
-            for="description"
-            class="block text-shark-200 text-sm font-medium"
-            >Descripción</label
-          >
-          <textarea
-            id="description"
-            rows="4"
-            class="block w-full text-sm bg-gray-700 text-shark-200 rounded-lg p-2 focus:outline-none focus:ring focus:ring-blue-500"
-            name="description"
-            placeholder="Escribe una descripción de ti mismo"
-          ></textarea>
-          <span id="description-error" class="text-red-500 text-sm"></span>
-        </div>
-        <div class="flex justify-center">
-          <button
-            class="border rounded border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400 font-bold py-2 px-4"
-            type="submit"
-          >
-            Registrar
-          </button>
-        </div>
-      </form>
+    <div class="flex-1 flex items-center justify-center px-4 py-6 overflow-y-auto">
+      <div class="w-full max-w-lg bg-shark-950 border border-shark-900 rounded shadow-lg">
+        <form id="user-data-form" class="p-4 sm:p-6 space-y-4" hx-post="/register" hx-swap="none">
+          <h1 class="text-white text-center font-bold text-lg sm:text-xl">Registro</h1>
+          <div>
+            <label for="pName" class="text-shark-200 block text-sm font-medium">Nombre</label>
+            <input id="pName" type="text" name="name" autocomplete="off"
+              class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500" />
+            <span id="name-error" class="text-red-500 text-sm"></span>
+          </div>
+          <div>
+            <label for="pNick" class="text-shark-200 block text-sm font-medium">Nombre de usuario</label>
+            <input id="pNick" type="text" name="nick"
+              class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500" />
+            <span id="nick-error" class="text-red-500 text-sm"></span>
+          </div>
+          <div>
+            <label for="pPass" class="text-shark-200 block text-sm font-medium">Contraseña</label>
+            <input id="pPass" type="password" name="password"
+              class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500" />
+            <span id="password-error" class="text-red-500 text-sm"></span>
+          </div>
+          <div class="flex justify-center">
+            <button type="submit"
+              class="border rounded border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400 font-bold py-2 px-4">
+              Registrar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-  </body>
+  </section>
+</body>
+
 </html>
-{{end}} {{block "userFormErrors" .}}
+{{end}}
+
+{{block "userFormErrors" .}}
 <span id="name-error" hx-swap-oob="innerHTML">{{.NameError}}</span>
-<span id="email-error" hx-swap-oob="innerHTML">{{.EmailError}}</span>
+<span id="nick-error" hx-swap-oob="innerHTML">{{.NickError}}</span>
 <span id="password-error" hx-swap-oob="innerHTML">{{.PasswordError}}</span>
-<span id="description-error" hx-swap-oob="innerHTML"
-  >{{.DescriptionError}}</span
->
 {{end}}

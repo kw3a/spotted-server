@@ -167,9 +167,11 @@ type User struct {
 	ID          string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+	Nick        string
+	Password    string
 	Name        string
 	Email       string
-	Password    string
 	Description string
 	ImageUrl    string
+	Number      string
 }

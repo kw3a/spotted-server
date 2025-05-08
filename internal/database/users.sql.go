@@ -11,33 +11,29 @@ import (
 
 const createUser = `-- name: CreateUser :exec
 INSERT INTO user 
-(id, name, email, password, description, image_url) VALUES 
-(?, ?, ?, ?, ?, ?)
+(id, nick, name, password) VALUES 
+(?, ?, ?, ?)
 `
 
 type CreateUserParams struct {
-	ID          string
-	Name        string
-	Email       string
-	Password    string
-	Description string
-	ImageUrl    string
+	ID       string
+	Nick     string
+	Name     string
+	Password string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 	_, err := q.db.ExecContext(ctx, createUser,
 		arg.ID,
+		arg.Nick,
 		arg.Name,
-		arg.Email,
 		arg.Password,
-		arg.Description,
-		arg.ImageUrl,
 	)
 	return err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, created_at, updated_at, name, email, password, description, image_url FROM user WHERE id = ?
+SELECT id, created_at, updated_at, nick, password, name, email, description, image_url, number FROM user WHERE id = ?
 `
 
 func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
@@ -47,34 +43,36 @@ func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
 		&i.ID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Nick,
+		&i.Password,
 		&i.Name,
 		&i.Email,
-		&i.Password,
 		&i.Description,
 		&i.ImageUrl,
+		&i.Number,
 	)
 	return i, err
 }
 
-const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, password FROM user WHERE email = ?
+const getUserByNick = `-- name: GetUserByNick :one
+SELECT id, nick, password FROM user WHERE nick = ?
 `
 
-type GetUserByEmailRow struct {
+type GetUserByNickRow struct {
 	ID       string
-	Email    string
+	Nick     string
 	Password string
 }
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
-	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
-	var i GetUserByEmailRow
-	err := row.Scan(&i.ID, &i.Email, &i.Password)
+func (q *Queries) GetUserByNick(ctx context.Context, nick string) (GetUserByNickRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserByNick, nick)
+	var i GetUserByNickRow
+	err := row.Scan(&i.ID, &i.Nick, &i.Password)
 	return i, err
 }
 
 const selectApplicants = `-- name: SelectApplicants :many
-SELECT user.id, user.created_at, user.updated_at, user.name, user.email, user.password, user.description, user.image_url
+SELECT user.id, user.created_at, user.updated_at, user.nick, user.password, user.name, user.email, user.description, user.image_url, user.number
 FROM user
 JOIN participation ON user.id = participation.user_id
 WHERE participation.quiz_id = ?
@@ -93,11 +91,13 @@ func (q *Queries) SelectApplicants(ctx context.Context, quizID string) ([]User, 
 			&i.ID,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Nick,
+			&i.Password,
 			&i.Name,
 			&i.Email,
-			&i.Password,
 			&i.Description,
 			&i.ImageUrl,
+			&i.Number,
 		); err != nil {
 			return nil, err
 		}
@@ -110,6 +110,34 @@ func (q *Queries) SelectApplicants(ctx context.Context, quizID string) ([]User, 
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateCell = `-- name: UpdateCell :exec
+UPDATE user SET number = ? WHERE id = ?
+`
+
+type UpdateCellParams struct {
+	Number string
+	ID     string
+}
+
+func (q *Queries) UpdateCell(ctx context.Context, arg UpdateCellParams) error {
+	_, err := q.db.ExecContext(ctx, updateCell, arg.Number, arg.ID)
+	return err
+}
+
+const updateEmail = `-- name: UpdateEmail :exec
+UPDATE user SET email = ? WHERE id = ?
+`
+
+type UpdateEmailParams struct {
+	Email string
+	ID    string
+}
+
+func (q *Queries) UpdateEmail(ctx context.Context, arg UpdateEmailParams) error {
+	_, err := q.db.ExecContext(ctx, updateEmail, arg.Email, arg.ID)
+	return err
 }
 
 const updateImage = `-- name: UpdateImage :exec

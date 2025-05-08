@@ -18,6 +18,7 @@ type AuthUser struct {
 	ID          string
 	Role        string
 	Name        string
+	Cell        string
 	ImageURL    string
 	Email       string
 	Description string
