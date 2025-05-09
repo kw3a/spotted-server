@@ -37,6 +37,7 @@
               <label 
                 for="preview-input" 
                 class="absolute bottom-0 right-2 bg-gray-700 hover:bg-gray-600 p-2 rounded-full cursor-pointer transition-all"
+                title="Editar foto"
               >
                 <img src="/public/edit.svg" class="w-6 h-6" alt="Edit">
               </label>
@@ -54,8 +55,9 @@
               <div class="flex justify-center gap-2">
                 <button 
                   id="save-image"
-                  class="flex justify-center justify-items-center w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
+                  class="flex justify-center justify-items-center cursor-pointer w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
                   type="submit"
+                  title="Guardar cambios"
                 >
                   <img 
                     src="/public/check.svg" 
@@ -67,7 +69,8 @@
                 </button>
                 <button 
                   id="cancel"
-                  class="flex justify-center justify-items-center w-7 h-7 rounded-full hover:bg-red-400 transition-colors duration-200"
+                  class="flex justify-center cursor-pointer justify-items-center w-7 h-7 rounded-full hover:bg-red-400 transition-colors duration-200"
+                  title="Cancelar"
                 >
                   <img 
                     src="/public/x.svg" 
@@ -95,8 +98,10 @@
                 hover:border-gray-600 border-transparent transition-colors duration-200 cursor-pointer">
               Datos personales</label>
             <input id="prt" class="peer/prt hidden" type="radio" name="sect" />
-            <label for="prt" class="peer-checked/prt:border-gray-600 px-4 py-2 text-gray-500 text-xl border-b 
-                hover:border-gray-600 border-transparent transition-colors duration-200 cursor-pointer">
+            <label for="prt" 
+              class="peer-checked/prt:border-gray-600 px-4 py-2 text-gray-500 text-xl border-b 
+              hover:border-gray-600 border-transparent transition-colors duration-200 cursor-pointer"
+            >
               Participaciones</label>
 
             <div class="hidden w-full peer-checked/pdata:block">

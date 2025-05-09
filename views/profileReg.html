@@ -15,32 +15,35 @@
   <section class="bg-shark-950 h-screen flex flex-col font-mono">
     {{template "navBar" .User}}
     <div class="flex-1 flex items-center justify-center px-4 py-6 overflow-y-auto">
-      <div class="w-full max-w-lg bg-shark-950 border border-shark-900 rounded shadow-lg">
+      <div class="w-full max-w-lg bg-shark-950 border border-shark-900 rounded-sm shadow-lg">
         <form id="user-data-form" class="p-4 sm:p-6 space-y-4" hx-post="/register" hx-swap="none">
           <h1 class="text-white text-center font-bold text-lg sm:text-xl">Registro</h1>
           <div>
             <label for="pName" class="text-shark-200 block text-sm font-medium">Nombre</label>
             <input id="pName" type="text" name="name" autocomplete="off"
-              class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500" />
+              class="rounded-sm bg-gray-700 text-shark-200 block w-full p-2 focus:outline-hidden focus:ring-3 focus:ring-blue-500" />
             <span id="name-error" class="text-red-500 text-sm"></span>
           </div>
           <div>
             <label for="pNick" class="text-shark-200 block text-sm font-medium">Nombre de usuario</label>
             <input id="pNick" type="text" name="nick"
-              class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500" />
+              class="rounded-sm bg-gray-700 text-shark-200 block w-full p-2 focus:outline-hidden focus:ring-3 focus:ring-blue-500" />
             <span id="nick-error" class="text-red-500 text-sm"></span>
           </div>
           <div>
             <label for="pPass" class="text-shark-200 block text-sm font-medium">Contraseña</label>
             <input id="pPass" type="password" name="password"
-              class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500" />
+              class="rounded-sm bg-gray-700 text-shark-200 block w-full p-2 focus:outline-hidden focus:ring-3 focus:ring-blue-500" />
             <span id="password-error" class="text-red-500 text-sm"></span>
           </div>
-          <div class="flex justify-center">
+          <div class="flex justify-center gap-2">
             <button type="submit"
-              class="border rounded border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400 font-bold py-2 px-4">
+              class="border rounded-sm border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400 font-bold py-2 px-4">
               Registrar
             </button>
+            <img 
+              class="inline cursor-pointer" width="18" height="18" src="/public/help.svg" 
+              title="Los datos registrados aquí no podrán ser cambiados después"/>
           </div>
         </form>
       </div>

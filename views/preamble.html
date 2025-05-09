@@ -18,35 +18,43 @@
     {{template "navBar" .User}}
     <div class="flex justify-center p-4 text-shark-200 overflow-y-auto">
       <section class="w-full xl:w-3/4 flex flex-col py-4 gap-2">
-        <strong class="font-semibold text-2xl">{{.Offer.Title}}</strong>
+        <strong class="font-semibold text-3xl text-white">{{.Offer.Title}}</strong>
         <div class="flex flex-row text-shark-100">
-          <div class="w-1/2">
-            <span class="hover:underline hover:underline-offset-1 hover:cursor-pointer"
-              hx-get="/companies/{{.Offer.CompanyID}}" hx-boost="true" hx-push-url="true" hx-target="body">
-              {{.Offer.CompanyName}}
-            </span>
+          <div class="w-1/2 flex">
+            <img class="border border-gray-700 hover:border-white cursor-pointer"
+              {{if .Offer.CompanyImageURL}} src="{{.Offer.CompanyImageURL}}" {{else}} src="/public/company.svg" {{end}}
+              width="60" height="60" 
+              hx-get="/companies/{{.Offer.CompanyID}}" hx-boost="true" hx-push-url="true" hx-target="body"
+            />
+            <strong class="font-extralight self-end">{{.Offer.CompanyName}} </strong>
           </div>
-          <p class="w-1/2">
+          <p class="w-1/2 text-green-300 self-end">
             {{.Offer.MinWage}} - {{.Offer.MaxWage}}
             <span class="font-semibold text-xl">$</span>
+            <img class="inline cursor-pointer" width="18" height="18" src="/public/help.svg" title="Rango salarial anual"/>
           </p>
         </div>
-        <strong class="font-semibold block">Sobre el puesto</strong>
+        <strong class="font-semibold block text-xl">Sobre el puesto</strong>
         <pre class="whitespace-pre-wrap text-shark-200 text-sm">{{.Offer.About}}</pre>
-        <strong class="font-semibold block">Requisitos</strong>
+        <strong class="font-semibold block text-xl">Requisitos</strong>
         <pre class="whitespace-pre-wrap text-shark-200 text-sm">{{.Offer.Requirements}}</pre>
-        <strong class="font-semibold block">Beneficios</strong>
+        <strong class="font-semibold block text-xl">Beneficios</strong>
         <pre class="whitespace-pre-wrap text-shark-200 text-sm">{{.Offer.Benefits}}</pre>
         <section class="flex justify-center">
-          <div class="w-full max-w-96 flex flex-col gap-2 justify-around bg-shark-900 rounded p-4">
-            <p class="text-center text-xl">Prueba</p>
+          <div class="w-full max-w-96 flex flex-col gap-2 justify-around bg-shark-900 rounded-sm p-4">
+            <p class="text-center text-xl">
+              Prueba 
+              <img 
+                class="inline cursor-pointer" width="18" height="18" src="/public/help.svg" 
+                title="Participa en la prueba para aplicar a este puesto."/>
+            </p>
             <p class="flex items-center text-shark-200 gap-2">
               <img class="inline" src="/public/clock.svg" width="20" height="20" alt="clock icon" />
               {{.Quiz.Duration}} minutos
             </p>
             <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full">
               {{range .Languages}}
-              <span class="rounded border border-shark-200 text-shark-200 px-2">{{.DisplayName}}</span>
+              <span class="rounded-sm border border-shark-200 text-shark-200 px-2">{{.DisplayName}}</span>
               {{end}}
             </div>
 
@@ -64,7 +72,7 @@
 {{if eq .User.Role "verified"}}
 <div class="flex justify-center">
   <button
-    class="border rounded border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400 font-bold w-32 text-center py-2 px-4"
+    class="border rounded-sm border-blue-400 cursor-pointer hover:border-blue-600 hover:text-blue-600 text-blue-400 font-bold w-32 text-center py-2 px-4"
     hx-post="/participate" hx-vals="js:{quizID: '{{.Quiz.ID}}'}"
     hx-confirm="Estás seguro de que quieres tomar esta prueba?">
     Participar
@@ -73,7 +81,7 @@
 {{else}}
 <div class="flex justify-center">
   <button
-    class="border rounded border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400 font-bold w-32 text-center py-2 px-4"
+    class="border cursor-pointer rounded-sm border-blue-500 hover:border-blue-400 hover:text-blue-400 text-blue-500 font-bold w-32 text-center py-2 px-4"
     hx-get="/login" hx-push-url="true" hx-target="body">
     Iniciar sesión
   </button>

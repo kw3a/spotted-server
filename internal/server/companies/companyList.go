@@ -15,8 +15,8 @@ type CompanyListStorage interface {
 type CompanyListData struct {
 	User      auth.AuthUser
 	Companies []shared.Company
+	CmpSearch    string
 }
-
 
 func GetCompanyListParams(r *http.Request) shared.CompanyQueryParams {
 	res := shared.CompanyQueryParams{}
@@ -25,7 +25,7 @@ func GetCompanyListParams(r *http.Request) shared.CompanyQueryParams {
 	if shared.ValidateUUID(userID) == nil {
 		res.UserID = userID
 	}
-	query := q.Get("q")	
+	query := q.Get("q")
 	if query != "" {
 		res.Query = query
 	}
@@ -55,6 +55,9 @@ func CreateCompanyListPageHandler(
 		data := CompanyListData{
 			User:      user,
 			Companies: companies,
+		}
+		if params.Query != "" {
+			data.CmpSearch = params.Query
 		}
 		if err := templ.Render(w, "companyList", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

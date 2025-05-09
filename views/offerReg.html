@@ -21,17 +21,18 @@
         hx-post="/register/offers" hx-trigger="evtsubmitoffer" hx-target="#offer-form-errors" hx-swap="none"
         hx-on::response-error="showToast(event.detail.xhr.responseText)">
         <section id="offer-form" class="flex flex-col gap-4">
-          <h1 class="text-xl font-bold text-white">Oferta</h1>
+          <h1 class="text-2xl font-bold text-white">Nueva oferta</h1>
           <div class="flex gap-4">
             <div class="w-1/2">
               <input id="f-title" type="text" name="offer[title]" placeholder="Título"
-                class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
+                class="rounded-sm bg-gray-700 text-shark-200 block w-full p-2 focus:outline-hidden focus:ring-3 focus:ring-blue-500"
                 autocomplete="off" />
               <span id="f-title-error" class="text-red-500 text-sm"></span>
             </div>
             <div class="w-1/2">
               <select id="f-companies" name="offer[companyID]" placeholder="Compañía"
-                class="rounded bg-gray-700 block w-full p-2 text-shark-200 focus:outline-none focus:ring focus:ring-blue-500">
+                title="Compañía"
+                class="rounded-sm cursor-pointer bg-gray-700 block w-full p-2 text-shark-200 focus:outline-hidden focus:ring-3 focus:ring-blue-500">
                 {{range .Companies}}
                 <option value="{{.ID}}" class="text-white">{{.Name}}</option>
                 {{end}}
@@ -40,43 +41,41 @@
           </div>
 
           <div>
-            <div class="flex flex-col gap-2">
-              <span class="text-shark-200 text-center">Rango salarial (anual)</span>
-              <div class="flex items-center gap-2">
-                <input id="f-min-wage" type="number" name="offer[minWage]" placeholder="Mínimo"
-                  class="w-full rounded bg-gray-700 text-shark-200 text-center p-2 focus:outline-none focus:ring focus:ring-blue-500" />
-                <span class="text-white font-bold">-</span>
-                <input id="f-max-wage" type="number" name="offer[maxWage]" placeholder="Máximo"
-                  class="w-full rounded bg-gray-700 text-shark-200 text-center p-2 focus:outline-none focus:ring focus:ring-blue-500" />
-              </div>
+            <div class="flex items-center gap-4">
+              <input id="f-min-wage" type="number" name="offer[minWage]" placeholder="Límite salarial inferior"
+                class="w-full rounded-sm bg-gray-700 text-shark-200 p-2 focus:outline-hidden focus:ring-3 focus:ring-blue-500" />
+              <input id="f-max-wage" type="number" name="offer[maxWage]" placeholder="Límite salarial superior"
+                class="w-full rounded-sm bg-gray-700 text-shark-200 p-2 focus:outline-hidden focus:ring-3 focus:ring-blue-500" />
+              <img 
+                class="inline cursor-pointer" width="18" height="18" src="/public/help.svg" 
+                title="Rango salarial anual"/>
             </div>
-
             <span id="f-wage-error" class="block text-center text-red-500 text-sm"></span>
           </div>
 
           <div>
             <textarea id="f-about" name="offer[about]" placeholder="Sobre el trabajo"
-              class="auto-resize-textarea bg-gray-700 text-shark-200 w-full rounded p-2 focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+              class="auto-resize-textarea bg-gray-700 text-shark-200 w-full rounded-sm p-2 focus:outline-hidden focus:ring-3 focus:ring-blue-500"></textarea>
             <span id="f-about-error" class="text-red-500 text-sm"></span>
           </div>
 
           <div>
             <textarea id="f-requirements" name="offer[requirements]" placeholder="Requisitos"
-              class="auto-resize-textarea bg-gray-700 text-shark-200 w-full rounded p-2 focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+              class="auto-resize-textarea bg-gray-700 text-shark-200 w-full rounded-sm p-2 focus:outline-hidden focus:ring-3 focus:ring-blue-500"></textarea>
             <span id="f-requirements-error" class="text-red-500 text-sm"></span>
           </div>
 
           <div>
             <textarea id="f-benefits" name="offer[benefits]" placeholder="Beneficios"
-              class="auto-resize-textarea bg-gray-700 text-shark-200 w-full rounded p-2 focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+              class="auto-resize-textarea bg-gray-700 text-shark-200 w-full rounded-sm p-2 focus:outline-hidden focus:ring-3 focus:ring-blue-500"></textarea>
             <span id="f-benefits-error" class="text-red-500 text-sm"></span>
           </div>
         </section>
 
         <div class="flex flex-col gap-4 container rounded-lg shadow-lg">
           <!-- Problems Container -->
-          <section class="flex flex-col gap-4 rounded border border-shark-900 p-2">
-            <h1 class="text-xl font-bold text-white text-center">Prueba</h1>
+          <section class="flex flex-col gap-4 rounded-sm border border-shark-900 p-2">
+            <h1 class="text-2xl font-bold text-white text-center">Prueba algorítmica</h1>
             {{template "f-quiz" .}}
             <section id="problems-container">
               <details class="flex flex-col gap-2 problem border border-gray-400 p-4 select-none" open>
@@ -84,19 +83,21 @@
                   onclick="event.preventDefault()">
                   <div class="flex grow gap-2 items-center">
                     <button class="edit-title border border-transparent hover:border-white p-2"
+                      title="Minimizar/Maximizar"
                       onclick="toggleDetails(event)" type="button">
                       <img src="/public/chevron.svg" alt="chevron icon" width="20" height="20"
                         style="pointer-events: none" />
                     </button>
                     <div class="grow">
                       <input
-                        class="bg-transparent w-full text-white border-b border-gray-400 select-none font-semibold px-1 focus:outline-none focus:border-blue-500"
+                        class="bg-transparent w-full text-white border-b border-gray-400 select-none font-semibold px-1 focus:outline-hidden focus:border-blue-500"
                         type="text" name="problems[0][title]" placeholder="Nombre del problema" spellcheck="false"
                         autocomplete="off" />
                       <span class="block text-xs text-red-500"></span>
                     </div>
                   </div>
                   <button class="delete-problem border border-transparent hover:border-red-500 p-2"
+                    title="Eliminar problema"
                     onclick="handleDeleteProblem(event)" type="button">
                     <img src="/public/x.svg" alt="delete icon" width="20" height="20" style="pointer-events: none" />
                   </button>
@@ -106,7 +107,7 @@
                 <section class="flex flex-col gap-2">
                   <div>
                     <textarea name="problems[0][description]" placeholder="Descripción"
-                      class="w-full bg-gray-700 text-shark-200 auto-resize-textarea p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+                      class="w-full bg-gray-700 text-shark-200 auto-resize-textarea p-2 rounded-sm focus:outline-hidden focus:ring-3 focus:ring-blue-500"></textarea>
                     <span class="text-xs text-red-500"></span>
                   </div>
                   <div class="relative mb-6">
@@ -134,6 +135,8 @@
                       <div class="flex justify-between items-center">
                         <h4 class="text-sm font-semibold text-shark-200">
                           Casos de prueba
+                          <img class="inline cursor-pointer" width="18" height="18" src="/public/help.svg" 
+                            title="Casos de prueba secretos con los que se calcula la puntuación. Saltos de línea y espacios debajo y arriba no serán tomados en cuenta"/>
                         </h4>
                         <!-- Add Test Cases -->
                         <button onclick="handleAddTestCase(event)"
@@ -142,9 +145,10 @@
                             style="pointer-events: none" />
                         </button>
                       </div>
-                      <div class="test-case flex flex-row rounded gap-2">
+                      <div class="test-case flex flex-row rounded-sm gap-2">
                         <div class="w-full relative tc">
                           <button onclick="handleDeleteTestCase(event)"
+                            title="Eliminar caso de prueba"
                             class="delete-test-case absolute top-0 right-0 border border-transparent hover:border-red-500 p-2"
                             type="button">
                             <img src="/public/x.svg" alt="login icon" width="20" height="20"
@@ -153,12 +157,12 @@
                           <div class="pt-6 pr-6">
                             <div>
                               <textarea name="problems[0][test_cases][0][input]" placeholder="Entrada"
-                                class="w-full auto-resize-textarea bg-gray-700 text-shark-200 p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+                                class="w-full auto-resize-textarea bg-gray-700 text-shark-200 p-2 rounded-sm focus:outline-hidden focus:ring-3 focus:ring-blue-500"></textarea>
                               <span class="block text-xs text-red-500"></span>
                             </div>
                             <div>
                               <textarea name="problems[0][test_cases][0][output]" placeholder="Salida esperada"
-                                class="w-full auto-resize-textarea bg-gray-700 text-shark-200 p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+                                class="w-full auto-resize-textarea bg-gray-700 text-shark-200 p-2 rounded-sm focus:outline-hidden focus:ring-3 focus:ring-blue-500"></textarea>
                               <span class="block text-xs text-red-500"></span>
                             </div>
                           </div>
@@ -173,6 +177,8 @@
                       <div class="flex justify-between items-center">
                         <h4 class="text-sm font-semibold text-shark-200">
                           Ejemplos
+                          <img class="inline cursor-pointer" width="18" height="18" src="/public/help.svg" 
+                            title="Casos de prueba públicos meramente para ejemplo de los aplicantes. No puntuan y no serán ejecutados"/>
                         </h4>
                         <!-- Add Examples-->
                         <button onclick="handleAddExample(event)"
@@ -181,9 +187,10 @@
                             style="pointer-events: none" />
                         </button>
                       </div>
-                      <div class="example flex flex-row rounded gap-2">
+                      <div class="example flex flex-row rounded-sm gap-2">
                         <div class="w-full relative ex">
                           <button onclick="handleDeleteExample(event)"
+                            title="Eliminar ejemplo"
                             class="delete-example absolute top-0 right-0 border border-transparent hover:border-red-500 p-2"
                             type="button">
                             <img src="/public/x.svg" alt="login icon" width="20" height="20"
@@ -192,12 +199,12 @@
                           <div class="pt-6 pr-6">
                             <div>
                               <textarea name="problems[0][examples][0][input]" placeholder="Entrada"
-                                class="auto-resize-textarea bg-gray-700 text-shark-200 w-full p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+                                class="auto-resize-textarea bg-gray-700 text-shark-200 w-full p-2 rounded-sm focus:outline-hidden focus:ring-3 focus:ring-blue-500"></textarea>
                               <span class="block text-xs text-red-500"></span>
                             </div>
                             <div>
                               <textarea name="problems[0][examples][0][output]" placeholder="Salida esperada"
-                                class="auto-resize-textarea bg-gray-700 text-shark-200 w-full p-2 rounded focus:outline-none focus:ring focus:ring-blue-500"></textarea>
+                                class="auto-resize-textarea bg-gray-700 text-shark-200 w-full p-2 rounded-sm focus:outline-hidden focus:ring-3 focus:ring-blue-500"></textarea>
                               <span class="block text-xs text-red-500"></span>
                             </div>
                           </div>
@@ -212,7 +219,7 @@
             <!-- Add Problem Button -->
             <div>
               <button id="add-problem"
-                class="border border-green-500 text-green-500 text-sm py-2 px-6 hover:border-green-600 hover:text-green-600"
+                class="border border-green-600 cursor-pointer text-green-600 text-sm py-2 px-6 hover:border-green-400 hover:text-green-400"
                 onclick="handleAddProblem(event)" type="button">
                 Nuevo problema
               </button>
@@ -220,11 +227,15 @@
             </div>
           </section>
 
-          <div class="flex justify-center">
+          <div class="flex justify-center gap-2">
             <button id="submit-offer-btn" type="button" onclick="submitForm(event)"
-              class="border border-blue-500 text-blue-500 py-2 px-6 rounded hover:border-blue-600 hover:text-blue-500">
+              class="border border-blue-500 cursor-pointer text-blue-500 py-2 px-6 rounded-sm hover:border-blue-300 hover:text-blue-300"
+            >
               Publicar oferta
             </button>
+            <img 
+              class="inline cursor-pointer" width="18" height="18" src="/public/help.svg" 
+              title="Los datos registrados aquí no se podrán editar después, solo archivar"/>
           </div>
           <div id="offer-form-errors"></div>
         </div>
@@ -238,7 +249,7 @@
 
 {{end}} {{block "toastMessage" .}}
 
-<div class="flex items-center p-4 space-x-4 divide-x rounded-lg shadow text-gray-400 divide-gray-700 bg-gray-800"
+<div class="flex items-center p-4 space-x-4 divide-x rounded-lg shadow-sm text-gray-400 divide-gray-700 bg-gray-800"
   role="alert">
   <svg class="w-5 h-5 text-blue-600 dark:text-blue-500 rotate-45" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
     fill="none" viewBox="0 0 18 20">
@@ -269,7 +280,7 @@
       <input id="language-{{$index}}" type="checkbox" name="quiz[languages]" value="{{$language.ID}}"
         class="hidden peer" />
       <label for="language-{{$index}}"
-        class="items-center border border-gray-400 py-1 px-2 rounded text-gray-400 select-none cursor-pointer peer-checked:border-blue-400 peer-checked:text-blue-400 hover:border-blue-400">{{$language.DisplayName}}</label>
+        class="items-center border border-gray-400 py-1 px-2 rounded-sm text-gray-400 select-none cursor-pointer peer-checked:border-blue-400 peer-checked:text-blue-400 hover:border-blue-400">{{$language.DisplayName}}</label>
     </div>
     {{end}}
     <span id="f-languages-error" class="text-red-500 text-sm"></span>

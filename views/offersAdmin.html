@@ -35,7 +35,7 @@
 {{block "offerAdminCard" .}}
 <section class="relative">
   {{if eq .Status 1}}
-  <div class="flex flex-col gap-2 border border-shark-900 rounded p-4 md:p-8 overflow-hidden">
+  <div class="flex flex-col gap-2 border border-shark-900 rounded-sm p-4 md:p-8 overflow-hidden">
     <div class="relative">
       <div class="absolute top-0 right-0">
         <div class="relative group inline-block">
@@ -43,14 +43,14 @@
             <img src="/public/archive.svg" alt="delete icon" width="20" height="20" style="pointer-events: none" />
           </button>
           <span
-            class="absolute right-1/2 translate-x-1/2 -top-8 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+            class="absolute right-1/2 translate-x-1/2 -top-8 px-2 py-1 text-xs text-white bg-gray-800 rounded-sm opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
             Archivar
           </span>
         </div>
       </div>
     </div>
     {{else}}
-    <div class="flex flex-col gap-2 border border-shark-900 rounded p-4 md:p-8 overflow-hidden opacity-50">
+    <div class="flex flex-col gap-2 border border-shark-900 rounded-sm p-4 md:p-8 overflow-hidden opacity-50">
       {{end}}
       <div class="flex gap-2">
         <img {{if .CompanyImageURL}} src="{{.CompanyImageURL}}" {{else}} src="/public/company.svg" {{end}}

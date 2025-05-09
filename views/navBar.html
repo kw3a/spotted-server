@@ -3,7 +3,7 @@
   <div class="w-1/2 flex justify-around">
     <div class="flex items-center gap-4">
       <button
-        class="inline-block p-1 hover:border-white border-b border-transparent"
+        class="inline-block p-1 hover:border-white border-b border-transparent cursor-pointer"
         hx-get="/"
         hx-target="body"
         hx-push-url="true"
@@ -33,13 +33,13 @@
           id="f-query"
           type="text"
           name="q"
-          class="bg-white ps-8 rounded text-black block w-full focus:outline-none focus:ring focus:ring-blue-500"
+          class="bg-white ps-8 rounded-sm text-black block w-full focus:outline-hidden focus:ring-3 focus:ring-blue-500"
 
         />
       </form>
     </div>
     <button
-      class="p-1 hover:border-white border-b border-transparent"
+      class="p-1 hover:border-white border-b border-transparent cursor-pointer"
       hx-get="/companies"
       hx-target="body"
       hx-push-url="true"
@@ -55,7 +55,7 @@
 {{end}} {{block "userIcon" .}}
 
 <div class="relative group">
-  <div class="rounded cursor-pointer">
+  <div class="rounded-sm cursor-pointer">
     <img
       class="aspect-square rounded-full mx-auto object-cover inline"
       {{if
@@ -70,7 +70,7 @@
     />
   </div>
   <div
-    class="left-1/2 transform -translate-x-1/2 group-hover:block hidden absolute z-10 rounded-lg shadow-sm w-44 bg-gray-700 divide-y divide-gray-600"
+    class="left-1/2 transform -translate-x-1/2 group-hover:block hidden absolute z-10 rounded-lg shadow-xs w-44 bg-gray-700 divide-y divide-gray-600"
   >
     {{if eq .Role "visitor"}}
     <ul class="py-2 text-sm text-gray-200">
@@ -98,8 +98,16 @@
       </li>
     </ul>
     {{else}}
-    <div class="px-4 py-3 text-sm text-white">
-      <div class="truncate text-lg">{{.Name}}</div>
+    <div class="py-3 text-sm text-white">
+      <div class="px-4 hover:bg-gray-600 cursor-pointer"
+        hx-get="/profile/{{.ID}}"
+        hx-target="body"
+        hx-push-url="true"
+        hx-boost="true"
+      >
+        <div class="truncate text-lg">{{.Name}}</div>
+        <span class="text-sm text-white/50">Ver perfil</span>
+      </div>
     </div>
 
     <ul class="py-2 text-sm text-gray-200">
@@ -153,17 +161,6 @@
     </ul>
 
     <ul class="py-2 text-sm text-gray-200">
-      <li
-        class="cursor-pointer"
-        hx-get="/profile/{{.ID}}"
-        hx-target="body"
-        hx-push-url="true"
-        hx-boost="true"
-      >
-        <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white"
-          >Perfil</span
-        >
-      </li>
       <li class="cursor-pointer" hx-post="/logout">
         <span class="block px-4 py-2 hover:bg-gray-600 hover:text-white">
           Cerrar sesión

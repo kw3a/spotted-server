@@ -244,7 +244,7 @@ function showToast(message) {
   // Create the toast element
   const toast = document.createElement("div");
   toast.className =
-    "flex items-center p-4 space-x-4 divide-x rounded-lg shadow text-red-500 divide-gray-700 bg-gray-800";
+    "flex items-center p-4 space-x-4 divide-x rounded-lg shadow-sm text-red-500 divide-gray-700 bg-gray-800";
 
   const img = errorImage();
   toast.appendChild(img);

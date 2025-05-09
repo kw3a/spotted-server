@@ -14,16 +14,18 @@
     <section class="bg-shark-950 h-screen flex flex-col font-mono">
       {{template "navBar" .User}}
 
-      <div class="flex flex-col p-4 justify-center items-center">
-        <div class="w-full sm:w-2/3 flex flex-col gap-4">
-          <form id="company-data-form" class="flex flex-col sm:flex-row border border-black rounded p-4 space-y-4 sm:space-y-0"
+      <div class="flex flex-col p-4 justify-center items-center overflow-y-auto">
+        <div class="w-full md:w-2/3 flex flex-col gap-4">
+          <form id="company-data-form" class="flex flex-col md:flex-row border border-black rounded-sm p-4 space-y-4 md:space-y-0"
             hx-post="/register/companies" hx-swap="none" hx-encoding="multipart/form-data"
             hx-disabled-elt="#company-reg-btn">
-            <section class="flex flex-col w-full sm:w-1/2 justify-center gap-4">
+            <section class="flex flex-col w-full md:w-1/2 justify-center gap-4">
               <div class="w-2/3 mx-auto">
-                <label for="image" class="block w-full h-full rounded-full overflow-hidden cursor-pointer">
+                <label for="image" class="block w-full h-full rounded-full overflow-hidden cursor-pointer"
+                  title="Editar imagen"
+                >
                   <img src="/public/company.svg"
-                    class="w-full h-auto border-2 border-gray-700 aspect-square rounded-full object-cover" id="preview"
+                    class="w-full h-auto border-2 border-gray-700 aspect-square rounded-full object-cover hover:border-gray-400" id="preview"
                     alt="avatar" />
                 </label>
                 <input id="image" type="file" name="image" onchange='window.previewImage(event,"/public/company.svg")'
@@ -32,7 +34,7 @@
               <span id="image-error" class="text-red-500 text-sm text-center"></span>
             </section>
 
-            <section class="flex flex-col w-full sm:w-1/2 justify-center">
+            <section class="flex flex-col w-full md:w-1/2 justify-center">
               <div class="flex flex-col gap-4 w-full">
                 <h1 class="text-center text-white font-semibold">
                   Registrar compañía
@@ -40,7 +42,7 @@
                 <div>
                   <label for="name" class="text-shark-200 block text-sm font-medium">Nombre</label>
                   <input
-                    class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
+                    class="rounded-sm bg-gray-700 text-shark-200 block w-full p-2 focus:outline-hidden focus:ring-3 focus:ring-blue-500"
                     type="text" name="name" id="name" autocomplete="off" />
                   <span id="name-error" class="text-red-500 text-sm"></span>
                 </div>
@@ -48,7 +50,7 @@
                 <div>
                   <label for="description" class="block text-shark-200 text-sm font-medium">Descripción</label>
                   <textarea id="description" rows="4"
-                    class="rounded-lg bg-gray-700 text-sm text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
+                    class="rounded-lg bg-gray-700 text-sm text-shark-200 block w-full p-2 focus:outline-hidden focus:ring-3 focus:ring-blue-500"
                     name="description" placeholder="Escribe una descripción de tu compañía"></textarea>
                   <span id="description-error" class="text-red-500 text-sm"></span>
                 </div>
@@ -56,14 +58,14 @@
                 <div>
                   <label for="website" class="block text-shark-200 text-sm font-medium">Sitio web (opcional)</label>
                   <input
-                    class="rounded bg-gray-700 text-shark-200 block w-full p-2 focus:outline-none focus:ring focus:ring-blue-500"
+                    class="rounded-sm bg-gray-700 text-shark-200 block w-full p-2 focus:outline-hidden focus:ring-3 focus:ring-blue-500"
                     type="text" name="website" id="website" />
                   <span id="website-error" class="text-red-500 text-sm"></span>
                 </div>
 
                 <div class="flex justify-center">
                   <button id="company-reg-btn"
-                    class="border rounded border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400 font-bold py-2 px-4"
+                    class="border rounded-sm border-blue-400 hover:border-blue-600 hover:text-blue-600 text-blue-400 font-bold py-2 px-4 cursor-pointer"
                     type="submit">
                     Registrar
                     <span class="loader htmx-indicator"></span>

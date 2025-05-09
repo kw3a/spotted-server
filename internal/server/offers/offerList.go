@@ -9,8 +9,9 @@ import (
 )
 
 type OfferListData struct {
-	User   auth.AuthUser
-	Offers []shared.Offer
+	User      auth.AuthUser
+	Offers    []shared.Offer
+	OfferSearch string
 }
 
 type OfferListStorage interface {
@@ -54,6 +55,9 @@ func CreateJobOffersHandler(
 		data := OfferListData{
 			User:   user,
 			Offers: offers,
+		}
+		if params.Query != "" {
+			data.OfferSearch = params.Query
 		}
 		if err = templ.Render(w, "jobPage", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

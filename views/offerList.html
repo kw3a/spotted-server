@@ -30,7 +30,7 @@
 
 </html>
 {{end}} {{block "offerCard" .}}
-<div class="group flex flex-col truncate gap-2 border border-shark-900 rounded p-8 cursor-pointer transition-shadow duration-200 hover:border-white"
+<div class="group flex flex-col truncate gap-2 border border-shark-900 rounded-sm p-8 cursor-pointer transition-shadow duration-200 hover:border-white"
      hx-get="/preamble/{{.ID}}" hx-trigger="click" hx-push-url="true" hx-target="body">
   <div class="flex gap-2">
     <img class="border border-gray-700 hover:border-white cursor-pointer"
