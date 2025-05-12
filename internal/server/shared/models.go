@@ -1,6 +1,17 @@
 package shared
 
-import "time"
+import (
+	"time"
+)
+
+type User struct {
+	ID          string
+	Name        string
+	Cell        string
+	ImageURL    string
+	Email       string
+	Description string
+}
 
 type SkillEntry struct {
 	Name string
@@ -84,8 +95,10 @@ type Problem struct {
 }
 
 type Example struct {
-	Input  string
-	Output string
+	ID        string
+	Input     string
+	Output    string
+	ProblemID string
 }
 
 type Score struct {
@@ -130,4 +143,17 @@ type TestCaseResult struct {
 type ExecutedTestCase struct {
 	TestCase TestCase
 	Result   TestCaseResult
+}
+
+type Application struct {
+	Applicant     User
+	Participation Participation
+	Summary       []Summary
+}
+
+type Summary struct {
+	Title      string
+	Score      Score
+	Submission Submission
+	Results    []TestCaseResult
 }

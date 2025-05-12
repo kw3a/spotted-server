@@ -7,3 +7,9 @@ WHERE example.problem_id = ?;
 INSERT INTO example
 (id, problem_id, input, output)
 VALUES (?, ?, ?, ?);
+
+-- name: BatchExamples :many
+SELECT example.*
+FROM example
+WHERE problem_id IN (sqlc.slice('problem_ids'));
+

@@ -71,47 +71,6 @@ func (q *Queries) GetUserByNick(ctx context.Context, nick string) (GetUserByNick
 	return i, err
 }
 
-const selectApplicants = `-- name: SelectApplicants :many
-SELECT user.id, user.created_at, user.updated_at, user.nick, user.password, user.name, user.email, user.description, user.image_url, user.number
-FROM user
-JOIN participation ON user.id = participation.user_id
-WHERE participation.quiz_id = ?
-`
-
-func (q *Queries) SelectApplicants(ctx context.Context, quizID string) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, selectApplicants, quizID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []User
-	for rows.Next() {
-		var i User
-		if err := rows.Scan(
-			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.Nick,
-			&i.Password,
-			&i.Name,
-			&i.Email,
-			&i.Description,
-			&i.ImageUrl,
-			&i.Number,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const updateCell = `-- name: UpdateCell :exec
 UPDATE user SET number = ? WHERE id = ?
 `

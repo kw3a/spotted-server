@@ -14,3 +14,9 @@ VALUES (?, ?, ?, ?);
 SELECT *
 FROM test_case
 WHERE problem_id = ?;
+
+-- name: BatchTestCases :many
+SELECT test_case.*
+FROM test_case
+WHERE problem_id IN (sqlc.slice('problem_ids'));
+

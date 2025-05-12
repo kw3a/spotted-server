@@ -7,7 +7,54 @@ package database
 
 import (
 	"context"
+	"strings"
 )
+
+const batchExamples = `-- name: BatchExamples :many
+SELECT example.id, example.created_at, example.updated_at, example.input, example.output, example.problem_id
+FROM example
+WHERE problem_id IN (/*SLICE:problem_ids*/?)
+`
+
+func (q *Queries) BatchExamples(ctx context.Context, problemIds []string) ([]Example, error) {
+	query := batchExamples
+	var queryParams []interface{}
+	if len(problemIds) > 0 {
+		for _, v := range problemIds {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:problem_ids*/?", strings.Repeat(",?", len(problemIds))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:problem_ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Example
+	for rows.Next() {
+		var i Example
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Input,
+			&i.Output,
+			&i.ProblemID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const insertExample = `-- name: InsertExample :exec
 INSERT INTO example

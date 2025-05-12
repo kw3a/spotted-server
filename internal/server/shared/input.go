@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 var spanishMonths = map[string]string{
@@ -22,6 +24,23 @@ var spanishMonths = map[string]string{
 	"November":  "Noviembre",
 	"December":  "Diciembre",
 }
+
+type CallbackJsonInput struct {
+	Stdout        string          `json:"stdout"`
+	Time          decimal.Decimal `json:"time"`
+	Memory        int32           `json:"memory"`
+	Stderr        string          `json:"stderr"`
+	Token         string          `json:"token"`
+	CompileOutput string          `json:"compile_output"`
+	Message       string          `json:"message"`
+	Status        status          `json:"status"`
+}
+
+type status struct {
+	ID          int    `json:"id"`
+	Description string `json:"description"`
+}
+
 
 func ErrLength(min, max int32) string {
 	return fmt.Sprintf("Debe tener entre %d a %d caracteres", min, max)

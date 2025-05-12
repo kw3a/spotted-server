@@ -4,11 +4,12 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/kw3a/spotted-server/internal/auth"
 	"github.com/kw3a/spotted-server/internal/server/codejudge"
+	"github.com/kw3a/spotted-server/internal/server/storage"
 )
 
 type App struct {
 	Templ       *Templates
-	Storage     *MysqlStorage
+	Storage     *storage.MysqlStorage
 	AuthService *auth.AuthService
 	AuthType    *auth.JWTAuth
 	Stream      *codejudge.Stream
@@ -22,7 +23,7 @@ func NewApp(envVars EnvVariables) (*App, error) {
 		return nil, err
 	}
 	templ := newTemplates(views)
-	mysqlStorage, err := NewMysqlStorage(envVars.dbURL)
+	mysqlStorage, err := storage.NewMysqlStorage(envVars.dbURL)
 	if err != nil {
 		return nil, err
 	}

@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -66,4 +67,65 @@ func (q *Queries) ParticipationStatus(ctx context.Context, arg ParticipationStat
 		&i.QuizID,
 	)
 	return i, err
+}
+
+const selectApplications = `-- name: SelectApplications :many
+SELECT user.id, user.created_at, user.updated_at, user.nick, user.password, user.name, user.email, user.description, user.image_url, user.number, participation.id as participation_id, participation.created_at as participation_created_at, 
+  participation.expires_at as participation_expires_at
+FROM user
+JOIN participation ON user.id = participation.user_id
+WHERE participation.quiz_id = ?
+`
+
+type SelectApplicationsRow struct {
+	ID                     string
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
+	Nick                   string
+	Password               string
+	Name                   string
+	Email                  string
+	Description            string
+	ImageUrl               string
+	Number                 string
+	ParticipationID        string
+	ParticipationCreatedAt sql.NullTime
+	ParticipationExpiresAt time.Time
+}
+
+func (q *Queries) SelectApplications(ctx context.Context, quizID string) ([]SelectApplicationsRow, error) {
+	rows, err := q.db.QueryContext(ctx, selectApplications, quizID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SelectApplicationsRow
+	for rows.Next() {
+		var i SelectApplicationsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Nick,
+			&i.Password,
+			&i.Name,
+			&i.Email,
+			&i.Description,
+			&i.ImageUrl,
+			&i.Number,
+			&i.ParticipationID,
+			&i.ParticipationCreatedAt,
+			&i.ParticipationExpiresAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

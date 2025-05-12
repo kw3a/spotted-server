@@ -12,12 +12,6 @@ INSERT INTO user
 -- name: UpdateImage :exec
 UPDATE user SET image_url = ? WHERE id = ?;
 
--- name: SelectApplicants :many
-SELECT user.*
-FROM user
-JOIN participation ON user.id = participation.user_id
-WHERE participation.quiz_id = ?;
-
 -- name: UpdateUserDescription :exec
 UPDATE user SET description = ? WHERE id = ?;
 

@@ -10,7 +10,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/kw3a/spotted-server/internal/server/shared"
-	"github.com/shopspring/decimal"
 )
 
 type CallbackURLParamsInput struct {
@@ -33,27 +32,12 @@ func GetCallbackURLParamsInput(r *http.Request) (CallbackURLParamsInput, error) 
 	}, nil
 }
 
-type CallbackJsonInput struct {
-	Stdout        string          `json:"stdout"`
-	Time          decimal.Decimal `json:"time"`
-	Memory        int32           `json:"memory"`
-	Stderr        string          `json:"stderr"`
-	Token         string          `json:"token"`
-	CompileOutput string          `json:"compile_output"`
-	Message       string          `json:"message"`
-	Status        status          `json:"status"`
-}
-type status struct {
-	ID          int    `json:"id"`
-	Description string `json:"description"`
-}
-
 type CallbackStorage interface {
-	UpdateTestCaseResult(ctx context.Context, input CallbackJsonInput, submissionID string, tcID string) error
+	UpdateTestCaseResult(ctx context.Context, input shared.CallbackJsonInput, submissionID string, tcID string) error
 }
 
 type callbackInputFn func(r *http.Request) (CallbackURLParamsInput, error)
-type decoderFn func(r *http.Request) (CallbackJsonInput, error)
+type decoderFn func(r *http.Request) (shared.CallbackJsonInput, error)
 
 func CreateCallbackHandler(storage CallbackStorage, st StreamService, decoder decoderFn, inputFn callbackInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +75,7 @@ func (app *App) CallbackHandler() http.HandlerFunc {
 	return CreateCallbackHandler(
 		app.Storage,
 		app.Stream,
-		shared.Decode[CallbackJsonInput],
+		shared.Decode[shared.CallbackJsonInput],
 		GetCallbackURLParamsInput,
 	)
 }

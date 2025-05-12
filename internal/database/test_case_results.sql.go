@@ -8,7 +8,57 @@ package database
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
+
+const batchTCResults = `-- name: BatchTCResults :many
+SELECT test_case_result.id, test_case_result.created_at, test_case_result.updated_at, test_case_result.output, test_case_result.status, test_case_result.time, test_case_result.memory, test_case_result.test_case_id, test_case_result.submission_id
+FROM test_case_result
+WHERE test_case_result.submission_id IN (/*SLICE:submissionIDs*/?)
+`
+
+func (q *Queries) BatchTCResults(ctx context.Context, submissionids []string) ([]TestCaseResult, error) {
+	query := batchTCResults
+	var queryParams []interface{}
+	if len(submissionids) > 0 {
+		for _, v := range submissionids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:submissionIDs*/?", strings.Repeat(",?", len(submissionids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:submissionIDs*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TestCaseResult
+	for rows.Next() {
+		var i TestCaseResult
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Output,
+			&i.Status,
+			&i.Time,
+			&i.Memory,
+			&i.TestCaseID,
+			&i.SubmissionID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const createTestCaseResult = `-- name: CreateTestCaseResult :exec
 INSERT INTO test_case_result

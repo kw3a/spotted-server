@@ -7,7 +7,54 @@ package database
 
 import (
 	"context"
+	"strings"
 )
+
+const batchTestCases = `-- name: BatchTestCases :many
+SELECT test_case.id, test_case.created_at, test_case.updated_at, test_case.input, test_case.output, test_case.problem_id
+FROM test_case
+WHERE problem_id IN (/*SLICE:problem_ids*/?)
+`
+
+func (q *Queries) BatchTestCases(ctx context.Context, problemIds []string) ([]TestCase, error) {
+	query := batchTestCases
+	var queryParams []interface{}
+	if len(problemIds) > 0 {
+		for _, v := range problemIds {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:problem_ids*/?", strings.Repeat(",?", len(problemIds))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:problem_ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TestCase
+	for rows.Next() {
+		var i TestCase
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Input,
+			&i.Output,
+			&i.ProblemID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const getTestCases = `-- name: GetTestCases :many
 SELECT problem.time_limit, problem.memory_limit, test_case.id, test_case.input, test_case.output

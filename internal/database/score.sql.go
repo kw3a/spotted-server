@@ -8,7 +8,91 @@ package database
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
+
+const batchBestSubmissionsFromParticipation = `-- name: BatchBestSubmissionsFromParticipation :many
+SELECT id, created_at, updated_at, src, accepted_test_cases, problem_id, participation_id, language_id, title, display_name, total_test_cases, rk
+FROM (
+    SELECT 
+        s.id, s.created_at, s.updated_at, s.src, s.accepted_test_cases, s.problem_id, s.participation_id, s.language_id, 
+        problem.title, 
+        language.display_name, 
+        COUNT(DISTINCT test_case.id) AS total_test_cases,
+        ROW_NUMBER() OVER (
+            PARTITION BY s.participation_id, s.problem_id 
+            ORDER BY s.accepted_test_cases DESC, s.created_at ASC
+        ) AS rk
+    FROM submission s
+    JOIN language ON s.language_id = language.id
+    JOIN problem ON s.problem_id = problem.id
+    LEFT JOIN test_case ON problem.id = test_case.problem_id
+    WHERE s.participation_id IN (/*SLICE:participation_ids*/?)
+    GROUP BY s.id  
+) ranked
+WHERE ranked.rk = 1
+`
+
+type BatchBestSubmissionsFromParticipationRow struct {
+	ID                string
+	CreatedAt         sql.NullTime
+	UpdatedAt         sql.NullTime
+	Src               string
+	AcceptedTestCases uint32
+	ProblemID         string
+	ParticipationID   string
+	LanguageID        int32
+	Title             string
+	DisplayName       string
+	TotalTestCases    int64
+	Rk                interface{}
+}
+
+func (q *Queries) BatchBestSubmissionsFromParticipation(ctx context.Context, participationIds []string) ([]BatchBestSubmissionsFromParticipationRow, error) {
+	query := batchBestSubmissionsFromParticipation
+	var queryParams []interface{}
+	if len(participationIds) > 0 {
+		for _, v := range participationIds {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:participation_ids*/?", strings.Repeat(",?", len(participationIds))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:participation_ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BatchBestSubmissionsFromParticipationRow
+	for rows.Next() {
+		var i BatchBestSubmissionsFromParticipationRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Src,
+			&i.AcceptedTestCases,
+			&i.ProblemID,
+			&i.ParticipationID,
+			&i.LanguageID,
+			&i.Title,
+			&i.DisplayName,
+			&i.TotalTestCases,
+			&i.Rk,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const bestSubmission = `-- name: BestSubmission :one
 SELECT submission.id, submission.created_at, submission.updated_at, submission.src, submission.accepted_test_cases, submission.problem_id, submission.participation_id, submission.language_id, language.display_name as language

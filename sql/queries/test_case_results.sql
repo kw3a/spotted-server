@@ -18,3 +18,8 @@ FROM test_case_result
 JOIN submission ON test_case_result.submission_id = submission.id
 JOIN test_case ON test_case_result.test_case_id = test_case.id
 WHERE test_case.problem_id = ? AND submission.id = ?;
+
+-- name: BatchTCResults :many
+SELECT test_case_result.*
+FROM test_case_result
+WHERE test_case_result.submission_id IN (sqlc.slice('submissionIDs'));
