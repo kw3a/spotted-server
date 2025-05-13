@@ -152,8 +152,13 @@ FROM offer
 JOIN company ON offer.company_id= company.id
 WHERE offer.status = 1
 ORDER BY offer.created_at DESC
-LIMIT 10
+LIMIT ? OFFSET ?
 `
+
+type GetOffersParams struct {
+	Limit  int32
+	Offset int32
+}
 
 type GetOffersRow struct {
 	ID              string
@@ -171,8 +176,8 @@ type GetOffersRow struct {
 	CompanyImageUrl string
 }
 
-func (q *Queries) GetOffers(ctx context.Context) ([]GetOffersRow, error) {
-	rows, err := q.db.QueryContext(ctx, getOffers)
+func (q *Queries) GetOffers(ctx context.Context, arg GetOffersParams) ([]GetOffersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getOffers, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -214,8 +219,14 @@ FROM offer
 JOIN company ON offer.company_id = company.id
 WHERE company.id = ? 
 ORDER BY offer.created_at DESC
-LIMIT 10
+LIMIT ? OFFSET ?
 `
+
+type GetOffersByCompanyParams struct {
+	ID     string
+	Limit  int32
+	Offset int32
+}
 
 type GetOffersByCompanyRow struct {
 	ID              string
@@ -233,8 +244,8 @@ type GetOffersByCompanyRow struct {
 	CompanyImageUrl string
 }
 
-func (q *Queries) GetOffersByCompany(ctx context.Context, id string) ([]GetOffersByCompanyRow, error) {
-	rows, err := q.db.QueryContext(ctx, getOffersByCompany, id)
+func (q *Queries) GetOffersByCompany(ctx context.Context, arg GetOffersByCompanyParams) ([]GetOffersByCompanyRow, error) {
+	rows, err := q.db.QueryContext(ctx, getOffersByCompany, arg.ID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -274,10 +285,16 @@ const getOffersByQuery = `-- name: GetOffersByQuery :many
 SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name, company.image_url as company_image_url
 FROM offer
 JOIN company ON offer.company_id = company.id
-WHERE offer.title LIKE CONCAT('%', ?, '%')
+WHERE offer.title LIKE CONCAT('%', ?, '%') AND offer.status = 1
 ORDER BY offer.created_at DESC
-LIMIT 10
+LIMIT ? OFFSET ?
 `
+
+type GetOffersByQueryParams struct {
+	CONCAT interface{}
+	Limit  int32
+	Offset int32
+}
 
 type GetOffersByQueryRow struct {
 	ID              string
@@ -295,8 +312,8 @@ type GetOffersByQueryRow struct {
 	CompanyImageUrl string
 }
 
-func (q *Queries) GetOffersByQuery(ctx context.Context, concat interface{}) ([]GetOffersByQueryRow, error) {
-	rows, err := q.db.QueryContext(ctx, getOffersByQuery, concat)
+func (q *Queries) GetOffersByQuery(ctx context.Context, arg GetOffersByQueryParams) ([]GetOffersByQueryRow, error) {
+	rows, err := q.db.QueryContext(ctx, getOffersByQuery, arg.CONCAT, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -339,8 +356,14 @@ JOIN company ON offer.company_id = company.id
 JOIN user ON company.user_id = user.id
 WHERE user.id = ? 
 ORDER BY offer.created_at DESC
-LIMIT 10
+LIMIT ? OFFSET ?
 `
+
+type GetOffersByUserParams struct {
+	ID     string
+	Limit  int32
+	Offset int32
+}
 
 type GetOffersByUserRow struct {
 	ID              string
@@ -358,8 +381,8 @@ type GetOffersByUserRow struct {
 	CompanyImageUrl string
 }
 
-func (q *Queries) GetOffersByUser(ctx context.Context, id string) ([]GetOffersByUserRow, error) {
-	rows, err := q.db.QueryContext(ctx, getOffersByUser, id)
+func (q *Queries) GetOffersByUser(ctx context.Context, arg GetOffersByUserParams) ([]GetOffersByUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getOffersByUser, arg.ID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -403,8 +426,14 @@ JOIN quiz ON offer.id = quiz.offer_id
 JOIN participation ON quiz.id = participation.quiz_id
 WHERE participation.user_id = ?
 ORDER BY participation.expires_at DESC
-LIMIT 10
+LIMIT ? OFFSET ?
 `
+
+type GetParticipatedOffersParams struct {
+	UserID string
+	Limit  int32
+	Offset int32
+}
 
 type GetParticipatedOffersRow struct {
 	ID              string
@@ -422,8 +451,8 @@ type GetParticipatedOffersRow struct {
 	CompanyImageUrl string
 }
 
-func (q *Queries) GetParticipatedOffers(ctx context.Context, userID string) ([]GetParticipatedOffersRow, error) {
-	rows, err := q.db.QueryContext(ctx, getParticipatedOffers, userID)
+func (q *Queries) GetParticipatedOffers(ctx context.Context, arg GetParticipatedOffersParams) ([]GetParticipatedOffersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getParticipatedOffers, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

@@ -9,9 +9,10 @@ import (
 )
 
 type OfferListData struct {
-	User      auth.AuthUser
-	Offers    []shared.Offer
-	OfferSearch string
+	User     auth.AuthUser
+	Offers   []shared.Offer
+	Filters  string
+	NextPage int32
 }
 
 type OfferListStorage interface {
@@ -29,6 +30,7 @@ func GetJobOffersParams(r *http.Request) shared.OfferQueryParams {
 	if shared.ValidateUUID(user) == nil {
 		params.UserID = user
 	}
+	params.Page = shared.PageParam(r)
 	return params
 }
 
@@ -53,13 +55,20 @@ func CreateJobOffersHandler(
 			return
 		}
 		data := OfferListData{
-			User:   user,
-			Offers: offers,
+			User:     user,
+			Offers:   offers,
+			NextPage: params.Page + 1,
 		}
 		if params.Query != "" {
-			data.OfferSearch = params.Query
+			data.Filters = "q=" + params.Query
+		} else if params.UserID != "" {
+			data.Filters = "u=" + params.UserID
 		}
-		if err = templ.Render(w, "jobPage", data); err != nil {
+		toRender := "offerListPage"
+		if params.Page > 1 {
+			toRender = "offerList"
+		}
+		if err = templ.Render(w, toRender, data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}

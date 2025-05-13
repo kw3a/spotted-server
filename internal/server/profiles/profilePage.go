@@ -18,6 +18,7 @@ type ProfilePageData struct {
 	Education      []shared.EducationEntry
 	Skills         []shared.SkillEntry
 	Participations []shared.Offer
+	NextPage       int32
 	Owner          bool
 }
 type ProfilePageInput struct {
@@ -41,7 +42,7 @@ type ProfilePageStorage interface {
 	SelectEducation(ctx context.Context, userID string) ([]shared.EducationEntry, error)
 	SelectSkills(ctx context.Context, userID string) ([]shared.SkillEntry, error)
 	SelectLinks(ctx context.Context, userID string) ([]shared.Link, error)
-	SelectParticipatedOffers(ctx context.Context, userID string) ([]shared.Offer, error)
+	SelectParticipatedOffers(ctx context.Context, userID string, page int32) ([]shared.Offer, error)
 }
 
 type profilePageInputFunc func(r *http.Request) (ProfilePageInput, error)
@@ -63,55 +64,65 @@ func CreateProfilePageHandler(
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		dbProfile, err := storage.GetUser(r.Context(), input.UserID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		experiences, err := storage.SelectExperiences(r.Context(), input.UserID)
+		page := shared.PageParam(r)
+		participatedOffers, err := storage.SelectParticipatedOffers(r.Context(), input.UserID, page)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		education, err := storage.SelectEducation(r.Context(), input.UserID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		toRender := "profilePage"
+		data := ProfilePageData{}
+		data.NextPage = page + 1
+		if page > 1 {
+			toRender = "participationList"
+			data.Participations = participatedOffers
+		} else {
+			dbProfile, err := storage.GetUser(r.Context(), input.UserID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			experiences, err := storage.SelectExperiences(r.Context(), input.UserID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			education, err := storage.SelectEducation(r.Context(), input.UserID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			skills, err := storage.SelectSkills(r.Context(), input.UserID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			links, err := storage.SelectLinks(r.Context(), input.UserID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			profile := auth.AuthUser{
+				ID:          dbProfile.ID,
+				Name:        dbProfile.Name,
+				ImageURL:    dbProfile.ImageUrl,
+				Description: dbProfile.Description,
+				Email:       dbProfile.Email,
+				Cell:        dbProfile.Number,
+			}
+			data = ProfilePageData{
+				User:           user,
+				Profile:        profile,
+				Links:          links,
+				Experiences:    experiences,
+				Education:      education,
+				Skills:         skills,
+				Participations: participatedOffers,
+				Owner:          profile.ID == user.ID,
+				NextPage:       page + 1,
+			}
 		}
-		skills, err := storage.SelectSkills(r.Context(), input.UserID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		links, err := storage.SelectLinks(r.Context(), input.UserID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		participatedOffers, err := storage.SelectParticipatedOffers(r.Context(), input.UserID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		profile := auth.AuthUser{
-			ID:          dbProfile.ID,
-			Name:        dbProfile.Name,
-			ImageURL:    dbProfile.ImageUrl,
-			Description: dbProfile.Description,
-			Email:       dbProfile.Email,
-			Cell:        dbProfile.Number,
-		}
-		data := ProfilePageData{
-			User:           user,
-			Profile:        profile,
-			Links:          links,
-			Experiences:    experiences,
-			Education:      education,
-			Skills:         skills,
-			Participations: participatedOffers,
-			Owner:          profile.ID == user.ID,
-		}
-		if err = templ.Render(w, "profilePage", data); err != nil {
+		if err = templ.Render(w, toRender, data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}

@@ -3,6 +3,7 @@ package shared
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -40,7 +41,6 @@ type status struct {
 	ID          int    `json:"id"`
 	Description string `json:"description"`
 }
-
 
 func ErrLength(min, max int32) string {
 	return fmt.Sprintf("Debe tener entre %d a %d caracteres", min, max)
@@ -104,3 +104,12 @@ func Pluralize(value int, month bool) string {
 	return "s"
 }
 
+func PageParam(r *http.Request) int32 {
+	q := r.URL.Query()
+	strPage := q.Get("page")
+	intPage, err := strconv.Atoi(strPage)
+	if err != nil {
+		return 1
+	}
+	return int32(intPage)
+}

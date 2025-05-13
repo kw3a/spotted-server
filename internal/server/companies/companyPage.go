@@ -58,7 +58,7 @@ func CreateCompanyPageHandler(
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		query := shared.OfferQueryParams{CompanyID: input.CompanyID}
+		query := shared.OfferQueryParams{CompanyID: input.CompanyID, Page: shared.PageParam(r)}
 		offers, err := storage.SelectOffers(r.Context(), query)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

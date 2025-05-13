@@ -19,15 +19,15 @@ FROM offer
 JOIN company ON offer.company_id= company.id
 WHERE offer.status = 1
 ORDER BY offer.created_at DESC
-LIMIT 10;
+LIMIT ? OFFSET ?;
 
 -- name: GetOffersByQuery :many
 SELECT offer.*, company.name as company_name, company.image_url as company_image_url
 FROM offer
 JOIN company ON offer.company_id = company.id
-WHERE offer.title LIKE CONCAT('%', ?, '%')
+WHERE offer.title LIKE CONCAT('%', ?, '%') AND offer.status = 1
 ORDER BY offer.created_at DESC
-LIMIT 10;
+LIMIT ? OFFSET ?;
 
 -- name: GetOffersByUser :many
 SELECT offer.*, company.name as company_name, company.image_url as company_image_url
@@ -36,7 +36,7 @@ JOIN company ON offer.company_id = company.id
 JOIN user ON company.user_id = user.id
 WHERE user.id = ? 
 ORDER BY offer.created_at DESC
-LIMIT 10;
+LIMIT ? OFFSET ?;
 
 -- name: GetOffersByCompany :many
 SELECT offer.*, company.name as company_name, company.image_url as company_image_url
@@ -44,7 +44,7 @@ FROM offer
 JOIN company ON offer.company_id = company.id
 WHERE company.id = ? 
 ORDER BY offer.created_at DESC
-LIMIT 10;
+LIMIT ? OFFSET ?;
 
 -- name: GetParticipatedOffers :many
 SELECT offer.*, company.name as company_name, company.image_url as company_image_url
@@ -54,7 +54,7 @@ JOIN quiz ON offer.id = quiz.offer_id
 JOIN participation ON quiz.id = participation.quiz_id
 WHERE participation.user_id = ?
 ORDER BY participation.expires_at DESC
-LIMIT 10;
+LIMIT ? OFFSET ?;
 
 -- name: GetOfferByQuiz :one
 SELECT offer.*

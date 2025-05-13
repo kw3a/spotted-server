@@ -32,7 +32,10 @@ func CreateOffersAdminHandler(
 			User: user,
 		}
 		if user.Role != "visitor" {
-			offers, err := storage.SelectOffers(r.Context(), shared.OfferQueryParams{UserID: user.ID})
+			offers, err := storage.SelectOffers(r.Context(), shared.OfferQueryParams{
+				UserID: user.ID,
+				Page:   shared.PageParam(r),
+			})
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

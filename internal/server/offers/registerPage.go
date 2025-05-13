@@ -10,7 +10,7 @@ import (
 
 type RegisterOfferStorage interface {
 	GetCompanies(ctx context.Context, params shared.CompanyQueryParams) ([]shared.Company, error)
-	GetOffersByUser(ctx context.Context, userID string) ([]shared.Offer, error)
+	GetOffersByUser(ctx context.Context, userID string, page int32) ([]shared.Offer, error)
 	GetLanguages(ctx context.Context) ([]shared.Language, error)
 }
 
@@ -39,7 +39,7 @@ func CreateRegisterOfferPage(
 			http.Redirect(w, r, redirection, http.StatusSeeOther)
 			return
 		}
-		offers, err := storage.GetOffersByUser(r.Context(), user.ID)
+		offers, err := storage.GetOffersByUser(r.Context(), user.ID, shared.PageParam(r))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

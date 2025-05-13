@@ -53,6 +53,7 @@ type CompanyQueryParams struct {
 	Query  string
 }
 type OfferQueryParams struct {
+	Page      int32
 	UserID    string
 	CompanyID string
 	Query     string

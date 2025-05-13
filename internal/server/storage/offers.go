@@ -13,6 +13,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const (
+	offerPageSize = 20
+)
+
 func (mysql *MysqlStorage) SelectFullProblems(ctx context.Context, quizID string) ([]shared.Problem, error) {
 	// Step 1: Get all problems
 	dbProblems, err := mysql.Queries.SelectProblems(ctx, quizID)
@@ -371,9 +375,13 @@ func (mysql *MysqlStorage) SelectOffer(ctx context.Context, ID string) (shared.O
 	}, nil
 }
 
-func (mysql *MysqlStorage) GetOffersByCompany(ctx context.Context, companyID string) ([]shared.Offer, error) {
+func (mysql *MysqlStorage) GetOffersByCompany(ctx context.Context, companyID string, page int32) ([]shared.Offer, error) {
 	offers := []shared.Offer{}
-	dbOffers, err := mysql.Queries.GetOffersByCompany(ctx, companyID)
+	dbOffers, err := mysql.Queries.GetOffersByCompany(ctx, database.GetOffersByCompanyParams{
+		ID:     companyID,
+		Limit:  offerPageSize,
+		Offset: (page - 1) * offerPageSize,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -397,9 +405,12 @@ func (mysql *MysqlStorage) GetOffersByCompany(ctx context.Context, companyID str
 	return offers, nil
 }
 
-func (mysql *MysqlStorage) GetOffers(ctx context.Context) ([]shared.Offer, error) {
+func (mysql *MysqlStorage) GetOffers(ctx context.Context, page int32) ([]shared.Offer, error) {
 	offers := []shared.Offer{}
-	dbOffers, err := mysql.Queries.GetOffers(ctx)
+	dbOffers, err := mysql.Queries.GetOffers(ctx, database.GetOffersParams{
+		Limit:  offerPageSize,
+		Offset: (page - 1) * offerPageSize,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -423,9 +434,13 @@ func (mysql *MysqlStorage) GetOffers(ctx context.Context) ([]shared.Offer, error
 	return offers, nil
 }
 
-func (mysql *MysqlStorage) GetOffersByQuery(ctx context.Context, query string) ([]shared.Offer, error) {
+func (mysql *MysqlStorage) GetOffersByQuery(ctx context.Context, query string, page int32) ([]shared.Offer, error) {
 	offers := []shared.Offer{}
-	dbOffers, err := mysql.Queries.GetOffersByQuery(ctx, query)
+	dbOffers, err := mysql.Queries.GetOffersByQuery(ctx, database.GetOffersByQueryParams{
+		CONCAT: query,
+		Limit:  offerPageSize,
+		Offset: (page - 1) * offerPageSize,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -449,8 +464,12 @@ func (mysql *MysqlStorage) GetOffersByQuery(ctx context.Context, query string) (
 	return offers, nil
 }
 
-func (mysql *MysqlStorage) GetOffersByUser(ctx context.Context, userID string) ([]shared.Offer, error) {
-	offers, err := mysql.Queries.GetOffersByUser(ctx, userID)
+func (mysql *MysqlStorage) GetOffersByUser(ctx context.Context, userID string, page int32) ([]shared.Offer, error) {
+	offers, err := mysql.Queries.GetOffersByUser(ctx, database.GetOffersByUserParams{
+		ID:     userID,
+		Limit:  offerPageSize,
+		Offset: (page - 1) * offerPageSize,
+	})
 	if err == sql.ErrNoRows {
 		return []shared.Offer{}, nil
 	}
@@ -477,8 +496,12 @@ func (mysql *MysqlStorage) GetOffersByUser(ctx context.Context, userID string) (
 	return res, nil
 }
 
-func (mysql *MysqlStorage) SelectParticipatedOffers(ctx context.Context, userID string) ([]shared.Offer, error) {
-	dbOffers, err := mysql.Queries.GetParticipatedOffers(ctx, userID)
+func (mysql *MysqlStorage) SelectParticipatedOffers(ctx context.Context, userID string, page int32) ([]shared.Offer, error) {
+	dbOffers, err := mysql.Queries.GetParticipatedOffers(ctx, database.GetParticipatedOffersParams{
+		UserID: userID,
+		Limit:  offerPageSize,
+		Offset: (page - 1) * offerPageSize,
+	})
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return []shared.Offer{}, nil
@@ -507,15 +530,15 @@ func (mysql *MysqlStorage) SelectParticipatedOffers(ctx context.Context, userID 
 
 func (mysql *MysqlStorage) SelectOffers(ctx context.Context, params shared.OfferQueryParams) ([]shared.Offer, error) {
 	if params.Query != "" {
-		return mysql.GetOffersByQuery(ctx, params.Query)
+		return mysql.GetOffersByQuery(ctx, params.Query, params.Page)
 	}
 	if params.CompanyID != "" {
-		return mysql.GetOffersByCompany(ctx, params.CompanyID)
+		return mysql.GetOffersByCompany(ctx, params.CompanyID, params.Page)
 	}
 	if params.UserID != "" {
-		return mysql.GetOffersByUser(ctx, params.UserID)
+		return mysql.GetOffersByUser(ctx, params.UserID, params.Page)
 	}
-	return mysql.GetOffers(ctx)
+	return mysql.GetOffers(ctx, params.Page)
 }
 
 func RelativeTime(t time.Time) string {

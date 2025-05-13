@@ -1,4 +1,4 @@
-{{block "jobPage" .}}
+{{block "offerListPage" .}}
 <!doctype html>
 <html lang="en">
 
@@ -15,21 +15,32 @@
     {{template "navBar" .User}}
     <div class="flex flex-row p-4 justify-center overflow-y-auto">
       <div class="w-1/2 flex flex-col gap-4">
-        <span class="text-white text-center text-xl">Publicaciones</span>
-        {{if not .Offers}}
-        <span class="text-white text-center"> Ninguna coincidencia </span>
-        {{else}}
+        <strong class="text-white text-center text-xl">Publicaciones</strong>
         <div class="grid grid-cols-2 gap-4 m-4">
-          {{range .Offers}} {{template "offerCard" .}} {{end}}
+          {{template "offerList" .}}
         </div>
-        {{end}}
       </div>
     </div>
   </section>
 </body>
 
 </html>
-{{end}} {{block "offerCard" .}}
+{{end}} 
+
+{{block "offerList" .}}
+{{if .Offers}}
+  {{range .Offers}} {{template "offerCard" .}} {{end}}
+  {{if .Filters}}
+  <div hx-get="/?page={{.NextPage}}&{{.Filters}}" hx-trigger="revealed" hx-swap="afterend"></div>
+  {{else}}
+  <div hx-get="/?page={{.NextPage}}" hx-trigger="revealed" hx-swap="afterend"></div>
+  {{end}}
+{{else}}
+<span class="text-white/50 text-center">No quedan más publicaciones</span>
+{{end}}
+{{end}}
+
+{{block "offerCard" .}}
 <div class="group flex flex-col truncate gap-2 border border-shark-900 rounded-sm p-8 cursor-pointer transition-shadow duration-200 hover:border-white"
      hx-get="/preamble/{{.ID}}" hx-trigger="click" hx-push-url="true" hx-target="body">
   <div class="flex gap-2">
