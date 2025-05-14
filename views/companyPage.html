@@ -12,25 +12,37 @@
 </head>
 
 <body class="" hx-ext="head-support">
-  <section class="bg-shark-950 h-screen flex flex-col font-mono">
+  <section class="bg-gradient-to-b from-shark-950 to-shark-900 min-h-screen flex flex-col font-mono">
     {{template "navBar" .User}}
-    <div class="flex flex-col lg:flex-row p-4 justify-center overflow-y-auto">
-      <div class="w-full lg:w-3/4 flex flex-col lg:flex-row gap-4 lg:divide-x lg:divide-gray-600">
-        <div class="w-full lg:w-1/2 flex flex-col justify-center gap-4 overflow-auto p-4">
+    <div class="flex flex-col lg:flex-row justify-center overflow-y-auto mt-8 mb-8">
+      <div class="w-full lg:w-3/4 flex flex-col lg:flex-row gap-8 lg:divide-x lg:divide-shark-800">
+        <div class="w-full lg:w-1/2 flex flex-col justify-center gap-6 overflow-auto p-4">
           <img {{ if eq .Company.ImageURL "" }} src="/public/company.svg" {{else}} src="{{.Company.ImageURL}}" {{end}}
-            class="w-1/2 h-auto border-2 border-gray-700 aspect-square rounded-full mx-auto object-cover" id="preview"
+            class="w-1/2 h-auto border border-gray-700 aspect-square rounded-full mx-auto object-cover transition-all duration-300 hover:border-white" id="preview"
             alt="avatar" />
-          <span class="text-white text-2xl font-semibold text-center">{{.Company.Name}}</span>
-          <span class="text-white text-lg text-center">{{.Company.Description}}</span>
-          <a href="{{.Company.Website}}" class="text-white text-lg text-center underline" target="_blank">Sitio web</a>
+          <span class="text-white text-3xl font-bold text-center tracking-wide">{{.Company.Name}}</span>
+          <span class="text-shark-200 text-lg text-center italic">{{.Company.Description}}</span>
+          <a href="{{.Company.Website}}" class="text-blue-400 text-lg text-center hover:underline" target="_blank">Sitio web</a>
         </div>
-        <div class="w-full lg:w-1/2 flex flex-col justify-center p-4 gap-4 overflow-auto">
-          <span class="text-white text-center font-semibold text-2xl">
+        <div class="w-full lg:w-1/2 flex flex-col justify-center p-4 gap-6 overflow-auto">
+          <div class="flex justify-center space-x-4 mb-4">
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+              <span class="text-white">Activo</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 bg-gray-500 rounded-full"></span>
+              <span class="text-white">Archivado</span>
+            </div>
+          </div>
+          <h2 class="text-white text-center font-bold text-3xl tracking-wide">
             Ofertas
-          </span>
+          </h2>
           {{if not .Offers}}
-          <span class="text-white text-center"> Ninguna coincidencia </span>
-          {{else}} {{range .Offers}} {{template "offerCard" .}} {{end}} {{end}}
+          <span class="block text-center text-shark-300 text-base mt-8 mb-8 italic">Ninguna coincidencia</span>
+          {{else}} 
+          {{template "companyPageList" .}}
+          {{end}}
         </div>
       </div>
     </div>
@@ -38,4 +50,22 @@
 </body>
 
 </html>
+{{end}}
+
+{{block "companyPageList" .}}
+{{if not .Offers}}
+<p class="text-shark-300 text-center italic"> No quedan más publicaciones </p>
+{{else}}
+{{range .Offers}} 
+  <div class="relative">
+    {{if eq .Status 1}}
+      <div class="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full" title="Oferta activa"></div>
+    {{else}}
+      <div class="absolute top-2 right-2 w-3 h-3 bg-shark-500 rounded-full" title="Oferta archivada"></div>
+    {{end}}
+    {{template "offerCard" .}}
+  </div>
+{{end}}
+  <div hx-get="/companies/{{.Company.ID}}?page={{.NextPage}}" hx-trigger="revealed" hx-swap="afterend"></div>
+{{end}}
 {{end}}

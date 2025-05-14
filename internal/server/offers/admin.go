@@ -11,6 +11,7 @@ import (
 type OffersAdminData struct {
 	User   auth.AuthUser
 	Offers []shared.Offer
+	NextPage int32
 }
 
 type OffersAdminStorage interface {
@@ -28,13 +29,19 @@ func CreateOffersAdminHandler(
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+		page := shared.PageParam(r)
 		data := OffersAdminData{
 			User: user,
+			NextPage: page + 1,
+		}
+		toRender := "offersAdmin"
+		if page > 1 {
+			toRender = "offersAdminList"
 		}
 		if user.Role != "visitor" {
 			offers, err := storage.SelectOffers(r.Context(), shared.OfferQueryParams{
 				UserID: user.ID,
-				Page:   shared.PageParam(r),
+				Page:   page,
 			})
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -42,7 +49,7 @@ func CreateOffersAdminHandler(
 			}
 			data.Offers = offers
 		}
-		if err := templ.Render(w, "offersAdmin", data); err != nil {
+		if err := templ.Render(w, toRender, data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}

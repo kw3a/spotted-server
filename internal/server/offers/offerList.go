@@ -11,7 +11,7 @@ import (
 type OfferListData struct {
 	User     auth.AuthUser
 	Offers   []shared.Offer
-	Filters  string
+	Search   string
 	NextPage int32
 }
 
@@ -25,10 +25,6 @@ func GetJobOffersParams(r *http.Request) shared.OfferQueryParams {
 	query := q.Get("q")
 	if query != "" {
 		params.Query = query
-	}
-	user := q.Get("u")
-	if shared.ValidateUUID(user) == nil {
-		params.UserID = user
 	}
 	params.Page = shared.PageParam(r)
 	return params
@@ -60,10 +56,8 @@ func CreateJobOffersHandler(
 			NextPage: params.Page + 1,
 		}
 		if params.Query != "" {
-			data.Filters = "q=" + params.Query
-		} else if params.UserID != "" {
-			data.Filters = "u=" + params.UserID
-		}
+			data.Search = params.Query
+		} 		
 		toRender := "offerListPage"
 		if params.Page > 1 {
 			toRender = "offerList"

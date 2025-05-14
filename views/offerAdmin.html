@@ -23,7 +23,7 @@
           <span class="text-shark-300 font-light">Publicado {{.Offer.RelativeTime}}</span>
 
           <section class="flex flex-col gap-4">
-            <strong class="text-shark-200 text-xl font-semibold">Detalles de la prueba</strong>
+            <strong class="text-shark-300 text-sm xl font-semibold">Detalles de la prueba</strong>
             <p class="flex items-center text-shark-200 gap-2 font-medium">
               Duración:
               <img class="inline" src="/public/clock.svg" width="20" height="20" alt="clock icon" />
@@ -37,7 +37,7 @@
             </div>
 
             <div class="flex flex-col">
-              <p class="text-shark-200 font-semibold">Problemas</p>
+              <p class="text-white font-bold">Problemas</p>
               <section class="flex flex-wrap gap-4 overflow-x-auto">
                 {{ $first := true }}
                 {{range .Problems}}
@@ -89,13 +89,13 @@
                           </div>
                         </summary>
                         <div class="flex flex-row divide-x divide-sky-600">
-                          <div class="w-1/2 bg-shark-700">
+                          <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
                             <span class="text-white px-2">ENTRADA</span>
-                            <pre class="text-shark-200 p-4">{{$testCase.Input}}</pre>
+                            <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{$testCase.Input}}</pre>
                           </div>
-                          <div class="w-1/2 bg-shark-700">
+                          <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
                             <span class="text-white px-2">SALIDA ESPERADA</span>
-                            <pre class="text-shark-200 p-4">{{$testCase.Output}}</pre>
+                            <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{$testCase.Output}}</pre>
                           </div>
                         </div>
                       </details>
@@ -106,13 +106,13 @@
                       <span class="text-center font-medium">Ejemplos</span>
                       {{range .Examples}}
                       <div class="flex flex-row divide-x divide-gray-800">
-                        <div class="w-1/2 bg-shark-700">
+                        <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
                           <span class="text-white px-2">ENTRADA</span>
-                          <pre class="text-shark-200 p-4">{{.Input}}</pre>
+                          <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{.Input}}</pre>
                         </div>
-                        <div class="w-1/2 bg-shark-700">
-                          <span class="text-white px-2">SALIDA</span>
-                          <pre class="text-shark-200 p-4">{{.Output}}</pre>
+                        <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
+                          <span class="text-shark-200 px-2 font-semibold">SALIDA</span>
+                          <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{.Output}}</pre>
                         </div>
                       </div>
                       {{end}} 
@@ -126,12 +126,12 @@
           </section>
         </section>
         <div class="xl:w-1/2 overflow-y-auto flex flex-col gap-4 p-8">
-          <p class="text-xl text-center">
+          <span class="text-2xl text-white font-bold tracking-wide">
             <span >Aplicantes</span>
             <img 
-              class="inline cursor-pointer" width="18" height="18" src="/public/help.svg" 
+              class="inline cursor-pointer ml-2 opacity-70 hover:opacity-100 transition-all" width="18" height="18" src="/public/help.svg" 
               title="Si un problema no aparece, es porque el aplicante no ha enviado ninguna solución para ese problema"/>
-          </p>
+          </span>
           {{range .Applicants}} 
           {{template "applicantCard" .}} 
           {{end}}
@@ -143,13 +143,13 @@
 {{end}} 
 
 {{block "applicantCard" .}}
-<div class="rounded border border-shark-900 p-4">
-  <div class="w-full p-8">
+<div class="rounded-2xl border border-shark-700 bg-shark-900/50 hover:border-shark-600 transition-all duration-300">
+  <div class="w-full p-6">
     <div class="flex flex-wrap justify-between">
       <div class="flex gap-2 truncate items-center">
         <div class="flex-shrink-0"> 
           <img
-            class="border border-gray-700 hover:border-white cursor-pointer object-cover aspect-square" 
+            class="border border-shark-700 hover:border-shark-500 cursor-pointer object-cover aspect-square rounded-full transition-all duration-300" 
             hx-get="/profile/{{.Applicant.ID}}"
             hx-push-url="true"
             hx-target="body"
@@ -229,7 +229,7 @@
       </summary>
       <div class="w-full bg-shark-700">
         <span class="text-white px-2">SALIDA OBTENIDA</span>
-        <pre class="text-shark-200 p-4">{{$tc.Output}}</pre>
+        <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{$tc.Output}}</pre>
       </div>
     </details>
   {{end}}

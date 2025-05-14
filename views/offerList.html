@@ -11,12 +11,38 @@
 </head>
 
 <body class="" hx-ext="head-support">
-  <section class="bg-shark-950 h-screen flex flex-col font-mono">
+  <section class="bg-gradient-to-b from-shark-950 to-shark-900 min-h-screen flex flex-col font-mono">
     {{template "navBar" .User}}
-    <div class="flex flex-row p-4 justify-center overflow-y-auto">
-      <div class="w-1/2 flex flex-col gap-4">
-        <strong class="text-white text-center text-xl">Publicaciones</strong>
-        <div class="grid grid-cols-2 gap-4 m-4">
+    <div class="flex flex-row justify-center overflow-y-auto">
+      <div class="w-full md:w-3/4 lg:w-1/2 flex flex-col gap-8 mt-8 mb-8">
+          <form
+            id="search-field"
+            hx-get="/"
+            hx-target="body"
+            hx-boost="true"
+            hx-push-url="true"
+            class="inline-block relative w-full drop-shadow-lg"
+          >
+            <div
+              class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none"
+            >
+              <img
+                src="/public/find.svg"
+                alt="search icon"
+                width="20"
+                height="20"
+              />
+            </div>
+            <input
+              id="f-query"
+              type="text"
+              name="q"
+              class="bg-white ps-10 py-2 rounded-lg text-black block w-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition placeholder-gray-400"
+              placeholder="Buscar publicaciones..."
+            />
+          </form>
+        <h1 class="text-white text-center text-2xl font-bold tracking-wide mb-2">Publicaciones</h1>
+        <div class="flex flex-col space-y-6">
           {{template "offerList" .}}
         </div>
       </div>
@@ -30,21 +56,21 @@
 {{block "offerList" .}}
 {{if .Offers}}
   {{range .Offers}} {{template "offerCard" .}} {{end}}
-  {{if .Filters}}
-  <div hx-get="/?page={{.NextPage}}&{{.Filters}}" hx-trigger="revealed" hx-swap="afterend"></div>
+  {{if .Search}}
+  <div hx-get="/?page={{.NextPage}}&q={{.Search}}" hx-trigger="revealed" hx-swap="afterend"></div>
   {{else}}
   <div hx-get="/?page={{.NextPage}}" hx-trigger="revealed" hx-swap="afterend"></div>
   {{end}}
 {{else}}
-<span class="text-white/50 text-center">No quedan más publicaciones</span>
+<span class="block text-center text-shark-300 text-base mt-8 mb-8 italic">No quedan más publicaciones</span>
 {{end}}
 {{end}}
 
 {{block "offerCard" .}}
-<div class="group flex flex-col truncate gap-2 border border-shark-900 rounded-sm p-8 cursor-pointer transition-shadow duration-200 hover:border-white"
+<div class="group flex flex-col truncate gap-2 bg-shark-800/70 border border-shark-900 rounded-2xl p-6 cursor-pointer shadow-sm transition-all duration-300 hover:border-blue-400 hover:shadow-2xl hover:-translate-y-1 active:scale-[0.99]"
      hx-get="/preamble/{{.ID}}" hx-trigger="click" hx-push-url="true" hx-target="body">
   <div class="flex gap-2">
-    <img class="border border-gray-700 hover:border-white cursor-pointer"
+    <img class="border border-gray-700 hover:border-white cursor-pointer rounded-md transition-all duration-300"
          {{if .CompanyImageURL}}src="{{.CompanyImageURL}}"{{else}}src="/public/company.svg"{{end}}
          width="50" height="50" 
          hx-get="/companies/{{.CompanyID}}" hx-boost="true" hx-push-url="true" hx-target="body"

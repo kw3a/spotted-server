@@ -13,6 +13,7 @@ type CompanyPageData struct {
 	User    auth.AuthUser
 	Company shared.Company
 	Offers  []shared.Offer
+	NextPage int32
 }
 
 type CompanyPageInput struct {
@@ -68,8 +69,13 @@ func CreateCompanyPageHandler(
 			User:    user,
 			Company: company,
 			Offers:  offers,
+			NextPage: shared.PageParam(r) + 1,
 		}
-		err = templ.Render(w, "companyPage", data)
+		toRender := "companyPage"
+		if shared.PageParam(r) > 1 {
+			toRender = "companyPageList"
+		}
+		err = templ.Render(w, toRender, data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
