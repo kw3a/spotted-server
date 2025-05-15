@@ -4,7 +4,7 @@
     <span class="text-white text-xl font-medium">Formación</span>
     {{if .Owner}}
     <button 
-      onclick="window.showAndHide('ed-form')"
+      onclick="edForm.showModal()"
       class="flex items-center justify-center w-7 h-7 rounded-full hover:bg-green-700 transition-colors duration-200"
       type="button"
       aria-label="Añadir habilidad"
@@ -65,65 +65,67 @@
 {{end}} 
 
 {{block "educationForm" .}}
-<div id="ed-form" class="hidden">
-  <form 
-    hx-post="/education" 
-    hx-target="#education_list" 
-    hx-swap="afterbegin"
-    class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-800 rounded-lg p-6 shadow-lg"
-  >
-    <div class="flex flex-col gap-2">
-      <label for="ed-degree" class="text-gray-300 font-medium">Título</label>
-      <input 
-        id="ed-degree" 
-        class="border border-gray-600 rounded-lg p-3 bg-gray-900 text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500" 
-        type="text" 
-        name="degree" 
-        placeholder="Ejemplo: Licenciatura en Ciencias"
-      />
-      <span id="ed-degree-error" class="text-red-500 text-sm"></span>
-    </div>
-    <div class="flex flex-col gap-2">
-      <label for="ed-institution" class="text-gray-300 font-medium">Institución</label>
-      <input 
-        id="ed-institution" 
-        class="border border-gray-600 rounded-lg p-3 bg-gray-900 text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500" 
-        type="text" 
-        name="institution" 
-        placeholder="Ejemplo: Universidad Nacional"
-      />
-      <span id="ed-institution-error" class="text-red-500 text-sm"></span>
-    </div>
-    <div class="flex flex-col gap-2">
-      <label for="ed-start" class="text-gray-300 font-medium">Fecha de inicio</label>
-      <input 
-        id="ed-start" 
-        class="border border-gray-600 rounded-lg p-3 bg-gray-900 text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500" 
-        type="month" 
-        name="start" 
-      />
-      <span id="ed-start-error" class="text-red-500 text-sm"></span>
-    </div>
-    <div class="flex flex-col gap-2">
-      <label for="ed-end" class="text-gray-300 font-medium">Fecha de fin</label>
-      <input 
-        id="ed-end" 
-        class="border border-gray-600 rounded-lg p-3 bg-gray-900 text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500" 
-        type="month" 
-        name="end" 
-      />
-      <span id="ed-end-error" class="text-red-500 text-sm"></span>
-    </div>
-    <div class="md:col-span-2 flex justify-end">
-      <button
-        class="px-4 py-1 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
-        type="submit"
-      >
-        Agregar
-      </button>
-    </div>
-  </form>
-</div>
+<dialog id="edForm">
+  <div class="fixed inset-0 flex items-center justify-center">
+    <form 
+      hx-post="/education" 
+      hx-target="#education_list" 
+      hx-swap="afterbegin"
+      class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-800 rounded-lg p-6 shadow-lg"
+    >
+      <div class="flex flex-col gap-2">
+        <label for="ed-degree" class="text-gray-300 font-medium">Título</label>
+        <input 
+          id="ed-degree" 
+          class="border border-gray-600 rounded-lg p-3 bg-gray-900 text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500" 
+          type="text" 
+          name="degree" 
+          placeholder="Ejemplo: Licenciatura en Ciencias"
+        />
+        <span id="ed-degree-error" class="text-red-500 text-sm"></span>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="ed-institution" class="text-gray-300 font-medium">Institución</label>
+        <input 
+          id="ed-institution" 
+          class="border border-gray-600 rounded-lg p-3 bg-gray-900 text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500" 
+          type="text" 
+          name="institution" 
+          placeholder="Ejemplo: Universidad Nacional"
+        />
+        <span id="ed-institution-error" class="text-red-500 text-sm"></span>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="ed-start" class="text-gray-300 font-medium">Fecha de inicio</label>
+        <input 
+          id="ed-start" 
+          class="border border-gray-600 rounded-lg p-3 bg-gray-900 text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500" 
+          type="month" 
+          name="start" 
+        />
+        <span id="ed-start-error" class="text-red-500 text-sm"></span>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="ed-end" class="text-gray-300 font-medium">Fecha de fin</label>
+        <input 
+          id="ed-end" 
+          class="border border-gray-600 rounded-lg p-3 bg-gray-900 text-gray-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500" 
+          type="month" 
+          name="end" 
+        />
+        <span id="ed-end-error" class="text-red-500 text-sm"></span>
+      </div>
+      <div class="md:col-span-2 flex justify-end">
+        <button
+          class="px-4 py-1 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+          type="submit"
+        >
+          Agregar
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
 {{end}}
 
 {{block "edErrors" .}}
