@@ -1,12 +1,5 @@
 const $ = (el) => document.querySelector(el);
 
-function showAndHide(...IDs) {
-  IDs.forEach((id) => {
-    const tag = document.getElementById(id);
-    tag?.classList.toggle("hidden");
-  });
-}
-
 function triggers() {
   const events = [
     { event: "link-added", selector: "#empty-links", form: "#linkForm"},
@@ -63,5 +56,3 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   triggers();
 });
-
-window.showAndHide = showAndHide;
