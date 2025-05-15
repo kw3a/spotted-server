@@ -2,7 +2,6 @@ package profiles
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -11,9 +10,19 @@ import (
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
+const (
+	errInvalidURL = "URL inválida"
+	errNameRequired = "El nombre es requerido"
+)
+
 type LinkRegisterInput struct {
 	URL  string
 	Name string
+}
+
+type LinkRegisterError struct {
+	NameError string
+	URLError  string
 }
 
 type LinkDeleteInput struct {
@@ -26,19 +35,23 @@ type LinkRegisterData struct {
 	ID   string
 }
 
-func GetLinkRegisterInput(r *http.Request) (LinkRegisterInput, error) {
+func GetLinkRegisterInput(r *http.Request) (LinkRegisterInput, LinkRegisterError, bool) {
+	errFound := false
+	inputErrors := LinkRegisterError{}
 	rawURL := r.FormValue("url")
-	if _, err := url.Parse(rawURL); err != nil {
-		return LinkRegisterInput{}, err
+	if _, err := url.Parse(rawURL); err != nil || rawURL == "" {
+		errFound = true
+		inputErrors.URLError = errInvalidURL
 	}
 	name := r.FormValue("name")
 	if name == "" {
-		return LinkRegisterInput{}, fmt.Errorf("name is required")
+		errFound = true
+		inputErrors.NameError = errNameRequired
 	}
 	return LinkRegisterInput{
 		URL:  rawURL,
 		Name: name,
-	}, nil
+	}, inputErrors, errFound
 }
 
 func GetLinkDeleteInput(r *http.Request) (LinkDeleteInput, error) {
@@ -56,7 +69,7 @@ type LinkStorage interface {
 	DeleteLink(ctx context.Context, userID, linkID string) error
 }
 
-type registerLinkInputFn func(r *http.Request) (LinkRegisterInput, error)
+type registerLinkInputFn func(r *http.Request) (LinkRegisterInput, LinkRegisterError, bool)
 
 func CreateRegisterLinkHandler(templ shared.TemplatesRepo, auth shared.AuthRep, storage LinkStorage, inputFn registerLinkInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -65,15 +78,19 @@ func CreateRegisterLinkHandler(templ shared.TemplatesRepo, auth shared.AuthRep, 
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		input, err := inputFn(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		input, inputErr, errFound := inputFn(r)
+		if errFound {
+			if err := templ.Render(w, "linkErrors", inputErr); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		linkID := uuid.New().String()
-		err = storage.RegisterLink(r.Context(), linkID, user.ID, input.URL, input.Name)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if err := storage.RegisterLink(r.Context(), linkID, user.ID, input.URL, input.Name); err != nil {
+			inputErr.NameError = errUnexpected
+			if err := templ.Render(w, "linkErrors", inputErr); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		data := LinkRegisterData{
@@ -103,8 +120,7 @@ func CreateDeleteLinkHandler(auth shared.AuthRep, storage LinkStorage, inputFn d
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		err = storage.DeleteLink(r.Context(), user.ID, input.LinkID)
-		if err != nil {
+		if err := storage.DeleteLink(r.Context(), user.ID, input.LinkID); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

@@ -2,7 +2,6 @@ package profiles
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -14,19 +13,26 @@ type SkillRegisterInput struct {
 	Name string
 }
 
+type SkillRegisterErrors struct {
+	NameError string
+}
+
 type SkillDeleteInput struct {
 	SkillID string
 }
 
 
-func GetSkillRegisterInput(r *http.Request) (SkillRegisterInput, error) {
+func GetSkillRegisterInput(r *http.Request) (SkillRegisterInput, SkillRegisterErrors, bool) {
 	name := r.FormValue("name")
+	errFound := false
+	inputErrors := SkillRegisterErrors{}
 	if name == "" {
-		return SkillRegisterInput{}, fmt.Errorf("name is required")
+		errFound = true
+		inputErrors.NameError = errNameRequired
 	}
 	return SkillRegisterInput{
 		Name: name,
-	}, nil
+	}, inputErrors, errFound
 }
 
 func GetSkillDeleteInput(r *http.Request) (SkillDeleteInput, error) {
@@ -44,7 +50,7 @@ type SkillStorage interface {
 	DeleteSkill(ctx context.Context, userID, skillID string) error
 }
 
-type registerSkillInputFn func(r *http.Request) (SkillRegisterInput, error)
+type registerSkillInputFn func(r *http.Request) (SkillRegisterInput, SkillRegisterErrors, bool)
 
 func CreateRegisterSkillHandler(templ shared.TemplatesRepo, auth shared.AuthRep, storage SkillStorage, inputFn registerSkillInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -53,14 +59,19 @@ func CreateRegisterSkillHandler(templ shared.TemplatesRepo, auth shared.AuthRep,
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		input, err := inputFn(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		input, inputErrors, errFound := inputFn(r)
+		if errFound {
+			if err := templ.Render(w, "skillErrors", inputErrors); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		skillID := uuid.New().String()
 		if err := storage.RegisterSkill(r.Context(), skillID, user.ID, input.Name); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			inputErrors.NameError = errUnexpected
+			if err := templ.Render(w, "skillErrors", inputErrors); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		data := shared.SkillEntry{

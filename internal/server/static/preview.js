@@ -9,18 +9,16 @@ function showAndHide(...IDs) {
 
 function triggers() {
   const events = [
-    { event: "link-added", selector: "#empty-links", form: "#link-form" },
-    { event: "skill-added", selector: "#empty-skills", form: "#skill-form" },
-    { event: "ed-added", selector: "#empty-ed", form: "#ed-form" },
-    { event: "exp-added", selector: "#empty-exp", form: "#exp-form" },
+    { event: "link-added", selector: "#empty-links", form: "#linkForm"},
+    { event: "skill-added", selector: "#empty-skills", form: "#skillForm"},
+    { event: "ed-added", selector: "#empty-ed", form: "#edForm" },
+    { event: "exp-added", selector: "#empty-exp", form: "#expForm" },
   ];
   events.forEach(({ event, selector, form }) => {
-    if ($(selector) !== null) {
-      document.body.addEventListener(event, () => {
-        $(selector)?.classList.add("hidden");
-        $(form)?.classList.add("hidden");
-      });
-    }
+    document.body.addEventListener(event, () => {
+      $(selector)?.classList.add("hidden");
+      $(form)?.close();
+    });
   });
 }
 
