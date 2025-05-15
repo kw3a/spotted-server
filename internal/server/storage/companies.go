@@ -7,6 +7,10 @@ import (
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
+const (
+	companyPageSize = 20
+)
+
 func (mysql *MysqlStorage) GetCompanyByID(ctx context.Context, companyID string) (shared.Company, error) {
 	company, err := mysql.Queries.GetCompanyByID(ctx, companyID)
 	if err != nil {
@@ -27,7 +31,11 @@ func (mysql *MysqlStorage) GetCompanies(ctx context.Context, params shared.Compa
 	var dbCompanies []database.Company
 	if params.Query != "" {
 		if params.UserID == "" {
-			comp, err := mysql.Queries.GetCompaniesByQuery(ctx, params.Query)
+			comp, err := mysql.Queries.GetCompaniesByQuery(ctx, database.GetCompaniesByQueryParams{
+				Limit:  companyPageSize,
+				Offset: (params.Page - 1) * companyPageSize,
+				CONCAT: params.Query,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -35,6 +43,8 @@ func (mysql *MysqlStorage) GetCompanies(ctx context.Context, params shared.Compa
 		} else {
 			comp, err := mysql.Queries.GetCompaniesByUserAndQuery(ctx, database.GetCompaniesByUserAndQueryParams{
 				UserID: params.UserID,
+				Limit:  companyPageSize,
+				Offset: (params.Page - 1) * companyPageSize,
 				CONCAT: params.Query,
 			})
 			if err != nil {
@@ -44,17 +54,32 @@ func (mysql *MysqlStorage) GetCompanies(ctx context.Context, params shared.Compa
 		}
 	} else {
 		if params.UserID == "" {
-			comp, err := mysql.Queries.GetCompanies(ctx)
+			comp, err := mysql.Queries.GetCompanies(ctx, database.GetCompaniesParams{
+				Limit:  companyPageSize,
+				Offset: (params.Page - 1) * companyPageSize,
+			})
 			if err != nil {
 				return nil, err
 			}
 			dbCompanies = comp
 		} else {
-			comp, err := mysql.Queries.GetCompaniesByUser(ctx, params.UserID)
-			if err != nil {
-				return nil, err
+			if params.Page == 0 {
+				comp, err := mysql.Queries.GetAllCompaniesByUser(ctx, params.UserID)
+				if err != nil {
+					return nil, err
+				}
+				dbCompanies = comp
+			} else {
+				comp, err := mysql.Queries.GetCompaniesByUser(ctx, database.GetCompaniesByUserParams{
+					UserID: params.UserID,
+					Limit:  companyPageSize,
+					Offset: (params.Page - 1) * companyPageSize,
+				})
+				if err != nil {
+					return nil, err
+				}
+				dbCompanies = comp
 			}
-			dbCompanies = comp
 		}
 	}
 	for _, dbCompany := range dbCompanies {
@@ -104,4 +129,3 @@ func (mysql *MysqlStorage) RegisterCompany(
 		ImageUrl:    imageURL,
 	})
 }
-

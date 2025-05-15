@@ -9,14 +9,57 @@ import (
 	"context"
 )
 
+const getAllCompaniesByUser = `-- name: GetAllCompaniesByUser :many
+SELECT company.id, company.name, company.description, company.website, company.created_at, company.updated_at, company.image_url, company.user_id
+FROM company
+WHERE company.user_id = ?
+`
+
+func (q *Queries) GetAllCompaniesByUser(ctx context.Context, userID string) ([]Company, error) {
+	rows, err := q.db.QueryContext(ctx, getAllCompaniesByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Company
+	for rows.Next() {
+		var i Company
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Website,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ImageUrl,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getCompanies = `-- name: GetCompanies :many
 SELECT company.id, company.name, company.description, company.website, company.created_at, company.updated_at, company.image_url, company.user_id
 FROM company
-LIMIT 10
+LIMIT ? OFFSET ?
 `
 
-func (q *Queries) GetCompanies(ctx context.Context) ([]Company, error) {
-	rows, err := q.db.QueryContext(ctx, getCompanies)
+type GetCompaniesParams struct {
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) GetCompanies(ctx context.Context, arg GetCompaniesParams) ([]Company, error) {
+	rows, err := q.db.QueryContext(ctx, getCompanies, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -51,11 +94,17 @@ const getCompaniesByQuery = `-- name: GetCompaniesByQuery :many
 SELECT company.id, company.name, company.description, company.website, company.created_at, company.updated_at, company.image_url, company.user_id
 FROM company
 WHERE company.name LIKE CONCAT('%', ?, '%')
-LIMIT 10
+LIMIT ? OFFSET ?
 `
 
-func (q *Queries) GetCompaniesByQuery(ctx context.Context, concat interface{}) ([]Company, error) {
-	rows, err := q.db.QueryContext(ctx, getCompaniesByQuery, concat)
+type GetCompaniesByQueryParams struct {
+	CONCAT interface{}
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) GetCompaniesByQuery(ctx context.Context, arg GetCompaniesByQueryParams) ([]Company, error) {
+	rows, err := q.db.QueryContext(ctx, getCompaniesByQuery, arg.CONCAT, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -90,11 +139,17 @@ const getCompaniesByUser = `-- name: GetCompaniesByUser :many
 SELECT company.id, company.name, company.description, company.website, company.created_at, company.updated_at, company.image_url, company.user_id
 FROM company
 WHERE company.user_id = ?
-LIMIT 10
+LIMIT ? OFFSET ?
 `
 
-func (q *Queries) GetCompaniesByUser(ctx context.Context, userID string) ([]Company, error) {
-	rows, err := q.db.QueryContext(ctx, getCompaniesByUser, userID)
+type GetCompaniesByUserParams struct {
+	UserID string
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) GetCompaniesByUser(ctx context.Context, arg GetCompaniesByUserParams) ([]Company, error) {
+	rows, err := q.db.QueryContext(ctx, getCompaniesByUser, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -129,16 +184,23 @@ const getCompaniesByUserAndQuery = `-- name: GetCompaniesByUserAndQuery :many
 SELECT company.id, company.name, company.description, company.website, company.created_at, company.updated_at, company.image_url, company.user_id
 FROM company
 WHERE company.name LIKE CONCAT('%', ?, '%') AND company.user_id = ?
-LIMIT 10
+LIMIT ? OFFSET ?
 `
 
 type GetCompaniesByUserAndQueryParams struct {
 	CONCAT interface{}
 	UserID string
+	Limit  int32
+	Offset int32
 }
 
 func (q *Queries) GetCompaniesByUserAndQuery(ctx context.Context, arg GetCompaniesByUserAndQueryParams) ([]Company, error) {
-	rows, err := q.db.QueryContext(ctx, getCompaniesByUserAndQuery, arg.CONCAT, arg.UserID)
+	rows, err := q.db.QueryContext(ctx, getCompaniesByUserAndQuery,
+		arg.CONCAT,
+		arg.UserID,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}

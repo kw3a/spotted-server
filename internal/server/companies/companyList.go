@@ -15,7 +15,8 @@ type CompanyListStorage interface {
 type CompanyListData struct {
 	User      auth.AuthUser
 	Companies []shared.Company
-	CmpSearch    string
+	CmpSearch string
+	NextPage  int32
 }
 
 func GetCompanyListParams(r *http.Request) shared.CompanyQueryParams {
@@ -29,6 +30,7 @@ func GetCompanyListParams(r *http.Request) shared.CompanyQueryParams {
 	if query != "" {
 		res.Query = query
 	}
+	res.Page = shared.PageParam(r)
 	return res
 }
 
@@ -55,11 +57,16 @@ func CreateCompanyListPageHandler(
 		data := CompanyListData{
 			User:      user,
 			Companies: companies,
+			NextPage:  params.Page + 1,
 		}
 		if params.Query != "" {
 			data.CmpSearch = params.Query
 		}
-		if err := templ.Render(w, "companyList", data); err != nil {
+		toRender := "companyListPage"
+		if params.Page > 1 {
+			toRender = "companyList"
+		}
+		if err := templ.Render(w, toRender, data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}

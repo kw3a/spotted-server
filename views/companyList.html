@@ -1,4 +1,4 @@
-{{block "companyList" .}}
+{{block "companyListPage" .}}
 <!doctype html>
 <html lang="en">
 
@@ -30,14 +30,12 @@
             />
           </div>
         </form>
-        {{if not .Companies}}
-        <span class="block text-center text-shark-300 text-base mt-8 mb-8 italic">Ninguna coincidencia</span>
+        {{if .Companies}}
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {{template "companyList" .}}
+          </div>
         {{else}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {{range .Companies}}
-          {{template "companyEntry" .}}
-          {{end}}
-        </div>
+          <span class="block text-center text-shark-300 text-base mt-8 mb-8 italic">Sin coincidencias</span>
         {{end}}
       </div>
     </div>
@@ -47,13 +45,24 @@
 </html>
 {{end}}
 
+{{block "companyList" .}}
+  {{if .Companies}}
+    {{range .Companies}}
+      {{template "companyEntry" .}}
+    {{end}}
+    {{if .NextPage}}
+      <div hx-get="/companies?page={{.NextPage}}&q={{.CmpSearch}}" hx-trigger="revealed" hx-swap="afterend"></div>
+    {{end}}
+  {{end}}
+{{end}}
+
 {{block "companyEntry" .}}
 <div class="group flex flex-col truncate gap-2 bg-shark-800/70 border border-shark-900 rounded-2xl p-6 cursor-pointer shadow-sm transition-all duration-300 hover:border-blue-400 hover:shadow-lg hover:-translate-y-1 active:scale-[0.99]"
   hx-get="/companies/{{.ID}}" hx-trigger="click" hx-push-url="true" hx-target="body">
   <img {{if .ImageURL}}src="{{.ImageURL}}"{{else}}src="/public/company.svg"{{end}}
     class="w-1/2 h-auto border border-gray-700 aspect-square rounded-full mx-auto object-cover transition-all duration-300 group-hover:border-white" alt="avatar" />
   <div>
-    <span class="text-white font-bold text-xl truncate text-center">{{.Name}}</span>
+    <span class="text-white font-bold text-xl max-w-full truncate text-center block">{{.Name}}</span>
   </div>
 </div>
 {{end}}

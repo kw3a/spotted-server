@@ -49,6 +49,7 @@ type Company struct {
 	ImageURL    string
 }
 type CompanyQueryParams struct {
+	Page   int32
 	UserID string
 	Query  string
 }
