@@ -96,12 +96,13 @@ type CompanyStorage interface {
 
 type registerCompanyInputFn func(shared.CloudinaryService, *http.Request) (CompanyRegInput, CompanyRegErrors, bool)
 
-func CreateRegisterCompanyHandler(
+func CreateRegisterHandler(
 	storage CompanyStorage,
 	auth shared.AuthRep,
 	cloudinaryService shared.CloudinaryService,
 	inputFn registerCompanyInputFn,
 	templ shared.TemplatesRepo,
+	redirectPath string,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := auth.GetUser(r)
@@ -122,7 +123,7 @@ func CreateRegisterCompanyHandler(
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Header().Add("HX-Redirect", "/companies/"+companyID)
+		w.Header().Add("HX-Redirect", redirectPath+companyID)
 		w.WriteHeader(http.StatusOK)
 	}
 }

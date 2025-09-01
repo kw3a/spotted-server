@@ -135,9 +135,11 @@ func CreateDeleteEducationHandler(auth shared.AuthRep, storage EducationStorage,
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if err := storage.DeleteEducation(r.Context(), user.ID, input.EducationID); err != nil {
+		err = storage.DeleteEducation(r.Context(), user.ID, input.EducationID)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.WriteHeader(http.StatusOK)
 	}
 }

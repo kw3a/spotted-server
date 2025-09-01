@@ -23,6 +23,7 @@ type ProfilePageData struct {
 }
 type ProfilePageInput struct {
 	UserID string
+	Page   int32
 }
 
 func GetProfilePageInput(r *http.Request) (ProfilePageInput, error) {
@@ -33,6 +34,7 @@ func GetProfilePageInput(r *http.Request) (ProfilePageInput, error) {
 	}
 	return ProfilePageInput{
 		UserID: userID,
+		Page:   shared.PageParam(r),
 	}, nil
 }
 
@@ -64,16 +66,15 @@ func CreateProfilePageHandler(
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		page := shared.PageParam(r)
-		participatedOffers, err := storage.SelectParticipatedOffers(r.Context(), input.UserID, page)
+		participatedOffers, err := storage.SelectParticipatedOffers(r.Context(), input.UserID, input.Page)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		toRender := "profilePage"
 		data := ProfilePageData{}
-		data.NextPage = page + 1
-		if page > 1 {
+		data.NextPage = input.Page + 1
+		if input.Page > 1 {
 			toRender = "participationList"
 			data.Participations = participatedOffers
 		} else {
@@ -119,7 +120,7 @@ func CreateProfilePageHandler(
 				Skills:         skills,
 				Participations: participatedOffers,
 				Owner:          profile.ID == user.ID,
-				NextPage:       page + 1,
+				NextPage:       input.Page + 1,
 			}
 		}
 		if err = templ.Render(w, toRender, data); err != nil {

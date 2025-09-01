@@ -11,7 +11,7 @@ type UserFormData struct {
 	User auth.AuthUser
 }
 
-func CreateUserPageHandler(authService shared.AuthRep, templ shared.TemplatesRepo) http.HandlerFunc {
+func CreateRegPageHandler(authService shared.AuthRep, templ shared.TemplatesRepo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := authService.GetUser(r)
 		if err != nil {

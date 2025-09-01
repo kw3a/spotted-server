@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
 
@@ -112,4 +113,8 @@ func PageParam(r *http.Request) int32 {
 		return 1
 	}
 	return int32(intPage)
+}
+
+func ValidateUUID(id string) error {
+	return uuid.Validate(id)
 }

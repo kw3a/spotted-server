@@ -75,7 +75,12 @@ func (DI *App) LogoutHandler() http.HandlerFunc {
 }
 
 func (DI *App) ProfilePicHandler() http.HandlerFunc {
-	return profiles.CreateProfilePicHandler(DI.Storage, DI.AuthService, &DI.Cld.Upload)
+	return profiles.CreatePictureHandler(
+		DI.Storage,
+		DI.AuthService,
+		&DI.Cld.Upload,
+		profiles.GetProfilePicInput,
+	)
 }
 
 func (DI *App) UserHandler() http.HandlerFunc {
@@ -89,7 +94,7 @@ func (DI *App) UserHandler() http.HandlerFunc {
 }
 
 func (DI *App) UserPageHandler() http.HandlerFunc {
-	return profiles.CreateUserPageHandler(DI.AuthService, DI.Templ)
+	return profiles.CreateRegPageHandler(DI.AuthService, DI.Templ)
 }
 
 func (DI *App) SkillRegisterHandler() http.HandlerFunc {

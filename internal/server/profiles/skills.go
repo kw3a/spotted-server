@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/kw3a/spotted-server/internal/auth"
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
@@ -21,12 +22,11 @@ type SkillDeleteInput struct {
 	SkillID string
 }
 
-
 func GetSkillRegisterInput(r *http.Request) (SkillRegisterInput, SkillRegisterErrors, bool) {
 	name := r.FormValue("name")
 	errFound := false
 	inputErrors := SkillRegisterErrors{}
-	if name == "" {
+	if len(name) < 1 || len(name) > 100 {
 		errFound = true
 		inputErrors.NameError = errNameRequired
 	}
@@ -52,11 +52,11 @@ type SkillStorage interface {
 
 type registerSkillInputFn func(r *http.Request) (SkillRegisterInput, SkillRegisterErrors, bool)
 
-func CreateRegisterSkillHandler(templ shared.TemplatesRepo, auth shared.AuthRep, storage SkillStorage, inputFn registerSkillInputFn) http.HandlerFunc {
+func CreateRegisterSkillHandler(templ shared.TemplatesRepo, authz shared.AuthRep, storage SkillStorage, inputFn registerSkillInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		user, err := auth.GetUser(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+		user, err := authz.GetUser(r)
+		if err != nil || user.Role == auth.NotAuthRole {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 		input, inputErrors, errFound := inputFn(r)
@@ -106,4 +106,3 @@ func CreateDeleteSkillHandler(auth shared.AuthRep, storage SkillStorage, inputFn
 		w.WriteHeader(http.StatusOK)
 	}
 }
-

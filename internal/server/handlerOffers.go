@@ -7,7 +7,7 @@ import (
 )
 
 func (DI *App) JobOffersHandler() http.HandlerFunc {
-	return offers.CreateJobOffersHandler(
+	return offers.CreateOfferListHandler(
 		offers.GetJobOffersParams,
 		DI.AuthService,
 		DI.Storage,
@@ -25,7 +25,7 @@ func (app *App) PreambleHandler() http.HandlerFunc {
 }
 
 func (DI *App) OfferRegistrationPage() http.HandlerFunc {
-	return offers.CreateRegisterOfferPage(
+	return offers.CreateRegisterPage(
 		DI.AuthService,
 		DI.Templ,
 		DI.Storage,
@@ -34,7 +34,7 @@ func (DI *App) OfferRegistrationPage() http.HandlerFunc {
 }
 
 func (DI *App) OfferRegistration() http.HandlerFunc {
-	return offers.CreateOfferRegistrationHandler(
+	return offers.CreateRegisterHandler(
 		DI.Templ,
 		DI.AuthService,
 		DI.Storage,
@@ -55,7 +55,6 @@ func (DI *App) OfferEditionPage() http.HandlerFunc {
 func (DI *App) OfferEdition() http.HandlerFunc {
 	return offers.CreateOfferEdition(
 		DI.Storage,
-		DI.Templ,
 		offers.GetOfferEditionInput,
 	)
 }
@@ -69,17 +68,16 @@ func (DI *App) OffersAdmin() http.HandlerFunc {
 }
 
 func (DI *App) OfferArchive() http.HandlerFunc {
-	return offers.CreateOfferArchiveHandler(
+	return offers.CreateArchiveHandler(
 		offers.GetOfferArchiveInput,
 		DI.AuthService,
 		DI.Storage,
-		DI.Templ,
 	)
 }
 
 func (DI *App) OfferAdmin() http.HandlerFunc {
-	return offers.CreateOfferApplHandler(
-		offers.GetOfferApplInput,
+	return offers.CreateApplicantsHandler(
+		offers.GetApplicantsInput,
 		DI.AuthService,
 		DI.Storage,
 		DI.Templ,

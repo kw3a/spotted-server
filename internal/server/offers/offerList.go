@@ -30,10 +30,10 @@ func GetJobOffersParams(r *http.Request) shared.OfferQueryParams {
 	return params
 }
 
-type offerListParamsFn func(r *http.Request) shared.OfferQueryParams
+type OfferListParamsFn func(r *http.Request) shared.OfferQueryParams
 
-func CreateJobOffersHandler(
-	paramsFn offerListParamsFn,
+func CreateOfferListHandler(
+	paramsFn OfferListParamsFn,
 	authService shared.AuthRep,
 	storage OfferListStorage,
 	templ shared.TemplatesRepo,

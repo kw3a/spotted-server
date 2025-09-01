@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -83,14 +82,14 @@ func (mysql *MysqlStorage) BestSubmission(ctx context.Context, applicantID strin
 	}, nil
 }
 
-func (mysql *MysqlStorage) InsertQuiz(r *http.Request, quizID string, offerID string, languages []int32, duration int32) error {
+func (mysql *MysqlStorage) InsertQuiz(ctx context.Context, quizID string, offerID string, languages []int32, duration int32) error {
 	tx, err := mysql.db.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 	qtx := mysql.Queries.WithTx(tx)
-	err = qtx.InsertQuiz(r.Context(), database.InsertQuizParams{
+	err = qtx.InsertQuiz(ctx, database.InsertQuizParams{
 		ID:       quizID,
 		OfferID:  offerID,
 		Duration: duration,
@@ -100,7 +99,7 @@ func (mysql *MysqlStorage) InsertQuiz(r *http.Request, quizID string, offerID st
 		return err
 	}
 	for _, lang := range languages {
-		err = qtx.InsertLanguageQuiz(r.Context(), database.InsertLanguageQuizParams{
+		err = qtx.InsertLanguageQuiz(ctx, database.InsertLanguageQuizParams{
 			ID:         uuid.New().String(),
 			QuizID:     quizID,
 			LanguageID: lang,

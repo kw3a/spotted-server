@@ -16,19 +16,21 @@ func (DI *App) CompanyListPageHandler() http.HandlerFunc {
 }
 
 func (DI *App) CompanyRegistrationPageHandler() http.HandlerFunc {
-	return companies.CreateRegisterCompanyPage(
+	return companies.CreateRegisterPageHandler(
 		DI.Templ,
 		DI.AuthService,
+		"/login",
 	)
 }
 
 func (DI *App) CompanyRegistrationHandler() http.HandlerFunc {
-	return companies.CreateRegisterCompanyHandler(
+	return companies.CreateRegisterHandler(
 		DI.Storage,
 		DI.AuthService,
 		&DI.Cld.Upload,
 		companies.GetRegisterCompanyInput,
 		DI.Templ,
+		"/companies/",
 	)
 }
 

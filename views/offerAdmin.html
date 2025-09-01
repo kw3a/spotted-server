@@ -66,7 +66,12 @@
                 <div id="modal-{{.ID}}" class="w-full bg-gray-900 rounded 
                   {{if not $first}} hidden {{end}}">
                   <div class="flex flex-col gap-8 p-8">
-                    <pre class="whitespace-pre-wrap">{{.Description}}</pre>
+                    <details>
+                      <summary class="cursor-pointer hover:bg-gray-800 p-2 font-bold">Descripción</summary>
+                      <div>
+                        <pre class="whitespace-pre-wrap">{{.Description}}</pre>
+                      </div>
+                    </details>
                     <div class="flex flex-col">
                       <span 
                         class="text-shark-200"

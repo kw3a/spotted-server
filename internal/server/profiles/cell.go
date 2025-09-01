@@ -35,7 +35,6 @@ func CellValidation(cell string) string {
 func GetUpdateCellInput(r *http.Request) (CellUpdateInput, CellUpdateErrors, bool) {
 	inputErrors := CellUpdateErrors{}
 	errFound := false
-
 	cell := r.FormValue("cell")
 	if strErr := CellValidation(cell); strErr != "" {
 		inputErrors.CellError = strErr

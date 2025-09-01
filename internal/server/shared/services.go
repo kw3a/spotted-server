@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
-	"github.com/google/uuid"
 	"github.com/kw3a/spotted-server/internal/auth"
 )
 
@@ -20,7 +19,4 @@ type AuthRep interface {
 
 type TemplatesRepo interface {
 	Render(w io.Writer, name string, data interface{}) error
-}
-func ValidateUUID(id string) error {
-	return uuid.Validate(id)
 }

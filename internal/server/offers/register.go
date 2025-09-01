@@ -25,7 +25,7 @@ type OfferStorage interface {
 
 type OfferRegInputFn func(r *http.Request) (OfferRegInput, error)
 
-func CreateOfferRegistrationHandler(
+func CreateRegisterHandler(
 	templ shared.TemplatesRepo,
 	auth shared.AuthRep,
 	storage OfferStorage,

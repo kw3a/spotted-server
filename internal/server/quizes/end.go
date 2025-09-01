@@ -1,0 +1,49 @@
+package quizes
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/kw3a/spotted-server/internal/server/shared"
+)
+
+type EndStorage interface {
+	EndQuiz(ctx context.Context, userID, quizID string) (shared.Offer, error)
+}
+type EndInput struct {
+	QuizID string
+}
+
+func GetEndInput(r *http.Request) (EndInput, error) {
+	quizID := r.FormValue("quizID")
+	if err := shared.ValidateUUID(quizID); err != nil {
+		return EndInput{}, err
+	}
+	return EndInput{
+		QuizID: quizID,
+	}, nil
+}
+
+type endInputFn func(r *http.Request) (EndInput, error)
+func CreateEndHandler(endStorage EndStorage, authService shared.AuthRep, inputFn endInputFn) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, err := authService.GetUser(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		input, err := inputFn(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		offer, err := endStorage.EndQuiz(r.Context(), user.ID, input.QuizID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("HX-Redirect", "/preamble/"+offer.ID)
+		w.WriteHeader(http.StatusOK)
+	}
+}
+

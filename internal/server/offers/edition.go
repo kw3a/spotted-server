@@ -1,6 +1,7 @@
 package offers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -50,13 +51,12 @@ func GetOfferEditionInput(r *http.Request) (OfferEdition, error) {
 }
 
 type OfferEditionStorage interface {
-	InsertQuiz(r *http.Request, quizID, offerID string, languages []int32, duration int32) error
+	InsertQuiz(ctx context.Context, quizID, offerID string, languages []int32, duration int32) error
 }
 
 type offerEditionInputFn func(r *http.Request) (OfferEdition, error)
 func CreateOfferEdition(
 	storage OfferEditionStorage,
-	templ shared.TemplatesRepo,
 	inputFn offerEditionInputFn,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +66,7 @@ func CreateOfferEdition(
 			return
 		}
 		quizID := uuid.New().String()
-		err = storage.InsertQuiz(r, quizID, input.OfferID, input.Languages, input.Duration)
+		err = storage.InsertQuiz(r.Context(), quizID, input.OfferID, input.Languages, input.Duration)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

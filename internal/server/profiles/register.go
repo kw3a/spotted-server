@@ -13,8 +13,6 @@ import (
 
 const (
 	errUserTaken         = "Nombre de usuario no disponible"
-	errNameLength        = "Debe tener entre 3 a 255 caracteres"
-	errDescriptionLength = "Debe tener entre 20 a 500 caracteres"
 )
 
 type UserStorage interface {

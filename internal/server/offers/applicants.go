@@ -9,11 +9,11 @@ import (
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
-type OfferApplInput struct {
+type ApplicantsInput struct {
 	OfferID string
 }
 
-type OfferApplData struct {
+type ApplicantsData struct {
 	User       auth.AuthUser
 	Offer      shared.Offer
 	Quiz       shared.Quiz
@@ -22,7 +22,7 @@ type OfferApplData struct {
 	Applicants []shared.Application
 }
 
-type OfferApplStorage interface {
+type ApplicantsStorage interface {
 	SelectOfferByUser(ctx context.Context, id string, userID string) (shared.Offer, error)
 	SelectQuizByOffer(ctx context.Context, offerID string) (shared.Quiz, error)
 	SelectLanguages(ctx context.Context, quizID string) ([]shared.Language, error)
@@ -30,20 +30,20 @@ type OfferApplStorage interface {
 	SelectFullProblems(ctx context.Context, quizID string) ([]shared.Problem, error)
 }
 
-func GetOfferApplInput(r *http.Request) (OfferApplInput, error) {
+func GetApplicantsInput(r *http.Request) (ApplicantsInput, error) {
 	offerID := chi.URLParam(r, "offerID")
 	if err := shared.ValidateUUID(offerID); err != nil {
-		return OfferApplInput{}, err
+		return ApplicantsInput{}, err
 	}
-	return OfferApplInput{OfferID: offerID}, nil
+	return ApplicantsInput{OfferID: offerID}, nil
 }
 
-type offerApplInputFn func(r *http.Request) (OfferApplInput, error)
+type offerApplInputFn func(r *http.Request) (ApplicantsInput, error)
 
-func CreateOfferApplHandler(
+func CreateApplicantsHandler(
 	inputFn offerApplInputFn,
 	authService shared.AuthRep,
-	storage OfferApplStorage,
+	storage ApplicantsStorage,
 	templ shared.TemplatesRepo,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +82,7 @@ func CreateOfferApplHandler(
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		data := OfferApplData{
+		data := ApplicantsData{
 			User:       user,
 			Offer:      offer,
 			Quiz:       quiz,

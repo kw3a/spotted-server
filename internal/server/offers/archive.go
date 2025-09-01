@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/kw3a/spotted-server/internal/auth"
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
@@ -30,11 +31,10 @@ func GetOfferArchiveInput(r *http.Request) (OfferArchiveInput, error) {
 
 
 type offerArchiveInputFn func(r *http.Request) (OfferArchiveInput, error)
-func CreateOfferArchiveHandler(
+func CreateArchiveHandler(
 	inputFn offerArchiveInputFn,
 	authService shared.AuthRep,
 	storage OfferArchiveStorage,
-	templ shared.TemplatesRepo,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := authService.GetUser(r)
@@ -42,7 +42,7 @@ func CreateOfferArchiveHandler(
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		if user.Role == "visitor" || user.ID == "" {
+		if user.Role == auth.NotAuthRole {
 			http.Error(w, errNotAuthorized, http.StatusUnauthorized)
 			return
 		}

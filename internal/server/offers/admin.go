@@ -38,7 +38,7 @@ func CreateOffersAdminHandler(
 		if page > 1 {
 			toRender = "offersAdminList"
 		}
-		if user.Role != "visitor" {
+		if user.Role != auth.NotAuthRole {
 			offers, err := storage.SelectOffers(r.Context(), shared.OfferQueryParams{
 				UserID: user.ID,
 				Page:   page,

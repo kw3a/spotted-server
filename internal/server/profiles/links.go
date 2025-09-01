@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	errInvalidURL = "URL inválida"
+	errInvalidURL   = "URL inválida"
 	errNameRequired = "El nombre es requerido"
 )
 
@@ -39,12 +39,12 @@ func GetLinkRegisterInput(r *http.Request) (LinkRegisterInput, LinkRegisterError
 	errFound := false
 	inputErrors := LinkRegisterError{}
 	rawURL := r.FormValue("url")
-	if _, err := url.Parse(rawURL); err != nil || rawURL == "" {
+	if _, err := url.Parse(rawURL); err != nil || rawURL == "" || len(rawURL) > 256 {
 		errFound = true
 		inputErrors.URLError = errInvalidURL
 	}
 	name := r.FormValue("name")
-	if name == "" {
+	if len(name) < 1 || len(name) > 256 {
 		errFound = true
 		inputErrors.NameError = errNameRequired
 	}

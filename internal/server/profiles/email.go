@@ -21,6 +21,9 @@ type EmailUpdateStorage interface {
 }
 
 func EmailValidation(email string) string {
+	if len(email) < 3 || len(email) > 254 {
+		return errEmailInvalid
+	}
 	exp := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	compiledRegExp := regexp.MustCompile(exp)
 	if !compiledRegExp.MatchString(email) {
