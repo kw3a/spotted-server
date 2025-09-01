@@ -2,40 +2,11 @@ package auth
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-
-	"github.com/kw3a/spotted-server/internal/database"
 )
-
-type middlewareStorage struct{}
-func (m *middlewareStorage) GetUser(ctx context.Context, userID string) (database.User, error) {
-	return database.User{ID: "123"}, nil
-}
-
-type invalidMiddlewareStorage struct{}
-func (i *invalidMiddlewareStorage) GetUser(ctx context.Context, userID string) (database.User, error) {
-	return database.User{}, errors.New("error")
-}
-
-type middlewareAuthType struct{}
-func (m *middlewareAuthType) CreateAccess(refreshToken string) (string, error) {
-	return "", nil
-}
-func (m *middlewareAuthType) WhoAmI(accessToken string) (userID string, err error) {
-	return "", nil
-}
-
-type invalidMiddlewareAuthType struct{}
-func (i *invalidMiddlewareAuthType) CreateAccess(refreshToken string) (string, error) {
-	return "", errors.New("error")
-}
-func (i *invalidMiddlewareAuthType) WhoAmI(accessToken string) (userID string, err error) {
-	return "", errors.New("error")
-}
 
 func TestGetUserEmpty(t *testing.T) {
 	authService := AuthService{}
@@ -153,17 +124,3 @@ func TestDeleteCookies(t *testing.T) {
 		}
 	}
 }
-
-func nextFn() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	}
-}
-func requestWithCookies() *http.Request {
-	r, _ := http.NewRequest("GET", "/", nil)
-	r.AddCookie(&http.Cookie{Name: "access_token", Value: "access"})
-	r.AddCookie(&http.Cookie{Name: "refresh_token", Value: "refresh"})
-	return r
-}
-

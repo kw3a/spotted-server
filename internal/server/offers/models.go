@@ -97,8 +97,8 @@ func ValidateOffer(o OfferJ) (shared.Offer, error) {
 		About:        o.About,
 		Requirements: o.Requirements,
 		Benefits:     o.Benefits,
-		MinWage:      int32(minWage),
-		MaxWage:      int32(maxWage),
+		MinWage:      shared.IntToInt32(minWage),
+		MaxWage:      shared.IntToInt32(maxWage),
 		CompanyID:    o.CompanyID,
 	}, nil
 }
@@ -119,11 +119,11 @@ func ValidateQuiz(q QuizJ) (shared.Quiz, error) {
 			if err != nil {
 				return shared.Quiz{}, fmt.Errorf("el lenguaje debe ser un número")
 			}
-			languages = append(languages, int32(intLang))
+			languages = append(languages, shared.IntToInt32(intLang))
 		}
 	}
 	return shared.Quiz{
-		Duration:  int32(duration),
+		Duration:  shared.IntToInt32(duration),
 		Languages: languages,
 	}, nil
 }

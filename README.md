@@ -12,6 +12,21 @@ chmod +x ./scripts/migrateup.sh
 ./scripts/migrateup.sh 
 ```
 
+Run gosec tests
+```shell
+gosec -exclude-dir=seeders ./...
+```
+
+Run staticcheck linter
+```shell
+staticcheck ./...
+```
+
+Run unit tests
+```shell
+go test ./...
+```
+
 Run seeders
 ```shell
 chmod +x ./scripts/seed.sh 

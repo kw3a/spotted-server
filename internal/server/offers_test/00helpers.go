@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kw3a/spotted-server/internal/auth"
@@ -40,22 +39,6 @@ func (s *authMock) GetUser(r *http.Request) (userID auth.AuthUser, err error) {
 	return args.Get(0).(auth.AuthUser), args.Error(1)
 }
 
-type streamService struct {
-	mock.Mock
-}
-func (s *streamService) Register(name string, tokens []string, duration time.Duration) error {
-	args := s.Called(name, tokens, duration)
-	return args.Error(0)
-}
-func (s *streamService) Listen(name string) (chan string, error) {
-	args := s.Called(name)
-	return args.Get(0).(chan string), args.Error(1)
-}
-func (s *streamService) Update(name, token, status string) error {
-	args := s.Called(name, token, status)
-	return args.Error(0)
-}
-
 type Params map[string]string
 
 func WithUrlParam(r *http.Request, key, value string) *http.Request {
@@ -71,14 +54,5 @@ func WithUrlParams(r *http.Request, params Params) *http.Request {
 	for key, value := range params {
 		chiCtx.URLParams.Add(key, value)
 	}
-	return req
-}
-
-func formRequest(method, url string, formValues map[string][]string) *http.Request {
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		return nil
-	}
-	req.Form = formValues
 	return req
 }

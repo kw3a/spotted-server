@@ -10,7 +10,6 @@ import (
 
 const (
 	errEmailInvalid   = "Correo inválido"
-	errPasswordLength = "Debe tener entre 5 a 30 caracteres"
 	errUnexpected     = "Error inesperado, inténtelo de nuevo"
 )
 

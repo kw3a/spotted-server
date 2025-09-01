@@ -4,7 +4,9 @@ import "net/http"
 
 func CreateNotFoundHandler(tmpl TemplatesRepo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tmpl.Render(w, "notFound", nil)
+		if err :=tmpl.Render(w, "notFound", nil); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
 }
 

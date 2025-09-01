@@ -74,12 +74,3 @@ func WithUrlParams(r *http.Request, params Params) *http.Request {
 	}
 	return req
 }
-
-func formRequest(method, url string, formValues map[string][]string) *http.Request {
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		return nil
-	}
-	req.Form = formValues
-	return req
-}

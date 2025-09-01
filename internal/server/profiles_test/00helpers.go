@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/go-chi/chi/v5"
@@ -43,25 +42,6 @@ type authMock struct {
 func (s *authMock) GetUser(r *http.Request) (user auth.AuthUser, err error) {
 	args := s.Called(r)
 	return args.Get(0).(auth.AuthUser), args.Error(1)
-}
-
-type streamService struct {
-	mock.Mock
-}
-
-func (s *streamService) Register(name string, tokens []string, duration time.Duration) error {
-	args := s.Called(name, tokens, duration)
-	return args.Error(0)
-}
-
-func (s *streamService) Listen(name string) (chan string, error) {
-	args := s.Called(name)
-	return args.Get(0).(chan string), args.Error(1)
-}
-
-func (s *streamService) Update(name, token, status string) error {
-	args := s.Called(name, token, status)
-	return args.Error(0)
 }
 
 type cldMock struct {

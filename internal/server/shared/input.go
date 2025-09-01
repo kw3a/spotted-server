@@ -3,6 +3,7 @@ package shared
 import (
 	"database/sql"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -112,9 +113,20 @@ func PageParam(r *http.Request) int32 {
 	if err != nil {
 		return 1
 	}
-	return int32(intPage)
+	return IntToInt32(intPage)
 }
 
 func ValidateUUID(id string) error {
 	return uuid.Validate(id)
 }
+
+func IntToInt32(n int) int32 {
+    if n > math.MaxInt32 {
+        return math.MaxInt32
+    }
+    if n < math.MinInt32 {
+        return math.MinInt32
+    }
+    return int32(n)
+}
+

@@ -37,7 +37,7 @@ func GetOfferEditionInput(r *http.Request) (OfferEdition, error) {
 		if err != nil {
 			return OfferEdition{}, err
 		}
-		intLanguages = append(intLanguages, int32(intLang))
+		intLanguages = append(intLanguages, shared.IntToInt32(intLang))
 	}
 	duration, err := strconv.Atoi(r.FormValue("duration"))
 	if err != nil {
@@ -46,7 +46,7 @@ func GetOfferEditionInput(r *http.Request) (OfferEdition, error) {
 	return OfferEdition{
 		OfferID:     offerID,
 		Languages:   intLanguages,
-		Duration:    int32(duration),
+		Duration:    shared.IntToInt32(duration),
 	}, nil
 }
 
