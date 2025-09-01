@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/kw3a/spotted-server/internal/server/shared"
 	"github.com/kw3a/spotted-server/seeders/internal/database"
 )
 
@@ -67,11 +68,11 @@ func (cfg *SeedersConfig) seedLanguages() ([]int, error) {
 func (cfg *SeedersConfig) DeleteLanguagesStr(ctx context.Context, IDs []string) error {
 	intIDs := []int32{}
 	for _, id := range IDs {
-		intID, err := strconv.ParseInt(id, 10, 64)
+		intID, err := strconv.Atoi(id)
 		if err != nil {
 			return err
 		}
-		intIDs = append(intIDs, int32(intID))
+		intIDs = append(intIDs, shared.IntToInt32(intID))
 	}
 	return cfg.DB.DeleteLanguages(ctx, intIDs)
 }

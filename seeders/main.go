@@ -9,6 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
+	"github.com/kw3a/spotted-server/internal/server/shared"
 	"github.com/kw3a/spotted-server/seeders/internal/database"
 )
 
@@ -72,13 +73,13 @@ func main() {
 	for _, langID := range languageIDs {
 		languageProblems = append(languageProblems, database.SeedLanguageQuizParams{
 			ID:         uuid.New().String(),
-			LanguageID: int32(langID),
+			LanguageID: shared.IntToInt32(langID),
 			QuizID:     quizesID[0],
 		})
 	}
 	languageProblems = append(languageProblems, database.SeedLanguageQuizParams{
 		ID:         uuid.New().String(),
-		LanguageID: int32(languageIDs[0]),
+		LanguageID: shared.IntToInt32(languageIDs[0]),
 		QuizID:     quizesID[1],
 	})
 	
