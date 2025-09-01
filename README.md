@@ -1,20 +1,23 @@
 ## Installation
-Install judge0 locally using https://github.com/judge0/judge0/blob/master/CHANGELOG.md#deployment-procedure and judge0/docker-compose-judge0.yml
+Install judge0 locally following: https://github.com/judge0/judge0/blob/master/CHANGELOG.md#deployment-procedure and judge0/docker-compose-judge0.yml
 
-Install Mysql locally using Docker
+Development tools (gosec, staticcheck, air):
 ```shell
-docker compose . up -d
+go install github.com/securego/gosec/v2/cmd/gosec@latest
+go install honnef.co/go/tools/cmd/staticcheck@latest
+go install github.com/air-verse/air@latest
 ```
 
-Create database
+Database
 ```shell
+docker compose . up -d
 chmod +x ./scripts/migrateup.sh
 ./scripts/migrateup.sh 
 ```
 
 Run gosec tests
 ```shell
-gosec -exclude-dir=seeders ./...
+gosec ./...
 ```
 
 Run staticcheck linter
