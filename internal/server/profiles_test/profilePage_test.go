@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/kw3a/spotted-server/internal/auth"
 	"github.com/kw3a/spotted-server/internal/database"
 	"github.com/kw3a/spotted-server/internal/server/profiles"
 	"github.com/kw3a/spotted-server/internal/server/shared"
@@ -43,7 +44,7 @@ func (s *profilePageStorage) SelectSkills(ctx context.Context, userID string) ([
 }
 
 func profilePageInputFn(r *http.Request) (profiles.ProfilePageInput, error) {
-	return profiles.ProfilePageInput{}, nil
+	return profiles.ProfilePageInput{UserID: "1"}, nil
 }
 
 func TestProfilePageHandlerBadAuth(t *testing.T) {
@@ -71,10 +72,15 @@ func TestProfilePageHandlerBadInput(t *testing.T) {
 	}
 }
 
-func TestProfilePageHandlerBadStorageSelectParticipatedOffers(t *testing.T) {
+func TestProfilePageHandlerOwnerBadStorage(t *testing.T) {
+	inputFn := func(r *http.Request) (profiles.ProfilePageInput, error) {
+		return profiles.ProfilePageInput{UserID: "1"}, nil
+	}
+	authz := new(authMock)
+	authz.On("GetUser", mock.Anything).Return(auth.AuthUser{Role: auth.AuthRole, ID: "1"}, nil)
 	storage := new(profilePageStorage)
 	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, fmt.Errorf("error"))
-	handler := profiles.CreateProfilePageHandler(authRepo{}, &templates{}, storage, profilePageInputFn)
+	handler := profiles.CreateProfilePageHandler(authz, &templates{}, storage, inputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
@@ -83,13 +89,15 @@ func TestProfilePageHandlerBadStorageSelectParticipatedOffers(t *testing.T) {
 	}
 }
 
-func TestProfilePageHandlerPage2T(t *testing.T) {
+func TestProfilePageHandlerOwnerPage2T(t *testing.T) {
 	inputFn := func(r *http.Request) (profiles.ProfilePageInput, error) {
-		return profiles.ProfilePageInput{Page: 2}, nil
+		return profiles.ProfilePageInput{UserID: "1", Page: 2}, nil
 	}
+	authz := new(authMock)
+	authz.On("GetUser", mock.Anything).Return(auth.AuthUser{Role: auth.AuthRole, ID: "1"}, nil)
 	storage := new(profilePageStorage)
 	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
-	handler := profiles.CreateProfilePageHandler(authRepo{}, &invalidTemplates{}, storage, inputFn)
+	handler := profiles.CreateProfilePageHandler(authz, &invalidTemplates{}, storage, inputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
@@ -98,13 +106,15 @@ func TestProfilePageHandlerPage2T(t *testing.T) {
 	}
 }
 
-func TestProfilePageHandlerPage2(t *testing.T) {
+func TestProfilePageHandlerOwnerPage2(t *testing.T) {
 	inputFn := func(r *http.Request) (profiles.ProfilePageInput, error) {
-		return profiles.ProfilePageInput{Page: 2}, nil
+		return profiles.ProfilePageInput{UserID: "1", Page: 2}, nil
 	}
+	authz := new(authMock)
+	authz.On("GetUser", mock.Anything).Return(auth.AuthUser{Role: auth.AuthRole, ID: "1"}, nil)
 	storage := new(profilePageStorage)
 	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
-	handler := profiles.CreateProfilePageHandler(authRepo{}, &templates{}, storage, inputFn)
+	handler := profiles.CreateProfilePageHandler(authz, &templates{}, storage, inputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
@@ -113,7 +123,22 @@ func TestProfilePageHandlerPage2(t *testing.T) {
 	}
 }
 
-func TestProfilePageHandlerBadStorageGetUser(t *testing.T) {
+func TestProfilePageHandlerOwnerBadStorageGetUser(t *testing.T) {
+	authz := new(authMock)
+	authz.On("GetUser", mock.Anything).Return(auth.AuthUser{Role: auth.AuthRole, ID: "1"}, nil)
+	storage := new(profilePageStorage)
+	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
+	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, fmt.Errorf("error"))
+	handler := profiles.CreateProfilePageHandler(authz, &templates{}, storage, profilePageInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected status %d, got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestProfilePageHandlerNotOwnerBadStorageGetUser(t *testing.T) {
 	storage := new(profilePageStorage)
 	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
 	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, fmt.Errorf("error"))
@@ -126,7 +151,23 @@ func TestProfilePageHandlerBadStorageGetUser(t *testing.T) {
 	}
 }
 
-func TestProfilePageHandlerBadStorageSelectExperiences(t *testing.T) {
+func TestProfilePageHandlerOwnerBadStorageSelectExperiences(t *testing.T) {
+	authz := new(authMock)
+	authz.On("GetUser", mock.Anything).Return(auth.AuthUser{Role: auth.AuthRole, ID: "1"}, nil)
+	storage := new(profilePageStorage)
+	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
+	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, nil)
+	storage.On("SelectExperiences", mock.Anything, mock.Anything).Return([]shared.ExperienceEntry{}, fmt.Errorf("error"))
+	handler := profiles.CreateProfilePageHandler(authz, &templates{}, storage, profilePageInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, w.Code)
+	}
+}
+
+func TestProfilePageHandlerNotOwnerBadStorageSelectExperiences(t *testing.T) {
 	storage := new(profilePageStorage)
 	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
 	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, nil)
@@ -140,7 +181,24 @@ func TestProfilePageHandlerBadStorageSelectExperiences(t *testing.T) {
 	}
 }
 
-func TestProfilePageHandlerBadStorageSelectEducation(t *testing.T) {
+func TestProfilePageHandlerOwnerBadStorageSelectEducation(t *testing.T) {
+	authz := new(authMock)
+	authz.On("GetUser", mock.Anything).Return(auth.AuthUser{Role: auth.AuthRole, ID: "1"}, nil)
+	storage := new(profilePageStorage)
+	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
+	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, nil)
+	storage.On("SelectExperiences", mock.Anything, mock.Anything).Return([]shared.ExperienceEntry{}, nil)
+	storage.On("SelectEducation", mock.Anything, mock.Anything).Return([]shared.EducationEntry{}, fmt.Errorf("error"))
+	handler := profiles.CreateProfilePageHandler(authz, &templates{}, storage, profilePageInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, w.Code)
+	}
+}
+
+func TestProfilePageHandlerNotOwnerBadStorageSelectEducation(t *testing.T) {
 	storage := new(profilePageStorage)
 	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
 	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, nil)
@@ -155,7 +213,25 @@ func TestProfilePageHandlerBadStorageSelectEducation(t *testing.T) {
 	}
 }
 
-func TestProfilePageHandlerBadStorageSelectSkills(t *testing.T) {
+func TestProfilePageHandlerOwnerBadStorageSelectSkills(t *testing.T) {
+	authz := new(authMock)
+	authz.On("GetUser", mock.Anything).Return(auth.AuthUser{Role: auth.AuthRole, ID: "1"}, nil)
+	storage := new(profilePageStorage)
+	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
+	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, nil)
+	storage.On("SelectExperiences", mock.Anything, mock.Anything).Return([]shared.ExperienceEntry{}, nil)
+	storage.On("SelectEducation", mock.Anything, mock.Anything).Return([]shared.EducationEntry{}, nil)
+	storage.On("SelectSkills", mock.Anything, mock.Anything).Return([]shared.SkillEntry{}, fmt.Errorf("error"))
+	handler := profiles.CreateProfilePageHandler(authz, &templates{}, storage, profilePageInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, w.Code)
+	}
+}
+
+func TestProfilePageHandlerNotOwnerBadStorageSelectSkills(t *testing.T) {
 	storage := new(profilePageStorage)
 	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
 	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, nil)
@@ -171,7 +247,26 @@ func TestProfilePageHandlerBadStorageSelectSkills(t *testing.T) {
 	}
 }
 
-func TestProfilePageHandlerBadStorageSelectLinks(t *testing.T) {
+func TestProfilePageHandlerOwnerBadStorageSelectLinks(t *testing.T) {
+	authz := new(authMock)
+	authz.On("GetUser", mock.Anything).Return(auth.AuthUser{Role: auth.AuthRole, ID: "1"}, nil)
+	storage := new(profilePageStorage)
+	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
+	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, nil)
+	storage.On("SelectExperiences", mock.Anything, mock.Anything).Return([]shared.ExperienceEntry{}, nil)
+	storage.On("SelectEducation", mock.Anything, mock.Anything).Return([]shared.EducationEntry{}, nil)
+	storage.On("SelectSkills", mock.Anything, mock.Anything).Return([]shared.SkillEntry{}, nil)
+	storage.On("SelectLinks", mock.Anything, mock.Anything).Return([]shared.Link{}, fmt.Errorf("error"))
+	handler := profiles.CreateProfilePageHandler(authz, &templates{}, storage, profilePageInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, w.Code)
+	}
+}
+
+func TestProfilePageHandlerNotOwnerBadStorageSelectLinks(t *testing.T) {
 	storage := new(profilePageStorage)
 	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
 	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, nil)
@@ -188,7 +283,26 @@ func TestProfilePageHandlerBadStorageSelectLinks(t *testing.T) {
 	}
 }
 
-func TestProfilePageHandlerBadTemplate(t *testing.T) {
+func TestProfilePageHandlerOwnerBadTemplate(t *testing.T) {
+	authz := new(authMock)
+	authz.On("GetUser", mock.Anything).Return(auth.AuthUser{Role: auth.AuthRole, ID: "1"}, nil)
+	storage := new(profilePageStorage)
+	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
+	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, nil)
+	storage.On("SelectExperiences", mock.Anything, mock.Anything).Return([]shared.ExperienceEntry{}, nil)
+	storage.On("SelectEducation", mock.Anything, mock.Anything).Return([]shared.EducationEntry{}, nil)
+	storage.On("SelectSkills", mock.Anything, mock.Anything).Return([]shared.SkillEntry{}, nil)
+	storage.On("SelectLinks", mock.Anything, mock.Anything).Return([]shared.Link{}, nil)
+	handler := profiles.CreateProfilePageHandler(authz, &invalidTemplates{}, storage, profilePageInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, w.Code)
+	}
+}
+
+func TestProfilePageHandlerNotOwnerBadTemplate(t *testing.T) {
 	storage := new(profilePageStorage)
 	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
 	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, nil)
@@ -205,7 +319,25 @@ func TestProfilePageHandlerBadTemplate(t *testing.T) {
 	}
 }
 
-func TestProfilePageHandler(t *testing.T) {
+func TestProfilePageHandlerOwner(t *testing.T) {
+	authz := new(authMock)
+	authz.On("GetUser", mock.Anything).Return(auth.AuthUser{Role: auth.AuthRole, ID: "1"}, nil)
+	storage := new(profilePageStorage)
+	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
+	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, nil)
+	storage.On("SelectExperiences", mock.Anything, mock.Anything).Return([]shared.ExperienceEntry{}, nil)
+	storage.On("SelectEducation", mock.Anything, mock.Anything).Return([]shared.EducationEntry{}, nil)
+	storage.On("SelectSkills", mock.Anything, mock.Anything).Return([]shared.SkillEntry{}, nil)
+	storage.On("SelectLinks", mock.Anything, mock.Anything).Return([]shared.Link{}, nil)
+	handler := profiles.CreateProfilePageHandler(authz, &templates{}, storage, profilePageInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
+	}
+}
+func TestProfilePageHandlerNotOwner(t *testing.T) {
 	storage := new(profilePageStorage)
 	storage.On("SelectParticipatedOffers", mock.Anything, mock.Anything, mock.Anything).Return([]shared.Offer{}, nil)
 	storage.On("GetUser", mock.Anything, mock.Anything).Return(database.User{}, nil)

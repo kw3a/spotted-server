@@ -66,64 +66,67 @@ func CreateProfilePageHandler(
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		participatedOffers, err := storage.SelectParticipatedOffers(r.Context(), input.UserID, input.Page)
+		renderPage := "profilePage"
+		renderList:= "participationList"
+		data := ProfilePageData{}
+		data.NextPage = input.Page + 1
+		data.Owner = user.ID == input.UserID
+		if data.Owner {
+			participatedOffers, err := storage.SelectParticipatedOffers(r.Context(), input.UserID, input.Page)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			data.Participations = participatedOffers
+			if input.Page > 1 {
+				if err = templ.Render(w, renderList, data); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+				}
+				return
+			}
+		}
+		dbProfile, err := storage.GetUser(r.Context(), input.UserID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		experiences, err := storage.SelectExperiences(r.Context(), input.UserID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		toRender := "profilePage"
-		data := ProfilePageData{}
-		data.NextPage = input.Page + 1
-		if input.Page > 1 {
-			toRender = "participationList"
-			data.Participations = participatedOffers
-		} else {
-			dbProfile, err := storage.GetUser(r.Context(), input.UserID)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			experiences, err := storage.SelectExperiences(r.Context(), input.UserID)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			education, err := storage.SelectEducation(r.Context(), input.UserID)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			skills, err := storage.SelectSkills(r.Context(), input.UserID)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			links, err := storage.SelectLinks(r.Context(), input.UserID)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			profile := auth.AuthUser{
-				ID:          dbProfile.ID,
-				Name:        dbProfile.Name,
-				ImageURL:    dbProfile.ImageUrl,
-				Description: dbProfile.Description,
-				Email:       dbProfile.Email,
-				Cell:        dbProfile.Number,
-			}
-			data = ProfilePageData{
-				User:           user,
-				Profile:        profile,
-				Links:          links,
-				Experiences:    experiences,
-				Education:      education,
-				Skills:         skills,
-				Participations: participatedOffers,
-				Owner:          profile.ID == user.ID,
-				NextPage:       input.Page + 1,
-			}
+		education, err := storage.SelectEducation(r.Context(), input.UserID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		if err = templ.Render(w, toRender, data); err != nil {
+		skills, err := storage.SelectSkills(r.Context(), input.UserID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		links, err := storage.SelectLinks(r.Context(), input.UserID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		profile := auth.AuthUser{
+			ID:          dbProfile.ID,
+			Name:        dbProfile.Name,
+			ImageURL:    dbProfile.ImageUrl,
+			Description: dbProfile.Description,
+			Email:       dbProfile.Email,
+			Cell:        dbProfile.Number,
+		}
+		data.User = user
+		data.Profile = profile
+		data.Links = links
+		data.Experiences = experiences
+		data.Education = education
+		data.Skills = skills
+		data.NextPage = input.Page + 1
+
+		if err = templ.Render(w, renderPage, data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
