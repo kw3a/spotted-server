@@ -28,7 +28,7 @@ func (q *Queries) ArchiveOffer(ctx context.Context, arg ArchiveOfferParams) erro
 }
 
 const getOffer = `-- name: GetOffer :one
-SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name
+SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name, company.image_url as company_image_url
 FROM offer
 JOIN company ON offer.company_id = company.id
 WHERE offer.id = ?
@@ -36,18 +36,19 @@ LIMIT 1
 `
 
 type GetOfferRow struct {
-	ID           string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	Title        string
-	About        string
-	Requirements string
-	Benefits     string
-	Status       int32
-	MinWage      int32
-	MaxWage      int32
-	CompanyID    string
-	CompanyName  string
+	ID              string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Title           string
+	About           string
+	Requirements    string
+	Benefits        string
+	Status          int32
+	MinWage         int32
+	MaxWage         int32
+	CompanyID       string
+	CompanyName     string
+	CompanyImageUrl string
 }
 
 func (q *Queries) GetOffer(ctx context.Context, id string) (GetOfferRow, error) {
@@ -66,6 +67,7 @@ func (q *Queries) GetOffer(ctx context.Context, id string) (GetOfferRow, error) 
 		&i.MaxWage,
 		&i.CompanyID,
 		&i.CompanyName,
+		&i.CompanyImageUrl,
 	)
 	return i, err
 }
@@ -98,7 +100,7 @@ func (q *Queries) GetOfferByQuiz(ctx context.Context, id string) (Offer, error) 
 }
 
 const getOfferByUser = `-- name: GetOfferByUser :one
-SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name
+SELECT offer.id, offer.created_at, offer.updated_at, offer.title, offer.about, offer.requirements, offer.benefits, offer.status, offer.min_wage, offer.max_wage, offer.company_id, company.name as company_name, company.image_url as company_image_url
 FROM offer
 JOIN company ON offer.company_id = company.id
 JOIN user ON company.user_id = user.id
@@ -112,18 +114,19 @@ type GetOfferByUserParams struct {
 }
 
 type GetOfferByUserRow struct {
-	ID           string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	Title        string
-	About        string
-	Requirements string
-	Benefits     string
-	Status       int32
-	MinWage      int32
-	MaxWage      int32
-	CompanyID    string
-	CompanyName  string
+	ID              string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Title           string
+	About           string
+	Requirements    string
+	Benefits        string
+	Status          int32
+	MinWage         int32
+	MaxWage         int32
+	CompanyID       string
+	CompanyName     string
+	CompanyImageUrl string
 }
 
 func (q *Queries) GetOfferByUser(ctx context.Context, arg GetOfferByUserParams) (GetOfferByUserRow, error) {
@@ -142,6 +145,7 @@ func (q *Queries) GetOfferByUser(ctx context.Context, arg GetOfferByUserParams) 
 		&i.MaxWage,
 		&i.CompanyID,
 		&i.CompanyName,
+		&i.CompanyImageUrl,
 	)
 	return i, err
 }

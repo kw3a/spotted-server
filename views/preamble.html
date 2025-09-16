@@ -21,12 +21,13 @@
         <h1 class="font-bold text-3xl text-white tracking-wide text-shadow-lg">{{.Offer.Title}}</h1>
         <div class="flex flex-row text-shark-50 items-center bg-shark-900/50 rounded-xl p-4">
           <div class="w-1/2 flex">
-            <img class="border border-gray-700 hover:border-white cursor-pointer rounded-md transition-all duration-300"
+            <img 
+              class="border border-gray-700 aspect-square object-cover transition-all duration-300 hover:border-white cursor-pointer"
               {{if .Offer.CompanyImageURL}} src="{{.Offer.CompanyImageURL}}" {{else}} src="/public/company.svg" {{end}}
               width="60" height="60" 
               hx-get="/companies/{{.Offer.CompanyID}}" hx-boost="true" hx-push-url="true" hx-target="body"
             />
-            <strong class="font-bold text-white ml-2">{{.Offer.CompanyName}}</strong>
+            <strong class="font-bold text-white ml-2 text-xl">{{.Offer.CompanyName}}</strong>
           </div>
           <p class="w-1/2 text-green-200 flex items-center justify-end font-semibold">
             {{.Offer.MinWage}} - {{.Offer.MaxWage}}

@@ -1,0 +1,8 @@
+-- +goose Up
+ALTER TABLE example 
+MODIFY COLUMN INPUT TEXT;
+
+ALTER TABLE example
+MODIFY COLUMN OUTPUT TEXT;
+
+-- +goose Down

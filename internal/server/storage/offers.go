@@ -326,15 +326,16 @@ func (mysql *MysqlStorage) SelectOfferByUser(ctx context.Context, ID string, use
 	}
 	relativeTime := RelativeTime(dbQuiz.CreatedAt)
 	return shared.Offer{
-		ID:           dbQuiz.ID,
-		Title:        dbQuiz.Title,
-		About:        dbQuiz.About,
-		Status:       dbQuiz.Status,
-		CompanyName:  dbQuiz.CompanyName,
-		CompanyID:    dbQuiz.CompanyID,
-		MinWage:      dbQuiz.MinWage,
-		MaxWage:      dbQuiz.MaxWage,
-		RelativeTime: relativeTime,
+		ID:              dbQuiz.ID,
+		Title:           dbQuiz.Title,
+		About:           dbQuiz.About,
+		Status:          dbQuiz.Status,
+		CompanyName:     dbQuiz.CompanyName,
+		CompanyID:       dbQuiz.CompanyID,
+		CompanyImageURL: dbQuiz.CompanyImageUrl,
+		MinWage:         dbQuiz.MinWage,
+		MaxWage:         dbQuiz.MaxWage,
+		RelativeTime:    relativeTime,
 	}, nil
 }
 
@@ -361,17 +362,18 @@ func (mysql *MysqlStorage) SelectOffer(ctx context.Context, ID string) (shared.O
 	}
 	relativeTime := RelativeTime(dbQuiz.CreatedAt)
 	return shared.Offer{
-		ID:           dbQuiz.ID,
-		Title:        dbQuiz.Title,
-		About:        dbQuiz.About,
-		Requirements: dbQuiz.Requirements,
-		Benefits:     dbQuiz.Benefits,
-		Status:       dbQuiz.Status,
-		CompanyName:  dbQuiz.CompanyName,
-		CompanyID:    dbQuiz.CompanyID,
-		MinWage:      dbQuiz.MinWage,
-		MaxWage:      dbQuiz.MaxWage,
-		RelativeTime: relativeTime,
+		ID:              dbQuiz.ID,
+		Title:           dbQuiz.Title,
+		About:           dbQuiz.About,
+		Requirements:    dbQuiz.Requirements,
+		Benefits:        dbQuiz.Benefits,
+		Status:          dbQuiz.Status,
+		CompanyName:     dbQuiz.CompanyName,
+		CompanyID:       dbQuiz.CompanyID,
+		CompanyImageURL: dbQuiz.CompanyImageUrl,
+		MinWage:         dbQuiz.MinWage,
+		MaxWage:         dbQuiz.MaxWage,
+		RelativeTime:    relativeTime,
 	}, nil
 }
 

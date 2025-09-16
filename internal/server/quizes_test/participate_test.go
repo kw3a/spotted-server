@@ -114,7 +114,7 @@ func TestParticipateHandler(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Error("expected ok")
 	}
-	if w.Header().Get("HX-Redirect") != "/quizzes/1" {
+	if w.Header().Get("HX-Redirect") != "/quizes/1" {
 		t.Error("invalid redirect")
 	}
 }

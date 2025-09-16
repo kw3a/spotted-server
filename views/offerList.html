@@ -15,34 +15,33 @@
     {{template "navBar" .User}}
     <div class="flex flex-row justify-center overflow-y-auto">
       <div class="w-full md:w-3/4 lg:w-1/2 flex flex-col gap-8 mt-8 mb-8">
-          <form
-            id="search-field"
-            hx-get="/"
-            hx-target="body"
-            hx-boost="true"
-            hx-push-url="true"
-            class="inline-block relative w-full drop-shadow-lg"
+        <form
+          id="search-field"
+          hx-get="/"
+          hx-target="body"
+          hx-boost="true"
+          hx-push-url="true"
+          class="inline-block relative w-full drop-shadow-lg"
+        >
+          <div
+            class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none"
           >
-            <div
-              class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none"
-            >
-              <img
-                src="/public/find.svg"
-                alt="search icon"
-                width="20"
-                height="20"
-              />
-            </div>
-            <input
-              id="f-query"
-              type="text"
-              name="q"
-              class="bg-white ps-10 py-2 rounded-lg text-black block w-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition placeholder-gray-400"
-              placeholder="Buscar publicaciones..."
-              {{if .Search}}value="{{.Search}}"{{end}}
+            <img
+              src="/public/find.svg"
+              alt="search icon"
+              width="20"
+              height="20"
             />
-          </form>
-        <h1 class="text-white text-center text-2xl font-bold tracking-wide mb-2">Publicaciones</h1>
+          </div>
+          <input
+            id="f-query"
+            type="text"
+            name="q"
+            class="bg-white ps-10 py-2 rounded-lg text-black block w-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition placeholder-gray-400"
+            placeholder="Buscar publicaciones..."
+            {{if .Search}}value="{{.Search}}"{{end}}
+          />
+        </form>
         <div class="flex flex-col space-y-6">
           {{template "offerList" .}}
         </div>

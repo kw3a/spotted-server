@@ -95,7 +95,7 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 	})
 
 	r.With(authNMiddleware).With(authRMiddleware).Group(func(r chi.Router) {
-		r.Get("/quizzes/{quizID}", app.QuizPageHandler())
+		r.Get("/quizes/{quizID}", app.QuizPageHandler())
 		r.Get("/problems", app.ProblemsHandler())
 		r.Get("/examples", app.ExamplesHandler())
 		r.Get("/source", app.LastSrcHandler())

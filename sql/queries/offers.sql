@@ -1,12 +1,12 @@
 -- name: GetOffer :one
-SELECT offer.*, company.name as company_name
+SELECT offer.*, company.name as company_name, company.image_url as company_image_url
 FROM offer
 JOIN company ON offer.company_id = company.id
 WHERE offer.id = ?
 LIMIT 1;
 
 -- name: GetOfferByUser :one
-SELECT offer.*, company.name as company_name
+SELECT offer.*, company.name as company_name, company.image_url as company_image_url
 FROM offer
 JOIN company ON offer.company_id = company.id
 JOIN user ON company.user_id = user.id

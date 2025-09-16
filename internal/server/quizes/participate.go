@@ -42,7 +42,7 @@ func CreateParticipateHandler(storage ParticipationStorage, authService shared.A
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		w.Header().Set("HX-Redirect", "/quizzes/"+input.QuizID)
+		w.Header().Set("HX-Redirect", "/quizes/"+input.QuizID)
 		w.WriteHeader(http.StatusOK)
 	}
 }

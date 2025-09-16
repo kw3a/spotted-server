@@ -30,7 +30,7 @@ func (cfg *SeedersConfig) seedQuizes(authors []string) ([]string, error) {
 			return nil, err
 		}
 	}
-	fmt.Println("Quizzes seeded successfully")
+	fmt.Println("Quizes seeded successfully")
 	if err := SaveIDsToFile(IDs, "to_delete/quiz.txt"); err != nil {
 		return nil, err
 	}
