@@ -2,6 +2,7 @@ package offers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/kw3a/spotted-server/internal/auth"
@@ -15,22 +16,30 @@ type OfferListData struct {
 	NextPage int32
 }
 
+const (
+	queryUpperLimit = 30
+	errorQueryLimit = "el límite máximo es de 30 caracteres"
+)
+
 type OfferListStorage interface {
 	SelectOffers(ctx context.Context, params shared.OfferQueryParams) ([]shared.Offer, error)
 }
 
-func GetJobOffersParams(r *http.Request) shared.OfferQueryParams {
+func GetListParams(r *http.Request) (shared.OfferQueryParams, error) {
 	params := shared.OfferQueryParams{}
 	q := r.URL.Query()
 	query := q.Get("q")
+	if len(query) > queryUpperLimit {
+		return shared.OfferQueryParams{}, fmt.Errorf(errorQueryLimit)
+	}
 	if query != "" {
 		params.Query = query
 	}
 	params.Page = shared.PageParam(r)
-	return params
+	return params, nil
 }
 
-type OfferListParamsFn func(r *http.Request) shared.OfferQueryParams
+type OfferListParamsFn func(r *http.Request) (shared.OfferQueryParams, error)
 
 func CreateOfferListHandler(
 	paramsFn OfferListParamsFn,
@@ -44,7 +53,11 @@ func CreateOfferListHandler(
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		params := paramsFn(r)
+		params, err := paramsFn(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		offers, err := storage.SelectOffers(r.Context(), params)
 		if err != nil {
 			http.Error(w, "can't find offers", http.StatusInternalServerError)
@@ -57,7 +70,7 @@ func CreateOfferListHandler(
 		}
 		if params.Query != "" {
 			data.Search = params.Query
-		} 		
+		}
 		toRender := "offerListPage"
 		if params.Page > 1 {
 			toRender = "offerList"

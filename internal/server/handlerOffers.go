@@ -8,7 +8,7 @@ import (
 
 func (DI *App) JobOffersHandler() http.HandlerFunc {
 	return offers.CreateOfferListHandler(
-		offers.GetJobOffersParams,
+		offers.GetListParams,
 		DI.AuthService,
 		DI.Storage,
 		DI.Templ,
