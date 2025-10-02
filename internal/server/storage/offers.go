@@ -551,14 +551,14 @@ func RelativeTime(t time.Time) string {
 	if duration < 0 {
 		duration = -duration
 		if duration < time.Minute {
-			return "in a few seconds"
+			return "en unos segundos"
 		} else if duration < time.Hour {
-			return fmt.Sprintf("in %d minutes", int(duration.Minutes()))
+			return fmt.Sprintf("en %d minutos", int(duration.Minutes()))
 		} else if duration < 24*time.Hour {
-			return fmt.Sprintf("in %d hours", int(duration.Hours()))
+			return fmt.Sprintf("en %d horas", int(duration.Hours()))
 		} else {
 			days := int(duration.Hours() / 24)
-			return fmt.Sprintf("in %d days", days)
+			return fmt.Sprintf("en %d días", days)
 		}
 	}
 	if duration < time.Minute {
