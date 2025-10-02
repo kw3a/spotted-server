@@ -6,6 +6,9 @@ WHERE user.id = ?
 ORDER BY skill.created_at ASC
 LIMIT 10;
 
+-- name: CountSkills :one
+SELECT COUNT(*) AS count FROM skill WHERE user_id = ?;
+
 -- name: InsertSkill :exec
 INSERT INTO skill
 (id, user_id, name )

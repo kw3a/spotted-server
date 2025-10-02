@@ -82,6 +82,7 @@ func GetEducationDeleteInput(r *http.Request) (EducationDeleteInput, error) {
 }
 
 type EducationStorage interface {
+	CountEducation(ctx context.Context, userID string) (int32, error)
 	RegisterEducation(ctx context.Context, educationID, userID, institution, degree string, start time.Time, end sql.NullTime) error
 	DeleteEducation(ctx context.Context, userID, educationID string) error
 }
@@ -103,11 +104,21 @@ func CreateRegisterEducationHandler(templ shared.TemplatesRepo, auth shared.Auth
 			return
 		}
 		educationID := uuid.New().String()
-		if err := storage.RegisterEducation(r.Context(), educationID, user.ID, input.Institution, input.Degree, input.Start, input.End); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		count, err := storage.CountEducation(r.Context(), user.ID)
+		if err != nil || count >= maxGroupSize {
+			inputErr.DegreeError = errGroupSize(maxGroupSize)
+		} else {
+			if err := storage.RegisterEducation(r.Context(), educationID, user.ID, input.Institution, input.Degree, input.Start, input.End); err != nil {
+				inputErr.DegreeError = errUnexpected
+			}
+		}
+		if inputErr.DegreeError != "" {
+			if err := templ.Render(w, "edErrors", inputErr); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
-		data := shared.EducationEntry{
+		data := shared.EducationEntry {
 			Institution: input.Institution,
 			Degree:      input.Degree,
 			StartDate:   shared.DateSpanishFormat(sql.NullTime{Time: input.Start, Valid: true}),

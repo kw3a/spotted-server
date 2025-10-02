@@ -82,6 +82,7 @@ func GetExperienceDeleteInput(r *http.Request) (ExperienceDeleteInput, error) {
 }
 
 type ExperienceStorage interface {
+	CountExperience(ctx context.Context, userID string) (int32, error)
 	RegisterExperience(
 		ctx context.Context,
 		experienceID, userID, company, title string,
@@ -109,16 +110,26 @@ func CreateRegisterExperienceHandler(templ shared.TemplatesRepo, auth shared.Aut
 			return
 		}
 		experienceID := uuid.New().String()
-		if err := storage.RegisterExperience(
-			r.Context(),
-			experienceID,
-			user.ID,
-			input.Company,
-			input.Title,
-			input.Start,
-			input.End,
-		); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		count, err := storage.CountExperience(r.Context(), user.ID)
+		if err != nil || count >= maxGroupSize {
+			inputErr.TitleError = errGroupSize(maxGroupSize)
+		} else {
+			if err := storage.RegisterExperience(
+				r.Context(),
+				experienceID,
+				user.ID,
+				input.Company,
+				input.Title,
+				input.Start,
+				input.End,
+			); err != nil {
+				inputErr.TitleError = errUnexpected
+			}
+		}
+		if inputErr.TitleError != "" {
+			if err := templ.Render(w, "expErrors", inputErr); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 		data := shared.ExperienceEntry{

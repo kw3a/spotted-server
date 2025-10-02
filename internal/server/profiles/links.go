@@ -39,7 +39,7 @@ func GetLinkRegisterInput(r *http.Request) (LinkRegisterInput, LinkRegisterError
 	errFound := false
 	inputErrors := LinkRegisterError{}
 	rawURL := r.FormValue("url")
-	if _, err := url.Parse(rawURL); err != nil || rawURL == "" || len(rawURL) > 256 {
+	if u, err := url.Parse(rawURL); err != nil || u.Scheme == "" || u.Host == "" || len(rawURL) > 256 {
 		errFound = true
 		inputErrors.URLError = errInvalidURL
 	}
@@ -65,6 +65,7 @@ func GetLinkDeleteInput(r *http.Request) (LinkDeleteInput, error) {
 }
 
 type LinkStorage interface {
+	CountLinks(ctx context.Context, userID string) (int32, error)
 	RegisterLink(ctx context.Context, linkID, userID, url, name string) error
 	DeleteLink(ctx context.Context, userID, linkID string) error
 }
@@ -86,8 +87,15 @@ func CreateRegisterLinkHandler(templ shared.TemplatesRepo, auth shared.AuthRep, 
 			return
 		}
 		linkID := uuid.New().String()
-		if err := storage.RegisterLink(r.Context(), linkID, user.ID, input.URL, input.Name); err != nil {
-			inputErr.NameError = errUnexpected
+		count, err := storage.CountLinks(r.Context(), user.ID)
+		if err != nil || count >= maxGroupSize {
+			inputErr.NameError = errGroupSize(maxGroupSize)
+		} else {
+			if err := storage.RegisterLink(r.Context(), linkID, user.ID, input.URL, input.Name); err != nil {
+				inputErr.NameError = errUnexpected
+			}
+		}
+		if inputErr.NameError != "" {
 			if err := templ.Render(w, "linkErrors", inputErr); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}

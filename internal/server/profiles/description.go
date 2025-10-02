@@ -26,7 +26,7 @@ func GetDescUpdateInput(r *http.Request) (DescUpdateInput, DescUpdateErrors, boo
 	res := DescUpdateInput{}
 
 	description := r.FormValue("description")
-	if len(description) > 164 || len(description) < 1 {
+	if len(description) > 128 || len(description) < 5 {
 		inputErrors.DescrError = shared.ErrLength(5, 128)
 		errFound = true
 		res.Description = ""

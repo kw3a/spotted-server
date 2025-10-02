@@ -9,6 +9,17 @@ import (
 	"context"
 )
 
+const countLinks = `-- name: CountLinks :one
+SELECT COUNT(*) AS count FROM link WHERE user_id = ?
+`
+
+func (q *Queries) CountLinks(ctx context.Context, userID string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countLinks, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const deleteLink = `-- name: DeleteLink :exec
 DELETE FROM link
 WHERE id = ? and user_id = ?

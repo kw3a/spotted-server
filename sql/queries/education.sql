@@ -10,6 +10,9 @@ INSERT INTO education
 (id, user_id, institution, degree, start_date, end_date)
 VALUES (?, ?, ?, ?, ?, ?);
 
+-- name: CountEducation :one
+SELECT COUNT(*) AS count FROM education WHERE user_id = ?;
+
 -- name: DeleteEducation :exec
 DELETE FROM education
 WHERE id = ? AND user_id = ?;

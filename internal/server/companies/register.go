@@ -12,7 +12,7 @@ import (
 
 const (
 	errFormSize     = "La solicitud excede el tamaño máximo de 10 MB"
-	errURLFormat    = "URL inválido"
+	errURLFormat    = "URL inválida"
 	errImageFormat  = "Formato de imagen inválido"
 	errImageMissing = "Debe seleccionar una imagen"
 	errImageSave    = "La imagen no se pudo guardar"
@@ -54,13 +54,15 @@ func GetRegisterCompanyInput(
 		errFound = true
 	}
 	website := r.FormValue("website")
-	_, err = url.Parse(website)
-	if err != nil {
-		inputErrors.WebsiteError = errURLFormat
-		errFound = true
-	} else if len(website) > 256 {
-		inputErrors.WebsiteError = shared.ErrLength(9, 256)
-		errFound = true
+	if website != "" {
+		u, err := url.Parse(website)
+		if err != nil || u.Scheme == "" || u.Host == "" {
+			inputErrors.WebsiteError = errURLFormat
+			errFound = true
+		} else if len(website) > 256 {
+			inputErrors.WebsiteError = shared.ErrLength(9, 256)
+			errFound = true
+		}
 	}
 	image, _, err := r.FormFile("image")
 	if err != nil {

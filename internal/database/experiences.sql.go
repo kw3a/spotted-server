@@ -11,6 +11,17 @@ import (
 	"time"
 )
 
+const countExperience = `-- name: CountExperience :one
+SELECT COUNT(*) AS count FROM experience WHERE user_id = ?
+`
+
+func (q *Queries) CountExperience(ctx context.Context, userID string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countExperience, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const deleteExperience = `-- name: DeleteExperience :exec
 DELETE FROM experience
 WHERE id = ? AND user_id = ?

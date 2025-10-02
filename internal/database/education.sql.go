@@ -11,6 +11,17 @@ import (
 	"time"
 )
 
+const countEducation = `-- name: CountEducation :one
+SELECT COUNT(*) AS count FROM education WHERE user_id = ?
+`
+
+func (q *Queries) CountEducation(ctx context.Context, userID string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countEducation, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const deleteEducation = `-- name: DeleteEducation :exec
 DELETE FROM education
 WHERE id = ? AND user_id = ?

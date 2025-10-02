@@ -94,13 +94,13 @@
                           </div>
                         </summary>
                         <div class="flex flex-row divide-x divide-sky-600">
-                          <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
+                          <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg overflow-x-auto">
                             <span class="text-white px-2">ENTRADA</span>
                             <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{$testCase.Input}}</pre>
                           </div>
                           <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
                             <span class="text-white px-2">SALIDA ESPERADA</span>
-                            <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{$testCase.Output}}</pre>
+                            <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg overflow-x-auto">{{$testCase.Output}}</pre>
                           </div>
                         </div>
                       </details>
@@ -234,7 +234,7 @@
       </summary>
       <div class="w-full bg-shark-700">
         <span class="text-white px-2">SALIDA OBTENIDA</span>
-        <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{$tc.Output}}</pre>
+        <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg overflow-x-auto">{{$tc.Output}}</pre>
       </div>
     </details>
   {{end}}

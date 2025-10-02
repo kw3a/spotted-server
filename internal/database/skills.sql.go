@@ -9,6 +9,17 @@ import (
 	"context"
 )
 
+const countSkills = `-- name: CountSkills :one
+SELECT COUNT(*) AS count FROM skill WHERE user_id = ?
+`
+
+func (q *Queries) CountSkills(ctx context.Context, userID string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countSkills, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const deleteSkill = `-- name: DeleteSkill :exec
 DELETE FROM skill
 WHERE id = ? AND user_id = ?

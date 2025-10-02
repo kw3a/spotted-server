@@ -2,6 +2,7 @@ package profiles
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -20,6 +21,12 @@ type SkillRegisterErrors struct {
 
 type SkillDeleteInput struct {
 	SkillID string
+}
+
+const maxGroupSize = 10
+
+func errGroupSize(limit int32) string {
+	return fmt.Sprintf("no se pueden superar los %v elementos", limit)
 }
 
 func GetSkillRegisterInput(r *http.Request) (SkillRegisterInput, SkillRegisterErrors, bool) {
@@ -46,6 +53,7 @@ func GetSkillDeleteInput(r *http.Request) (SkillDeleteInput, error) {
 }
 
 type SkillStorage interface {
+	CountSkills(ctx context.Context, userID string) (int32, error)
 	RegisterSkill(ctx context.Context, skillID, userID, name string) error
 	DeleteSkill(ctx context.Context, userID, skillID string) error
 }
@@ -67,8 +75,15 @@ func CreateRegisterSkillHandler(templ shared.TemplatesRepo, authz shared.AuthRep
 			return
 		}
 		skillID := uuid.New().String()
-		if err := storage.RegisterSkill(r.Context(), skillID, user.ID, input.Name); err != nil {
-			inputErrors.NameError = errUnexpected
+		count, err := storage.CountSkills(r.Context(), user.ID)
+		if err != nil || count >= maxGroupSize {
+			inputErrors.NameError = errGroupSize(maxGroupSize)
+		} else {
+			if err := storage.RegisterSkill(r.Context(), skillID, user.ID, input.Name); err != nil {
+				inputErrors.NameError = errUnexpected
+			}
+		}
+		if inputErrors.NameError != "" {
 			if err := templ.Render(w, "skillErrors", inputErrors); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}

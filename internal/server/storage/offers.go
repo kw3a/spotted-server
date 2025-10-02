@@ -482,17 +482,18 @@ func (mysql *MysqlStorage) GetOffersByUser(ctx context.Context, userID string, p
 	for _, offer := range offers {
 		relativeTime := RelativeTime(offer.CreatedAt)
 		res = append(res, shared.Offer{
-			ID:           offer.ID,
-			Title:        offer.Title,
-			About:        offer.About,
-			Requirements: offer.Requirements,
-			Benefits:     offer.Benefits,
-			Status:       offer.Status,
-			CompanyName:  offer.CompanyName,
-			CompanyID:    offer.CompanyID,
-			MinWage:      offer.MinWage,
-			MaxWage:      offer.MaxWage,
-			RelativeTime: relativeTime,
+			ID:              offer.ID,
+			Title:           offer.Title,
+			About:           offer.About,
+			Requirements:    offer.Requirements,
+			Benefits:        offer.Benefits,
+			Status:          offer.Status,
+			CompanyName:     offer.CompanyName,
+			CompanyID:       offer.CompanyID,
+			CompanyImageURL: offer.CompanyImageUrl,
+			MinWage:         offer.MinWage,
+			MaxWage:         offer.MaxWage,
+			RelativeTime:    relativeTime,
 		})
 	}
 	return res, nil

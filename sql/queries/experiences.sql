@@ -11,6 +11,9 @@ INSERT INTO experience
 (id, user_id, title, company, start_date, end_date)
 VALUES (?, ?, ?, ?, ?, ?);
 
+-- name: CountExperience :one
+SELECT COUNT(*) AS count FROM experience WHERE user_id = ?;
+
 -- name: DeleteExperience :exec
 DELETE FROM experience
 WHERE id = ? AND user_id = ?;

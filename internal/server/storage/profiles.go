@@ -10,6 +10,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	ErrGroupLimit = "el límite es de 10 elementos"
+	groupLimit    = 10
+)
+
 func (mysql *MysqlStorage) UpdateDescription(ctx context.Context, userID, description string) error {
 	return mysql.Queries.UpdateUserDescription(ctx, database.UpdateUserDescriptionParams{
 		ID:          userID,
@@ -77,6 +82,11 @@ func (mysql *MysqlStorage) DeleteSkill(ctx context.Context, userID string, skill
 	})
 }
 
+func (mysql *MysqlStorage) CountSkills(ctx context.Context, userID string) (int32, error) {
+	count, err := mysql.Queries.CountSkills(ctx, userID)
+	return int32(count), err
+}
+
 func (mysql *MysqlStorage) RegisterSkill(ctx context.Context, skillID, userID, name string) error {
 	return mysql.Queries.InsertSkill(ctx, database.InsertSkillParams{
 		ID:     skillID,
@@ -90,6 +100,11 @@ func (mysql *MysqlStorage) DeleteLink(ctx context.Context, userID string, linkID
 		ID:     linkID,
 		UserID: userID,
 	})
+}
+
+func (mysql *MysqlStorage) CountLinks(ctx context.Context, userID string) (int32, error) {
+	count, err := mysql.Queries.CountLinks(ctx, userID)
+	return int32(count), err
 }
 
 func (mysql *MysqlStorage) RegisterLink(ctx context.Context, linkID, userID, url, name string) error {
@@ -126,6 +141,11 @@ func (mysql *MysqlStorage) SelectEducation(ctx context.Context, userID string) (
 	return res, nil
 }
 
+func (mysql *MysqlStorage) CountEducation(ctx context.Context, userID string) (int32, error) {
+	count, err := mysql.Queries.CountEducation(ctx, userID)
+	return int32(count), err
+}
+
 func (mysql *MysqlStorage) SelectExperiences(ctx context.Context, userID string) ([]shared.ExperienceEntry, error) {
 	experiences, err := mysql.Queries.SelectExperience(ctx, userID)
 	res := []shared.ExperienceEntry{}
@@ -148,6 +168,11 @@ func (mysql *MysqlStorage) SelectExperiences(ctx context.Context, userID string)
 		})
 	}
 	return res, nil
+}
+
+func (mysql *MysqlStorage) CountExperience(ctx context.Context, userID string) (int32, error) {
+	count, err := mysql.Queries.CountExperience(ctx, userID)
+	return int32(count), err
 }
 
 func (mysql *MysqlStorage) SelectLinks(ctx context.Context, userID string) ([]shared.Link, error) {
@@ -186,7 +211,6 @@ func (mysql *MysqlStorage) SelectSkills(ctx context.Context, userID string) ([]s
 	}
 	return res, nil
 }
-
 
 func (mysql *MysqlStorage) CreateUser(ctx context.Context, id, nick, name, password string) error {
 	encriptedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
