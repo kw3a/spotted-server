@@ -514,17 +514,18 @@ func (mysql *MysqlStorage) SelectParticipatedOffers(ctx context.Context, userID 
 	offers := []shared.Offer{}
 	for _, dbOffer := range dbOffers {
 		offer := shared.Offer{
-			ID:           dbOffer.ID,
-			Title:        dbOffer.Title,
-			About:        dbOffer.About,
-			Requirements: dbOffer.Requirements,
-			Benefits:     dbOffer.Benefits,
-			Status:       dbOffer.Status,
-			CompanyName:  dbOffer.CompanyName,
-			CompanyID:    dbOffer.CompanyID,
-			MinWage:      dbOffer.MinWage,
-			MaxWage:      dbOffer.MaxWage,
-			RelativeTime: RelativeTime(dbOffer.CreatedAt),
+			ID:              dbOffer.ID,
+			Title:           dbOffer.Title,
+			About:           dbOffer.About,
+			Requirements:    dbOffer.Requirements,
+			Benefits:        dbOffer.Benefits,
+			Status:          dbOffer.Status,
+			CompanyName:     dbOffer.CompanyName,
+			CompanyID:       dbOffer.CompanyID,
+			CompanyImageURL: dbOffer.CompanyImageUrl,
+			MinWage:         dbOffer.MinWage,
+			MaxWage:         dbOffer.MaxWage,
+			RelativeTime:    RelativeTime(dbOffer.CreatedAt),
 		}
 		offers = append(offers, offer)
 	}

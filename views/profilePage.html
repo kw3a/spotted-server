@@ -152,10 +152,12 @@
 
 
 {{block "participationList" .}}
-{{if .Participations}}
-{{range .Participations}} {{template "offerCard" .}} {{end}}
-<div hx-get="/profile/{{.Profile.ID}}?page={{.NextPage}}" hx-trigger="revealed" hx-swap="afterend"></div>
-{{else}}
-<span class="text-center text-shark-200/50">No quedan más participaciones</span>
-{{end}}
+<div class="flex flex-col gap-4">
+  {{if .Participations}}
+  {{range .Participations}} {{template "offerCard" .}} {{end}}
+  <div hx-get="/profile/{{.Profile.ID}}?page={{.NextPage}}" hx-trigger="revealed" hx-swap="afterend"></div>
+  {{else}}
+  <span class="text-center text-shark-200/50">No quedan más participaciones</span>
+  {{end}}
+</div>
 {{end}}
