@@ -17,6 +17,11 @@ type expStorage struct {
 	mock.Mock
 }
 
+func (s *expStorage) CountExperience(ctx context.Context, userID string) (int32, error) {
+	args := s.Called(ctx, userID)
+	return int32(args.Int(0)), args.Error(1)
+}
+
 func (s *expStorage) DeleteExperience(ctx context.Context, userID string, experienceID string) error {
 	args := s.Called(ctx, userID, experienceID)
 	return args.Error(0)
@@ -81,8 +86,55 @@ func TestExpHandlerBadInput(t *testing.T) {
 	}
 }
 
-func TestExpHandlerBadStorage(t *testing.T) {
+func TestExpHandlerBadStorageCountT(t *testing.T) {
 	storage := new(expStorage)
+	storage.On("CountExperience", mock.Anything, mock.Anything).Return(0, fmt.Errorf("count error"))
+	handler := profiles.CreateRegisterExperienceHandler(&invalidTemplates{}, &authRepo{}, storage, expInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, w.Code)
+	}
+}
+
+func TestExpHandlerBadStorageCount(t *testing.T) {
+	storage := new(expStorage)
+	storage.On("CountExperience", mock.Anything, mock.Anything).Return(0, fmt.Errorf("count error"))
+	handler := profiles.CreateRegisterExperienceHandler(&templates{}, &authRepo{}, storage, expInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
+	}
+}
+
+func TestExpHandlerBadStorageRegT(t *testing.T) {
+	storage := new(expStorage)
+	storage.On("CountExperience", mock.Anything, mock.Anything).Return(0, nil)
+	storage.On(
+		"RegisterExperience",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Return(fmt.Errorf("error"))
+	handler := profiles.CreateRegisterExperienceHandler(&invalidTemplates{}, &authRepo{}, storage, expInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, w.Code)
+	}
+}
+
+func TestExpHandlerBadStorageReg(t *testing.T) {
+	storage := new(expStorage)
+	storage.On("CountExperience", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On(
 		"RegisterExperience",
 		mock.Anything,
@@ -97,13 +149,14 @@ func TestExpHandlerBadStorage(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
-	if w.Code != http.StatusInternalServerError {
-		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, w.Code)
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
 	}
 }
 
 func TestExpHandlerBadTemplate(t *testing.T) {
 	storage := new(expStorage)
+	storage.On("CountExperience", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On(
 		"RegisterExperience",
 		mock.Anything,
@@ -128,6 +181,7 @@ func TestExpHandlerBadTemplate(t *testing.T) {
 
 func TestExpHandler(t *testing.T) {
 	storage := new(expStorage)
+	storage.On("CountExperience", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On(
 		"RegisterExperience",
 		mock.Anything,
@@ -204,7 +258,7 @@ func TestExpDeleteHandler(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
-	if w.Code != http.StatusOK{
+	if w.Code != http.StatusOK {
 		t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
 	}
 }

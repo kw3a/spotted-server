@@ -69,7 +69,7 @@ VALUES (?, ?, ?, ?, ?, ?)
 type CreateTestCaseResultParams struct {
 	ID           sql.NullString
 	Status       string
-	Time         string
+	Time         int32
 	Memory       int32
 	TestCaseID   string
 	SubmissionID string
@@ -164,7 +164,7 @@ WHERE submission_id = ? and test_case_id = ?
 type UpdateTestCaseResultParams struct {
 	ID           sql.NullString
 	Status       string
-	Time         string
+	Time         int32
 	Memory       int32
 	Output       string
 	SubmissionID string

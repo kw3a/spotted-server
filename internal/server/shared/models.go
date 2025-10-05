@@ -91,7 +91,7 @@ type Problem struct {
 	Title       string
 	Description string
 	MemoryLimit int32
-	TimeLimit   float64
+	TimeLimit   int32
 	TestCases   []TestCase
 	Examples    []Example
 }
@@ -136,7 +136,7 @@ type TestCaseResult struct {
 	ID           string
 	Output       string
 	Status       string
-	Time         int64
+	Time         int32
 	Memory       int32
 	SubmissionID string
 	TestCaseID   string

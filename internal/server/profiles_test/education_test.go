@@ -17,6 +17,11 @@ type educationStorage struct {
 	mock.Mock
 }
 
+func (s *educationStorage) CountEducation(ctx context.Context, userID string) (int32, error) {
+	args := s.Called(ctx, userID)
+	return int32(args.Int(0)), args.Error(1)
+}
+
 func (s *educationStorage) DeleteEducation(ctx context.Context, userID string, educationID string) error {
 	args := s.Called(ctx, userID, educationID)
 	return args.Error(0)
@@ -81,8 +86,33 @@ func TestEdHandlerBadInput(t *testing.T) {
 	}
 }
 
-func TestEdHandlerBadStorage(t *testing.T) {
+func TestEdHandlerBadStorageCountEducationT(t *testing.T) {
 	storage := new(educationStorage)
+	storage.On("CountEducation", mock.Anything, mock.Anything).Return(0, fmt.Errorf("count error"))
+	handler := profiles.CreateRegisterEducationHandler(&invalidTemplates{}, &authRepo{}, storage, edInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, w.Code)
+	}
+}
+
+func TestEdHandlerBadStorageCountEducation(t *testing.T) {
+	storage := new(educationStorage)
+	storage.On("CountEducation", mock.Anything, mock.Anything).Return(0, fmt.Errorf("count error"))
+	handler := profiles.CreateRegisterEducationHandler(&templates{}, &authRepo{}, storage, edInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
+	}
+}
+
+func TestEdHandlerBadStorageRegisterT(t *testing.T) {
+	storage := new(educationStorage)
+	storage.On("CountEducation", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On(
 		"RegisterEducation",
 		mock.Anything,
@@ -92,8 +122,8 @@ func TestEdHandlerBadStorage(t *testing.T) {
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,
-	).Return(fmt.Errorf("error"))
-	handler := profiles.CreateRegisterEducationHandler(&templates{}, &authRepo{}, storage, edInputFn)
+	).Return(fmt.Errorf("ed register error"))
+	handler := profiles.CreateRegisterEducationHandler(&invalidTemplates{}, &authRepo{}, storage, edInputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
@@ -102,8 +132,31 @@ func TestEdHandlerBadStorage(t *testing.T) {
 	}
 }
 
+func TestEdHandlerBadStorageRegister(t *testing.T) {
+	storage := new(educationStorage)
+	storage.On("CountEducation", mock.Anything, mock.Anything).Return(0, nil)
+	storage.On(
+		"RegisterEducation",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Return(fmt.Errorf("ed register error"))
+	handler := profiles.CreateRegisterEducationHandler(&templates{}, &authRepo{}, storage, edInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
+	}
+}
+
 func TestEdHandlerBadTemplate(t *testing.T) {
 	storage := new(educationStorage)
+	storage.On("CountEducation", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On(
 		"RegisterEducation",
 		mock.Anything,
@@ -128,6 +181,7 @@ func TestEdHandlerBadTemplate(t *testing.T) {
 
 func TestEdHandler(t *testing.T) {
 	storage := new(educationStorage)
+	storage.On("CountEducation", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On(
 		"RegisterEducation",
 		mock.Anything,
@@ -204,7 +258,7 @@ func TestEdDeleteHandler(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
-	if w.Code != http.StatusOK{
+	if w.Code != http.StatusOK {
 		t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
 	}
 }

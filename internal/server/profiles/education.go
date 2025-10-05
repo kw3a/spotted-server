@@ -118,7 +118,7 @@ func CreateRegisterEducationHandler(templ shared.TemplatesRepo, auth shared.Auth
 			}
 			return
 		}
-		data := shared.EducationEntry {
+		data := shared.EducationEntry{
 			Institution: input.Institution,
 			Degree:      input.Degree,
 			StartDate:   shared.DateSpanishFormat(sql.NullTime{Time: input.Start, Valid: true}),

@@ -16,6 +16,11 @@ type skillStorage struct {
 	mock.Mock
 }
 
+func (s *skillStorage) CountSkills(ctx context.Context, userID string) (int32, error) {
+	args := s.Called(ctx, userID)
+	return int32(args.Int(0)), args.Error(1)
+}
+
 func (s *skillStorage) DeleteSkill(ctx context.Context, userID string, skillID string) error {
 	args := s.Called(ctx, userID, skillID)
 	return args.Error(0)
@@ -85,8 +90,33 @@ func TestRegisterSkillHandlerBadInput(t *testing.T) {
 	}
 }
 
-func TestRegisterSkillHandlerBadStorageT(t *testing.T) {
+func TestRegisterSkillHandlerBadStorageCountT(t *testing.T) {
 	storage := new(skillStorage)
+	storage.On("CountSkills", mock.Anything, mock.Anything).Return(0, fmt.Errorf("count error"))
+	handler := profiles.CreateRegisterSkillHandler(&invalidTemplates{}, &authRepo{}, storage, skillRegisterInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, w.Code)
+	}
+}
+
+func TestRegisterSkillHandlerBadStorageCount(t *testing.T) {
+	storage := new(skillStorage)
+	storage.On("CountSkills", mock.Anything, mock.Anything).Return(0, fmt.Errorf("count error"))
+	handler := profiles.CreateRegisterSkillHandler(&templates{}, &authRepo{}, storage, skillRegisterInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
+	}
+}
+
+func TestRegisterSkillHandlerBadStorageRegisterSkillT(t *testing.T) {
+	storage := new(skillStorage)
+	storage.On("CountSkills", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On("RegisterSkill", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(fmt.Errorf("storage error"))
 	handler := profiles.CreateRegisterSkillHandler(&invalidTemplates{}, &authRepo{}, storage, skillRegisterInputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
@@ -97,20 +127,22 @@ func TestRegisterSkillHandlerBadStorageT(t *testing.T) {
 	}
 }
 
-func TestRegisterSkillHandlerBadStorage(t *testing.T) {
+func TestRegisterSkillHandlerBadStorageRegisterSkill(t *testing.T) {
 	storage := new(skillStorage)
+	storage.On("CountSkills", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On("RegisterSkill", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(fmt.Errorf("storage error"))
 	handler := profiles.CreateRegisterSkillHandler(&templates{}, &authRepo{}, storage, skillRegisterInputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	handler(w, req)
-	if w.Code != http.StatusOK {
+	if w.Code != http.StatusOK{
 		t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
 	}
 }
 
 func TestRegisterSkillHandlerBadTemplate(t *testing.T) {
 	storage := new(skillStorage)
+	storage.On("CountSkills", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On("RegisterSkill", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	handler := profiles.CreateRegisterSkillHandler(&invalidTemplates{}, &authRepo{}, storage, skillRegisterInputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
@@ -126,6 +158,7 @@ func TestRegisterSkillHandlerBadTemplate(t *testing.T) {
 
 func TestRegisterSkillHandler(t *testing.T) {
 	storage := new(skillStorage)
+	storage.On("CountSkills", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On("RegisterSkill", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	handler := profiles.CreateRegisterSkillHandler(&templates{}, &authRepo{}, storage, skillRegisterInputFn)
 	req, _ := http.NewRequest("GET", "/", nil)

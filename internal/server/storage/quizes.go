@@ -43,15 +43,10 @@ func (mysql *MysqlStorage) GetResults(ctx context.Context, problemID, submission
 	}
 	tcResults := []shared.TestCaseResult{}
 	for _, dbExecTC := range dbTCResults {
-		dbTime, err := decimal.NewFromString(dbExecTC.Time)
-		if err != nil {
-			return []shared.TestCaseResult{}, err
-		}
-		dbTime = dbTime.Mul(decimal.NewFromInt32(1000))
 		tcResults = append(tcResults, shared.TestCaseResult{
 			Output:     dbExecTC.Output,
 			Status:     dbExecTC.Status,
-			Time:       dbTime.IntPart(),
+			Time:       dbExecTC.Time,
 			Memory:     dbExecTC.Memory,
 			TestCaseID: dbExecTC.TestCaseID,
 		},
@@ -279,9 +274,10 @@ func ToTC(dbTestCases []database.GetTestCasesRow) ([]codejudge.TestCase, error) 
 	}
 	res := []codejudge.TestCase{}
 	for _, testCase := range dbTestCases {
+		fTimeLimit := float64(testCase.TimeLimit)
 		current := codejudge.TestCase{
 			ID:             testCase.ID,
-			TimeLimit:      testCase.TimeLimit,
+			TimeLimit:      fTimeLimit / 1000,
 			MemoryLimit:    testCase.MemoryLimit,
 			Input:          testCase.Input,
 			ExpectedOutput: testCase.Output,
@@ -297,11 +293,13 @@ func (s MysqlStorage) UpdateTestCaseResult(
 	input shared.CallbackJsonInput,
 	submissionID, testCaseID string,
 ) error {
+	input.Time = input.Time.Mul(decimal.NewFromInt32(1000))
+	intTime := input.Time.IntPart()
 	return s.Queries.UpdateTestCaseResult(ctx, database.UpdateTestCaseResultParams{
 		ID:           sql.NullString{String: input.Token, Valid: true},
 		Output:       input.Stdout,
 		Status:       input.Status.Description,
-		Time:         input.Time.String(),
+		Time:         int32(intTime),
 		Memory:       input.Memory,
 		SubmissionID: submissionID,
 		TestCaseID:   testCaseID,
@@ -322,4 +320,3 @@ func (s MysqlStorage) EndQuiz(ctx context.Context, userID, quizID string) (share
 		ID: offer.ID,
 	}, nil
 }
-

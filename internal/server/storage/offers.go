@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/kw3a/spotted-server/internal/database"
 	"github.com/kw3a/spotted-server/internal/server/shared"
-	"github.com/shopspring/decimal"
 )
 
 const (
@@ -204,16 +203,11 @@ func (mysql *MysqlStorage) batchTCResults(
 	}
 	res := []shared.TestCaseResult{}
 	for _, dbTCResult := range dbTCResults {
-		dbTime, err := decimal.NewFromString(dbTCResult.Time)
-		if err != nil {
-			return []shared.TestCaseResult{}, err
-		}
-		dbTime = dbTime.Mul(decimal.NewFromInt32(1000))
 		current := shared.TestCaseResult{
 			ID:           dbTCResult.ID.String,
 			Output:       dbTCResult.Output,
 			Status:       dbTCResult.Status,
-			Time:         dbTime.IntPart(),
+			Time:         dbTCResult.Time,
 			Memory:       dbTCResult.Memory,
 			TestCaseID:   dbTCResult.TestCaseID,
 			SubmissionID: dbTCResult.SubmissionID,
@@ -284,7 +278,7 @@ func (mysql *MysqlStorage) RegisterOffer(
 			QuizID:      quizID,
 			Title:       problem.Title,
 			Description: problem.Description,
-			TimeLimit:   float64(problem.TimeLimit),
+			TimeLimit:   problem.TimeLimit,
 			MemoryLimit: 262144,
 		})
 		if err != nil {

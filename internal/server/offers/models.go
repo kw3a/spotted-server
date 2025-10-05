@@ -170,11 +170,10 @@ func ValidateProblem(p ProblemJ) (shared.Problem, error) {
 			exs = append(exs, shared.Example{Input: ex.Input, Output: ex.Output})
 		}
 	}
-	fTimeLimit := float64(timeLimit / 1000)
 	return shared.Problem{
 		Title:       p.Title,
 		Description: p.Description,
-		TimeLimit:   fTimeLimit,
+		TimeLimit:   int32(timeLimit),
 		MemoryLimit: memoryLimit,
 		Examples:    exs,
 		TestCases:   tcs,

@@ -16,6 +16,11 @@ type linkStorage struct {
 	mock.Mock
 }
 
+func (s *linkStorage) CountLinks(ctx context.Context, userID string) (int32, error) {
+	args := s.Called(ctx, userID)
+	return int32(args.Int(0)), args.Error(1)
+}
+
 func (s *linkStorage) RegisterLink(ctx context.Context, linkID, userID, url, name string) error {
 	args := s.Called(ctx, linkID, userID, url, name)
 	return args.Error(0)
@@ -73,10 +78,9 @@ func TestRegisterLinkHandlerBadInput(t *testing.T) {
 	}
 }
 
-func TestRegisterLinkHandlerBadStorageT(t *testing.T) {
+func TestRegisterLinkHandlerBadStorageCountT(t *testing.T) {
 	storage := new(linkStorage)
-	storage.On("RegisterLink", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(fmt.Errorf("storage error"))
+	storage.On("CountLinks", mock.Anything, mock.Anything).Return(0, fmt.Errorf("count error"))
 	handler := profiles.CreateRegisterLinkHandler(&invalidTemplates{}, &authRepo{}, storage, linkRegisterInputFn)
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
@@ -86,8 +90,21 @@ func TestRegisterLinkHandlerBadStorageT(t *testing.T) {
 	}
 }
 
-func TestRegisterLinkHandlerBadStorage(t *testing.T) {
+func TestRegisterLinkHandlerBadStorageCount(t *testing.T) {
 	storage := new(linkStorage)
+	storage.On("CountLinks", mock.Anything, mock.Anything).Return(0, fmt.Errorf("count error"))
+	handler := profiles.CreateRegisterLinkHandler(&templates{}, &authRepo{}, storage, linkRegisterInputFn)
+	req, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
+	}
+}
+
+func TestRegisterLinkHandlerBadStorageRegT(t *testing.T) {
+	storage := new(linkStorage)
+	storage.On("CountLinks", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On("RegisterLink", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(fmt.Errorf("storage error"))
 	handler := profiles.CreateRegisterLinkHandler(&templates{}, &authRepo{}, storage, linkRegisterInputFn)
@@ -101,6 +118,7 @@ func TestRegisterLinkHandlerBadStorage(t *testing.T) {
 
 func TestRegisterLinkHandlerBadTemplate(t *testing.T) {
 	storage := new(linkStorage)
+	storage.On("CountLinks", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On("RegisterLink", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(nil)
 	handler := profiles.CreateRegisterLinkHandler(&invalidTemplates{}, &authRepo{}, storage, linkRegisterInputFn)
@@ -117,6 +135,7 @@ func TestRegisterLinkHandlerBadTemplate(t *testing.T) {
 
 func TestRegisterLinkHandler(t *testing.T) {
 	storage := new(linkStorage)
+	storage.On("CountLinks", mock.Anything, mock.Anything).Return(0, nil)
 	storage.On("RegisterLink", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(nil)
 	handler := profiles.CreateRegisterLinkHandler(&templates{}, &authRepo{}, storage, linkRegisterInputFn)

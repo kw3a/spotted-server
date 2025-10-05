@@ -45,7 +45,7 @@ func TestOfferListHandlerBadInput(t *testing.T) {
 	inputFn := func(r *http.Request) (shared.OfferQueryParams, error) {
 		return shared.OfferQueryParams{}, fmt.Errorf("input error")
 	}
-	handler := offers.CreateOfferListHandler(inputFn, &invalidAuthRepo{}, &offerListStorage{}, &templates{})
+	handler := offers.CreateOfferListHandler(inputFn, &authRepo{}, &offerListStorage{}, &templates{})
 	if handler == nil {
 		t.Error("expected handler")
 	}

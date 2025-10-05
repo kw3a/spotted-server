@@ -65,7 +65,7 @@ WHERE problem_id = ?
 `
 
 type GetTestCasesRow struct {
-	TimeLimit   float64
+	TimeLimit   int32
 	MemoryLimit int32
 	ID          string
 	Input       string

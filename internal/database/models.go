@@ -111,7 +111,7 @@ type Problem struct {
 	Description string
 	Title       string
 	MemoryLimit int32
-	TimeLimit   float64
+	TimeLimit   int32
 	QuizID      string
 }
 
@@ -157,7 +157,7 @@ type TestCaseResult struct {
 	UpdatedAt    time.Time
 	Output       string
 	Status       string
-	Time         string
+	Time         int32
 	Memory       int32
 	TestCaseID   string
 	SubmissionID string

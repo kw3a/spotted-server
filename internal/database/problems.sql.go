@@ -21,7 +21,7 @@ type InsertProblemParams struct {
 	Title       string
 	Description string
 	MemoryLimit int32
-	TimeLimit   float64
+	TimeLimit   int32
 }
 
 func (q *Queries) InsertProblem(ctx context.Context, arg InsertProblemParams) error {
