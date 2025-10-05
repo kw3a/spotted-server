@@ -8,14 +8,6 @@ import (
 	"github.com/kw3a/spotted-server/internal/server/shared"
 )
 
-func (DI *App) SourceHandler() http.HandlerFunc {
-	return quizes.CreateSrcHandler(
-		quizes.GetSrcInput,
-		DI.Storage,
-		DI.Templ,
-	)
-}
-
 func (app *App) CallbackHandler() http.HandlerFunc {
 	return quizes.CreateCallbackHandler(
 		app.Storage,

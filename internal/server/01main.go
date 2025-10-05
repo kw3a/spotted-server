@@ -85,12 +85,10 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 		r.Get("/login", app.LoginPageHandler())
 		r.Post("/login", app.LoginHandler())
 		r.Post("/logout", app.LogoutHandler())
-		//r.Get("/languages/{quizID}", app.LanguagesHandler())
 		r.Get("/", app.JobOffersHandler())
 		r.Get("/preamble/{quizID}", app.PreambleHandler())
 		r.Get("/offers/admin", app.OffersAdmin())
 		r.Get("/offers/admin/{offerID}", app.OfferAdmin())
-		//r.Get("/source/{problemID}/{applicantID}", app.SourceHandler())
 		r.Patch("/offers/archive/{offerID}", app.OfferArchive())
 	})
 
