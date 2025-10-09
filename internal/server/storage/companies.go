@@ -63,23 +63,15 @@ func (mysql *MysqlStorage) GetCompanies(ctx context.Context, params shared.Compa
 			}
 			dbCompanies = comp
 		} else {
-			if params.Page == 0 {
-				comp, err := mysql.Queries.GetAllCompaniesByUser(ctx, params.UserID)
-				if err != nil {
-					return nil, err
-				}
-				dbCompanies = comp
-			} else {
-				comp, err := mysql.Queries.GetCompaniesByUser(ctx, database.GetCompaniesByUserParams{
-					UserID: params.UserID,
-					Limit:  companyPageSize,
-					Offset: (params.Page - 1) * companyPageSize,
-				})
-				if err != nil {
-					return nil, err
-				}
-				dbCompanies = comp
+			comp, err := mysql.Queries.GetCompaniesByUser(ctx, database.GetCompaniesByUserParams{
+				UserID: params.UserID,
+				Limit:  companyPageSize,
+				Offset: (params.Page - 1) * companyPageSize,
+			})
+			if err != nil {
+				return nil, err
 			}
+			dbCompanies = comp
 		}
 	}
 	for _, dbCompany := range dbCompanies {

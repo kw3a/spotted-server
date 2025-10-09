@@ -36,7 +36,7 @@ func CreateRegisterPage(
 			http.Redirect(w, r, redirection, http.StatusSeeOther)
 			return
 		}
-		params := shared.CompanyQueryParams{UserID: user.ID}
+		params := shared.CompanyQueryParams{UserID: user.ID, Page: 1}
 		companies, err := storage.GetCompanies(r.Context(), params)
 		if err != nil || len(companies) == 0 {
 			http.Redirect(w, r, redirection, http.StatusSeeOther)

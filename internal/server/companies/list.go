@@ -16,6 +16,7 @@ type CompanyListData struct {
 	User      auth.AuthUser
 	Companies []shared.Company
 	CmpSearch string
+	CmpUser   string
 	NextPage  int32
 }
 
@@ -58,6 +59,9 @@ func CreateCompanyListPageHandler(
 			User:      user,
 			Companies: companies,
 			NextPage:  params.Page + 1,
+		}
+		if params.UserID != "" {
+			data.CmpUser = params.UserID
 		}
 		if params.Query != "" {
 			data.CmpSearch = params.Query

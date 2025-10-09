@@ -9,44 +9,6 @@ import (
 	"context"
 )
 
-const getAllCompaniesByUser = `-- name: GetAllCompaniesByUser :many
-SELECT company.id, company.name, company.description, company.website, company.created_at, company.updated_at, company.image_url, company.user_id
-FROM company
-WHERE company.user_id = ?
-`
-
-func (q *Queries) GetAllCompaniesByUser(ctx context.Context, userID string) ([]Company, error) {
-	rows, err := q.db.QueryContext(ctx, getAllCompaniesByUser, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Company
-	for rows.Next() {
-		var i Company
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.Website,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.ImageUrl,
-			&i.UserID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getCompanies = `-- name: GetCompanies :many
 SELECT company.id, company.name, company.description, company.website, company.created_at, company.updated_at, company.image_url, company.user_id
 FROM company

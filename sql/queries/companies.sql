@@ -19,11 +19,6 @@ FROM company
 WHERE company.user_id = ?
 LIMIT ? OFFSET ?;
 
--- name: GetAllCompaniesByUser :many
-SELECT company.*
-FROM company
-WHERE company.user_id = ?;
-
 -- name: GetCompaniesByQuery :many
 SELECT company.*
 FROM company

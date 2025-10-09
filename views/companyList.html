@@ -17,6 +17,7 @@
 
     <div class="flex justify-center overflow-y-auto mt-8 mb-8">
       <div class="w-full max-w-4xl flex flex-col gap-8">
+        <h2 class="text-center text-3xl font-bold text-white">Compañías</h2>
         <form id="company-filters" hx-get="/companies" hx-target="body" hx-boost="true" hx-push-url="true"
           class="flex flex-col sm:flex-row gap-4 items-center justify-center drop-shadow-lg">
           <div class="relative w-full sm:max-w-md">
@@ -26,7 +27,7 @@
             <input id="f-query" type="text" name="q"
               class="bg-white ps-10 py-2 rounded-lg text-black block w-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition placeholder-gray-400"
               maxlength="64"
-              placeholder="Buscar compañías..."
+              placeholder="Presiona enter para buscar..."
               {{if .CmpSearch}} value="{{.CmpSearch}}" {{end}}
             />
           </div>
@@ -52,7 +53,7 @@
       {{template "companyEntry" .}}
     {{end}}
     {{if .NextPage}}
-      <div hx-get="/companies?page={{.NextPage}}&q={{.CmpSearch}}" hx-trigger="revealed" hx-swap="afterend"></div>
+    <div hx-get="/companies?page={{.NextPage}}&q={{.CmpSearch}}&u={{.CmpUser}}" hx-trigger="revealed" hx-swap="afterend"></div>
     {{end}}
   {{end}}
 {{end}}
