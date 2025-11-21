@@ -3,6 +3,7 @@ package offers
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kw3a/spotted-server/internal/auth"
@@ -15,6 +16,7 @@ type PreambleData struct {
 	Quiz          shared.Quiz
 	Languages     []shared.Language
 	Participation shared.Participation
+	QuizAlive     bool
 }
 
 type Result struct {
@@ -82,6 +84,9 @@ func CreateParticipationHandler(templ shared.TemplatesRepo, storage PreambleStor
 			participation, err := storage.ParticipationStatus(r.Context(), user.ID, quiz.ID)
 			if err == nil {
 				data.Participation = participation
+				if data.Participation.ExpiresAt.After(time.Now()) {
+					data.QuizAlive = true
+				}
 			}
 		}
 		if err := templ.Render(w, "preamble", data); err != nil {

@@ -89,6 +89,14 @@
 </div>
 {{end}}
 {{else}}
-<p class="text-shark-200 text-center">Entregado {{.Participation.RelativeTime}}</p>
+  {{if .QuizAlive}}
+  <button
+    class="border cursor-pointer rounded-sm border-blue-500 hover:border-blue-400 hover:text-blue-400 text-blue-500 font-bold w-32 text-center py-2 px-4"
+      hx-get="/quizes/{{.Quiz.ID}}" hx-push-url="true" hx-target="body">
+      Retomar prueba
+  </button>
+  {{else}}
+  <p class="text-shark-200 text-center">Entregado {{.Participation.RelativeTime}}</p>
+  {{end}}
 {{end}}
 {{end}}
