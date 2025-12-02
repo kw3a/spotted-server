@@ -12,14 +12,15 @@ import (
 )
 
 type QuizPageData struct {
-	QuizID     string
-	Problems   []ProblemSelector
-	ExpiresAt  time.Time
-	Score      shared.Score
-	Problem    shared.Problem
-	Examples   []shared.Example
-	EditorData EditorData
-	Languages  []shared.Language
+	QuizID          string
+	Problems        []ProblemSelector
+	ExpiresAt       time.Time
+	ParticipationID string
+	Score           shared.Score
+	Problem         shared.Problem
+	Examples        []shared.Example
+	EditorData      EditorData
+	Languages       []shared.Language
 }
 
 type ProblemSelector struct {
@@ -141,14 +142,15 @@ func CreateQuizPageHandler(
 			return
 		}
 		data := QuizPageData{
-			QuizID:     input.OfferID,
-			Problems:   enumerateProblemsFn(problemIDs),
-			ExpiresAt:  partiData.ExpiresAt,
-			Score:      score,
-			Problem:    problem,
-			Examples:   examples,
-			EditorData: EditorData{SrcValue: lastSrc, Language: selectedLanguage.Name},
-			Languages:  languages,
+			QuizID:          input.OfferID,
+			Problems:        enumerateProblemsFn(problemIDs),
+			ExpiresAt:       partiData.ExpiresAt,
+			ParticipationID: partiData.ID,
+			Score:           score,
+			Problem:         problem,
+			Examples:        examples,
+			EditorData:      EditorData{SrcValue: lastSrc, Language: selectedLanguage.Name},
+			Languages:       languages,
 		}
 		err = templ.Render(w, "quizPage", data)
 		if err != nil {

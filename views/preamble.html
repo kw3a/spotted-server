@@ -10,44 +10,48 @@
   <script src="/static/head-support.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <title>{{.Offer.Title}}</title>
+  <title>{{.Offer.Title}}</title>
 </head>
 
 <body class="" hx-ext="head-support">
   <section class="bg-gradient-to-b from-shark-950 to-shark-900 h-screen flex flex-col font-mono relative">
     {{template "navBar" .User}}
     <div class="absolute inset-0 top-[4rem] overflow-y-auto pt-4 pb-8 px-4">
-      <section class="w-full xl:w-3/4 mx-auto flex flex-col gap-6 bg-shark-800/70 p-6 rounded-2xl shadow-2xl border border-shark-700">
+      <section
+        class="w-full xl:w-3/4 mx-auto flex flex-col gap-6 bg-shark-800/70 p-6 rounded-2xl shadow-2xl border border-shark-700">
         <h1 class="font-bold text-3xl text-white tracking-wide text-shadow-lg">{{.Offer.Title}}</h1>
         <div class="flex flex-row text-shark-50 items-center bg-shark-900/50 rounded-xl p-4">
           <div class="w-1/2 flex">
-            <img 
+            <img
               class="border border-gray-700 aspect-square object-cover transition-all duration-300 hover:border-white cursor-pointer"
               {{if .Offer.CompanyImageURL}} src="{{.Offer.CompanyImageURL}}" {{else}} src="/public/company.svg" {{end}}
-              width="60" height="60" 
-              hx-get="/companies/{{.Offer.CompanyID}}" hx-boost="true" hx-push-url="true" hx-target="body"
-            />
+              width="60" height="60" hx-get="/companies/{{.Offer.CompanyID}}" hx-boost="true" hx-push-url="true"
+              hx-target="body" />
             <strong class="font-bold text-white ml-2 text-xl">{{.Offer.CompanyName}}</strong>
           </div>
           <p class="w-1/2 text-green-200 flex items-center justify-end font-semibold">
             {{.Offer.MinWage}} - {{.Offer.MaxWage}}
             <span class="font-semibold text-xl">$</span>
-            <img class="inline cursor-pointer" width="18" height="18" src="/public/help.svg" title="Rango salarial anual"/>
+            <img class="inline cursor-pointer" width="18" height="18" src="/public/help.svg"
+              title="Rango salarial anual" />
           </p>
         </div>
         <h2 class="font-bold block text-2xl text-white">Sobre el puesto</h2>
-        <pre class="whitespace-pre-wrap text-shark-100 text-base bg-shark-900/50 p-4 rounded-lg border border-shark-700">{{.Offer.About}}</pre>
+        <pre
+          class="whitespace-pre-wrap text-shark-100 text-base bg-shark-900/50 p-4 rounded-lg border border-shark-700">{{.Offer.About}}</pre>
         <strong class="font-semibold block text-xl text-white">Requisitos</strong>
-        <pre class="whitespace-pre-wrap text-shark-100 text-base bg-shark-900/50 p-4 rounded-lg border border-shark-700">{{.Offer.Requirements}}</pre>
+        <pre
+          class="whitespace-pre-wrap text-shark-100 text-base bg-shark-900/50 p-4 rounded-lg border border-shark-700">{{.Offer.Requirements}}</pre>
         <strong class="font-semibold block text-xl text-white">Beneficios</strong>
-        <pre class="whitespace-pre-wrap text-shark-100 text-base bg-shark-900/50 p-4 rounded-lg border border-shark-700">{{.Offer.Benefits}}</pre>
+        <pre
+          class="whitespace-pre-wrap text-shark-100 text-base bg-shark-900/50 p-4 rounded-lg border border-shark-700">{{.Offer.Benefits}}</pre>
         <section class="flex justify-center mt-6">
-          <div class="w-full max-w-96 flex flex-col gap-4 justify-around bg-shark-800/80 rounded-2xl p-6 shadow-2xl border border-shark-700">
+          <div
+            class="w-full max-w-96 flex flex-col gap-4 justify-around bg-shark-800/80 rounded-2xl p-6 shadow-2xl border border-shark-700">
             <p class="text-center text-xl text-white font-semibold">
-              Prueba 
-              <img 
-                class="inline cursor-pointer" width="18" height="18" src="/public/help.svg" 
-                title="Participa en la prueba para aplicar a este puesto."/>
+              Prueba
+              <img class="inline cursor-pointer" width="18" height="18" src="/public/help.svg"
+                title="Participa en la prueba para aplicar a este puesto." />
             </p>
             <p class="flex items-center text-shark-200 gap-2">
               <img class="inline" src="/public/clock.svg" width="20" height="20" alt="clock icon" />
@@ -55,7 +59,8 @@
             </p>
             <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full mt-2">
               {{range .Languages}}
-              <span class="rounded-lg border border-shark-600 text-shark-300 px-2 py-1 bg-shark-900/50">{{.DisplayName}}</span>
+              <span
+                class="rounded-lg border border-shark-600 text-shark-300 px-2 py-1 bg-shark-900/50">{{.DisplayName}}</span>
               {{end}}
             </div>
 
@@ -89,14 +94,16 @@
 </div>
 {{end}}
 {{else}}
-  {{if .QuizAlive}}
+{{if .QuizAlive}}
+<div class="flex justify-center">
   <button
     class="border cursor-pointer rounded-sm border-blue-500 hover:border-blue-400 hover:text-blue-400 text-blue-500 font-bold w-32 text-center py-2 px-4"
-      hx-get="/quizes/{{.Quiz.ID}}" hx-push-url="true" hx-target="body">
-      Retomar prueba
+    hx-get="/quizes/{{.Quiz.ID}}" hx-target="body">
+    Retomar prueba
   </button>
-  {{else}}
-  <p class="text-shark-200 text-center">Entregado {{.Participation.RelativeTime}}</p>
-  {{end}}
+</div>
+{{else}}
+<p class="text-shark-200 text-center">Entregado {{.Participation.RelativeTime}}</p>
+{{end}}
 {{end}}
 {{end}}

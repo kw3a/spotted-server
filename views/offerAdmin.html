@@ -1,174 +1,156 @@
 {{block "offerAdmin" .}}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Aplicantes</title>
-    <script src="/static/htmx.min.js"></script>
-    <link href="/static/output.css" rel="stylesheet" />
-    <script src="/static/head-support.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="/static/offerAdmin.js" type="module" defer></script>
-  </head>
 
-  <body class="" hx-ext="head-support">
-    <section class="bg-shark-950 h-screen flex flex-col font-mono">
-      {{template "navBar" .User}}
-      <div class="flex-1 w-full flex flex-col xl:flex-row sm:gap-8 xl:gap-0 text-shark-200 overflow-hidden">
-        <section class="xl:w-1/2 overflow-y-auto p-8">
-          <strong class="font-semibold text-2xl"
-            >{{.Offer.Title}}</strong
-          >
-          <span class="text-shark-300 font-light">Publicado {{.Offer.RelativeTime}}</span>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aplicantes</title>
+  <script src="/static/htmx.min.js"></script>
+  <link href="/static/output.css" rel="stylesheet" />
+  <script src="/static/head-support.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="/static/offerAdmin.js" type="module" defer></script>
+  <script src="/static/applicant-playback.js" defer></script>
+</head>
 
-          <section class="flex flex-col gap-4">
-            <strong class="text-shark-300 text-sm xl font-semibold">Detalles de la prueba</strong>
-            <p class="flex items-center text-shark-200 gap-2 font-medium">
-              Duración:
-              <img class="inline" src="/public/clock.svg" width="20" height="20" alt="clock icon" />
-              {{.Quiz.Duration}} minutos
-            </p>
-            <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full">
-              <span class="font-medium">Lenguajes permitidos:</span>
-              {{range .Languages}}
-              <span class="rounded border border-shark-200 text-shark-200 px-2">{{.DisplayName}}</span>
+<body class="" hx-ext="head-support">
+  <section class="bg-shark-950 h-screen flex flex-col font-mono">
+    {{template "navBar" .User}}
+    <div class="flex-1 w-full flex flex-col xl:flex-row sm:gap-8 xl:gap-0 text-shark-200 overflow-hidden">
+      <section class="xl:w-1/2 overflow-y-auto p-8">
+        <strong class="font-semibold text-2xl">{{.Offer.Title}}</strong>
+        <span class="text-shark-300 font-light">Publicado {{.Offer.RelativeTime}}</span>
+
+        <section class="flex flex-col gap-4">
+          <strong class="text-shark-300 text-sm xl font-semibold">Detalles de la prueba</strong>
+          <p class="flex items-center text-shark-200 gap-2 font-medium">
+            Duración:
+            <img class="inline" src="/public/clock.svg" width="20" height="20" alt="clock icon" />
+            {{.Quiz.Duration}} minutos
+          </p>
+          <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full">
+            <span class="font-medium">Lenguajes permitidos:</span>
+            {{range .Languages}}
+            <span class="rounded border border-shark-200 text-shark-200 px-2">{{.DisplayName}}</span>
+            {{end}}
+          </div>
+
+          <div class="flex flex-col">
+            <p class="text-white font-bold">Problemas</p>
+            <section class="flex flex-wrap gap-4 overflow-x-auto">
+              {{ $first := true }}
+              {{range .Problems}}
+              <div class="bg-shark-900 rounded">
+                <input type="radio" name="problem-group" id="problem-{{.ID}}" class="hidden peer"
+                  onclick="window.openModal('modal-{{.ID}}')" {{if $first}} checked {{end}}>
+                <label for="problem-{{.ID}}"
+                  class="block w-full font-semibold hover:bg-gray-900 px-4 py-2 rounded cursor-pointer text-left peer-checked:bg-gray-900 select-none">
+                  {{.Title}}
+                </label>
+              </div>
+              {{ $first = false }}
               {{end}}
-            </div>
+            </section>
 
-            <div class="flex flex-col">
-              <p class="text-white font-bold">Problemas</p>
-              <section class="flex flex-wrap gap-4 overflow-x-auto">
-                {{ $first := true }}
-                {{range .Problems}}
-                <div class="bg-shark-900 rounded">
-                  <input 
-                    type="radio" 
-                    name="problem-group" 
-                    id="problem-{{.ID}}" 
-                    class="hidden peer"
-                    onclick="window.openModal('modal-{{.ID}}')"
-                  {{if $first}} checked {{end}}>
-                  <label 
-                    for="problem-{{.ID}}" 
-                    class="block w-full font-semibold hover:bg-gray-900 px-4 py-2 rounded cursor-pointer text-left peer-checked:bg-gray-900 select-none"
-                  >
-                    {{.Title}}
-                  </label>
-                </div>
-                {{ $first = false }}
-                {{end}}
-              </section>
-
-              <section class="">
-                {{ $first := true }}
-                {{range .Problems}}
-                <div id="modal-{{.ID}}" class="w-full bg-gray-900 rounded 
+            <section class="">
+              {{ $first := true }}
+              {{range .Problems}}
+              <div id="modal-{{.ID}}" class="w-full bg-gray-900 rounded 
                   {{if not $first}} hidden {{end}}">
-                  <div class="flex flex-col gap-8 p-8">
-                    <details>
-                      <summary class="cursor-pointer hover:bg-gray-800 p-2 font-bold">Descripción</summary>
-                      <div>
-                        <pre class="whitespace-pre-wrap">{{.Description}}</pre>
+                <div class="flex flex-col gap-8 p-8">
+                  <details>
+                    <summary class="cursor-pointer hover:bg-gray-800 p-2 font-bold">Descripción</summary>
+                    <div>
+                      <pre class="whitespace-pre-wrap">{{.Description}}</pre>
+                    </div>
+                  </details>
+                  <div class="flex flex-col">
+                    <span class="text-shark-200">
+                      Tiempo límite: {{.TimeLimit}} ms</span>
+                    <span class="text-shark-200">
+                      Memoria límite: {{.MemoryLimit}} kb</span>
+                  </div>
+
+                  <div class="flex flex-col gap-4 bg-gray-800 p-2">
+                    <span class="text-center font-medium">Casos de prueba</span>
+                    {{range $index, $testCase := .TestCases}}
+                    <details class="rounded">
+                      <summary class="bg-sky-600 select-none cursor-pointer hover:bg-sky-500 list-none">
+                        <div class="flex justify-between p-2 font-mono">
+                          <span class="text-white font-medium">TC {{add $index 1}}</span>
+                          <span class="text-white opacity-50">{{$testCase.ID}}</span>
+                        </div>
+                      </summary>
+                      <div class="flex flex-row divide-x divide-sky-600">
+                        <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg overflow-x-auto">
+                          <span class="text-white px-2">ENTRADA</span>
+                          <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{$testCase.Input}}</pre>
+                        </div>
+                        <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
+                          <span class="text-white px-2">SALIDA ESPERADA</span>
+                          <pre
+                            class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg overflow-x-auto">{{$testCase.Output}}</pre>
+                        </div>
                       </div>
                     </details>
-                    <div class="flex flex-col">
-                      <span 
-                        class="text-shark-200"
-                      >
-                      Tiempo límite: {{.TimeLimit}} ms</span>
-                      <span 
-                        class="text-shark-200"
-                      >
-                      Memoria límite: {{.MemoryLimit}} kb</span>
-                    </div>
+                    {{end}}
+                  </div>
 
-                    <div class="flex flex-col gap-4 bg-gray-800 p-2">
-                      <span class="text-center font-medium">Casos de prueba</span>
-                      {{range $index, $testCase := .TestCases}}
-                      <details class="rounded">
-                        <summary class="bg-sky-600 select-none cursor-pointer hover:bg-sky-500 list-none">
-                          <div class="flex justify-between p-2 font-mono">
-                            <span class="text-white font-medium">TC {{add $index 1}}</span>
-                            <span class="text-white opacity-50">{{$testCase.ID}}</span>
-                          </div>
-                        </summary>
-                        <div class="flex flex-row divide-x divide-sky-600">
-                          <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg overflow-x-auto">
-                            <span class="text-white px-2">ENTRADA</span>
-                            <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{$testCase.Input}}</pre>
-                          </div>
-                          <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
-                            <span class="text-white px-2">SALIDA ESPERADA</span>
-                            <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg overflow-x-auto">{{$testCase.Output}}</pre>
-                          </div>
-                        </div>
-                      </details>
-                      {{end}}
-                    </div>
-
-                    <div class="flex flex-col gap-4 bg-gray-800 p-2">
-                      <span class="text-center font-medium">Ejemplos</span>
-                      {{range .Examples}}
-                      <div class="flex flex-row divide-x divide-gray-800">
-                        <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
-                          <span class="text-white px-2">ENTRADA</span>
-                          <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{.Input}}</pre>
-                        </div>
-                        <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
-                          <span class="text-shark-200 px-2 font-semibold">SALIDA</span>
-                          <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{.Output}}</pre>
-                        </div>
+                  <div class="flex flex-col gap-4 bg-gray-800 p-2">
+                    <span class="text-center font-medium">Ejemplos</span>
+                    {{range .Examples}}
+                    <div class="flex flex-row divide-x divide-gray-800">
+                      <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
+                        <span class="text-white px-2">ENTRADA</span>
+                        <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{.Input}}</pre>
                       </div>
-                      {{end}} 
+                      <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
+                        <span class="text-shark-200 px-2 font-semibold">SALIDA</span>
+                        <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{.Output}}</pre>
+                      </div>
                     </div>
+                    {{end}}
                   </div>
                 </div>
-                {{ $first = false }}
-                {{end}}
-              </section>
-            </div>
-          </section>
+              </div>
+              {{ $first = false }}
+              {{end}}
+            </section>
+          </div>
         </section>
-        <div class="xl:w-1/2 overflow-y-auto flex flex-col gap-4 p-8">
-          <span class="text-2xl text-white font-bold tracking-wide">
-            <span >Aplicantes</span>
-            <img 
-              class="inline cursor-pointer ml-2 opacity-70 hover:opacity-100 transition-all" width="18" height="18" src="/public/help.svg" 
-              title="Si un problema no aparece, es porque el aplicante no ha enviado ninguna solución para ese problema"/>
-          </span>
-          {{range .Applicants}} 
-          {{template "applicantCard" .}} 
-          {{end}}
-        </div>
+      </section>
+      <div class="xl:w-1/2 overflow-y-auto flex flex-col gap-4 p-8">
+        <span class="text-2xl text-white font-bold tracking-wide">
+          <span>Aplicantes</span>
+          <img class="inline cursor-pointer ml-2 opacity-70 hover:opacity-100 transition-all" width="18" height="18"
+            src="/public/help.svg"
+            title="Si un problema no aparece, es porque el aplicante no ha enviado ninguna solución para ese problema" />
+        </span>
+        {{range .Applicants}}
+        {{template "applicantCard" .}}
+        {{end}}
       </div>
-    </section>
-  </body>
+    </div>
+  </section>
+</body>
+
 </html>
-{{end}} 
+{{end}}
 
 {{block "applicantCard" .}}
 <div class="rounded-2xl border border-shark-700 bg-shark-900/50 hover:border-shark-600 transition-all duration-300">
   <div class="w-full p-6">
     <div class="flex flex-wrap justify-between">
       <div class="flex gap-2 truncate items-center">
-        <div class="flex-shrink-0"> 
+        <div class="flex-shrink-0">
           <img
-            class="border border-shark-700 hover:border-shark-500 cursor-pointer object-cover aspect-square rounded-full transition-all duration-300" 
-            hx-get="/profile/{{.Applicant.ID}}"
-            hx-push-url="true"
-            hx-target="body"
-            hx-boost="true"
-            {{if .Applicant.ImageURL}}
-              src="{{.Applicant.ImageURL}}"
-            {{else}}
-              src="/public/user.svg"
-            {{end}}
-            width="40"
-            height="40"
-          />
+            class="border border-shark-700 hover:border-shark-500 cursor-pointer object-cover aspect-square rounded-full transition-all duration-300"
+            hx-get="/profile/{{.Applicant.ID}}" hx-push-url="true" hx-target="body" hx-boost="true" {{if
+            .Applicant.ImageURL}} src="{{.Applicant.ImageURL}}" {{else}} src="/public/user.svg" {{end}} width="40"
+            height="40" />
         </div>
-        <div class="flex flex-col flex-1 justify-center min-w-0"> 
+        <div class="flex flex-col flex-1 justify-center min-w-0">
           <span class="font-semibold text-xl truncate">{{.Applicant.Name}}</span>
           <span class="truncate">{{.Applicant.Description}}</span>
         </div>
@@ -179,25 +161,36 @@
     <div class="flex flex-col gap-2">
       {{ $applicant := .Applicant }}
       {{range .Summary}}
-      <details
-        class="bg-gray-900"
-      >
+      <details class="bg-gray-900">
         <summary class="flex-auto flex hover:bg-gray-800 justify-between cursor-pointer px-4 py-2">
           <span class="text-shark-200">{{.Title}}</span>
           {{if eq .Score.AcceptedTestCases 0}}
           <span class="text-red-500">
-          {{else}}
-            {{if eq .Score.AcceptedTestCases .Score.TotalTestCases}}
-          <span class="text-green-600">
             {{else}}
-          <span class="text-yellow-600">
-            {{end}}
-          {{end}}
-            {{.Score.AcceptedTestCases}}/{{.Score.TotalTestCases}}</span>
+            {{if eq .Score.AcceptedTestCases .Score.TotalTestCases}}
+            <span class="text-green-600">
+              {{else}}
+              <span class="text-yellow-600">
+                {{end}}
+                {{end}}
+                {{.Score.AcceptedTestCases}}/{{.Score.TotalTestCases}}</span>
         </summary>
         {{template "sourceCard" .}}
       </details>
       {{end}}
+    </div>
+
+    <!-- Recordings Section -->
+    <div class="mt-4 border-t border-shark-700 pt-4" data-recording-section
+      data-participation-id="{{.Participation.ID}}">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-shark-200 font-semibold">Grabaciones</span>
+        <button data-load-recordings
+          class="px-4 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          Ver grabación
+        </button>
+      </div>
+      <div data-recordings-container></div>
     </div>
   </div>
 </div>
@@ -216,9 +209,10 @@
     </code>
   </pre>
   <div class="flex flex-col gap-4">
-  {{range $index, $tc := .Results}}
+    {{range $index, $tc := .Results}}
     <details class="">
-      <summary class="flex flex-wrap font-mono justify-between text-white bg-sky-600 hover:bg-sky-500 p-2 cursor-pointer select-none">
+      <summary
+        class="flex flex-wrap font-mono justify-between text-white bg-sky-600 hover:bg-sky-500 p-2 cursor-pointer select-none">
         <span class="font-medium">TC {{add $index 1}}</span>
         {{if eq $tc.Status "Accepted"}}
         <span class="text-green-400 font-semibold">{{$tc.Status}}</span>
@@ -237,7 +231,7 @@
         <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg overflow-x-auto">{{$tc.Output}}</pre>
       </div>
     </details>
-  {{end}}
+    {{end}}
   </div>
 </section>
 {{end}}
