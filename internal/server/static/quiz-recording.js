@@ -27,19 +27,26 @@
 
     function setStateEl(el, state) {
         if (!el) return;
-        el.classList.remove('state-not-available', 'state-not-allowed', 'state-working');
+        // Reset classes
+        el.className = 'w-3 h-3 rounded-full mt-1';
+
+        let title = state;
+        let colorClass = 'bg-gray-400'; // Default/unknown
+
         if (state === 'not-available') {
-            el.textContent = 'no disponible';
-            el.classList.add('state-not-available');
+            title = 'No disponible';
+            colorClass = 'bg-gray-500';
         } else if (state === 'not-allowed') {
-            el.textContent = 'no permitido';
-            el.classList.add('state-not-allowed');
+            title = 'No permitido';
+            colorClass = 'bg-red-500';
         } else if (state === 'working') {
-            el.textContent = 'activo';
-            el.classList.add('state-working');
-        } else {
-            el.textContent = state;
+            title = 'Activo';
+            colorClass = 'bg-green-500';
         }
+
+        el.title = title;
+        el.classList.add(colorClass);
+        el.textContent = ''; // Clear text
     }
 
     function preferH264(sdp) {
