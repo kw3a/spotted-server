@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"html/template"
 	"io"
 	"path/filepath"
@@ -25,6 +26,10 @@ func viewsPath() (string, error) {
 var templateFuncs = template.FuncMap{
 	"add": func(a, b int) int { return a + b },
 	"inc": func(i int) int { return i + 1 },
+	"json": func(v interface{}) template.JS {
+		a, _ := json.Marshal(v)
+		return template.JS(a)
+	},
 }
 
 func newTemplates(views string) *Templates {

@@ -159,3 +159,18 @@ type Summary struct {
 	Submission Submission
 	Results    []TestCaseResult
 }
+
+type StrokeWindow struct {
+	ID           string
+	StrokeAmount int32
+	UdMean       int32
+	UdStdDev     int32
+	Du1Mean      int32
+	Du1StdDev    int32
+	Du2Mean      int32
+	Du2StdDev    int32
+	DdMean       int32
+	DdStdDev     int32
+	UuMean       int32
+	UuStdDev     int32
+}

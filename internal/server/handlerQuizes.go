@@ -80,3 +80,11 @@ func (DI *App) EndHandler() http.HandlerFunc {
 func (app *App) ExamplesHandler() http.HandlerFunc {
 	return quizes.CreateExamplesHandler(app.Templ, app.Storage, quizes.GetExamplesInput)
 }
+
+func (app *App) KeystrokeWindowHandler() http.HandlerFunc {
+	return quizes.CreateKeyStrokeWindowHandler(app.Storage, app.AuthService, quizes.GetStrokeWindowInput)
+}
+
+func (app *App) KeystrokeReportHandler() http.HandlerFunc {
+	return quizes.CreateKeyStrokeReportHandler(app.Templ, app.Storage, quizes.GetKeyStrokeReportInput)
+}

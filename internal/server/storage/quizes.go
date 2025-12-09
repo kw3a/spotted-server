@@ -15,6 +15,49 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+func (s *MysqlStorage) InsertKeyStrokeWindow(ctx context.Context, participationID string, strokeWindow shared.StrokeWindow) error {
+	return s.Queries.InsertStrokeWindow(ctx, database.InsertStrokeWindowParams{
+		ID:              strokeWindow.ID,
+		ParticipationID: participationID,
+		StrokeAmount:    strokeWindow.StrokeAmount,
+		UdMean:          strokeWindow.UdMean,
+		UdStdDev:        strokeWindow.UdStdDev,
+		Du1Mean:         strokeWindow.Du1Mean,
+		Du1StdDev:       strokeWindow.Du1StdDev,
+		Du2Mean:         strokeWindow.Du2Mean,
+		Du2StdDev:       strokeWindow.Du2StdDev,
+		DdMean:          strokeWindow.DdMean,
+		DdStdDev:        strokeWindow.DdStdDev,
+		UuMean:          strokeWindow.UuMean,
+		UuStdDev:        strokeWindow.UuStdDev,
+	})
+}
+
+func (s *MysqlStorage) SelectStrokeWindows(ctx context.Context, participationID string) ([]shared.StrokeWindow, error) {
+	dbWindows, err := s.Queries.SelectStrokeWindows(ctx, participationID)
+	if err != nil {
+		return []shared.StrokeWindow{}, err
+	}
+	windows := []shared.StrokeWindow{}
+	for _, dbWindow := range dbWindows {
+		windows = append(windows, shared.StrokeWindow{
+			ID:           dbWindow.ID,
+			StrokeAmount: dbWindow.StrokeAmount,
+			UdMean:       dbWindow.UdMean,
+			UdStdDev:     dbWindow.UdStdDev,
+			Du1Mean:      dbWindow.Du1Mean,
+			Du1StdDev:    dbWindow.Du1StdDev,
+			Du2Mean:      dbWindow.Du2Mean,
+			Du2StdDev:    dbWindow.Du2StdDev,
+			DdMean:       dbWindow.DdMean,
+			DdStdDev:     dbWindow.DdStdDev,
+			UuMean:       dbWindow.UuMean,
+			UuStdDev:     dbWindow.UuStdDev,
+		})
+	}
+	return windows, nil
+}
+
 func (mysql *MysqlStorage) SelectTestCases(ctx context.Context, problemID string) ([]shared.TestCase, error) {
 	dbTC, err := mysql.Queries.SelectTestCases(ctx, problemID)
 	if err != nil {

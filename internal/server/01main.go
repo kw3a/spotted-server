@@ -90,6 +90,7 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 		r.Get("/offers/admin", app.OffersAdmin())
 		r.Get("/offers/admin/{offerID}", app.OfferAdmin())
 		r.Patch("/offers/archive/{offerID}", app.OfferArchive())
+		r.Post("/keystrokes", app.KeystrokeWindowHandler())
 	})
 
 	r.With(authNMiddleware).With(authRMiddleware).Group(func(r chi.Router) {
@@ -100,6 +101,7 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 		r.Get("/score", app.ScoreHandler())
 		r.Post("/participate", app.ParticipateHandler())
 		r.Post("/end", app.EndHandler())
+		r.Get("/keystrokes/report", app.KeystrokeReportHandler())
 
 		r.Post("/submissions", app.RunHandler())
 		r.HandleFunc("/results/{submissionID}", app.ResultsHandler())

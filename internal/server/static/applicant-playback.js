@@ -42,16 +42,8 @@
             src.src = buildGetUrl(path, it.start, it.duration);
             video.appendChild(src);
 
-            const link = document.createElement('a');
-            link.href = src.src;
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            link.className = 'inline-block mt-2 text-blue-400 hover:text-blue-600 text-sm';
-            link.textContent = 'Abrir en pestaña';
-
             card.appendChild(title);
             card.appendChild(video);
-            card.appendChild(link);
             list.appendChild(card);
         });
 

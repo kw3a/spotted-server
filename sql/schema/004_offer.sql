@@ -7,7 +7,7 @@ CREATE TABLE offer (
   about VARCHAR(5000) NOT NULL,
   requirements VARCHAR(5000) NOT NULL,
   benefits VARCHAR(5000) NOT NULL,
-  status TINYINT NOT NULL DEFAULT 1,
+  status INT NOT NULL DEFAULT 1,
   min_wage INT NOT NULL,
   max_wage INT NOT NULL,
   company_id CHAR(36) NOT NULL,
