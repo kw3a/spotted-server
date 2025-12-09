@@ -97,7 +97,7 @@ func (mysql *MysqlStorage) SelectApplications(ctx context.Context, quizID string
 		applicationIndex[participationID] = &applications[i]
 	}
 
-	summaries, err := mysql.batchSummary(ctx, quizID, participationIDs)
+	summaries, err := mysql.batchSummary(ctx, participationIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +163,6 @@ func (mysql *MysqlStorage) selectApplicants(ctx context.Context, quizID string) 
 
 func (mysql *MysqlStorage) batchSummary(
 	ctx context.Context,
-	quizID string,
 	participationIDs []string,
 ) ([]shared.Summary, error) {
 	sum, err := mysql.Queries.BatchBestSubmissionsFromParticipation(ctx, participationIDs)

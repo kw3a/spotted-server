@@ -12,13 +12,7 @@
   <script src="/static/htmx.min.js"></script>
   <script src="/static/sse.js"></script>
   <script src="/static/head-support.js"></script>
-  <script>
-    // Set participationID globally for recording script
-    window.participationID = "{{.ParticipationID}}";
-    window.quizID = "{{.QuizID}}";
-  </script>
-  <script src="/static/quiz-recording.js"></script>
-  <script src="/static/keystroke-recording.js"></script>
+
   <style>
     /* Recording status styles */
     .state-not-available {
@@ -187,6 +181,13 @@
       </section>
     </div>
   </div>
+  <script>
+    // Set participationID globally for recording script
+    window.participationID = "{{.ParticipationID}}";
+    window.quizID = "{{.QuizID}}";
+  </script>
+  <script src="/static/quiz-recording.js"></script>
+  <script src="/static/keystroke-recording.js"></script>
 </body>
 
 </html>

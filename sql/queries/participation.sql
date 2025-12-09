@@ -17,5 +17,6 @@ SELECT user.*, participation.id as participation_id, participation.created_at as
   participation.expires_at as participation_expires_at
 FROM user
 JOIN participation ON user.id = participation.user_id
-WHERE participation.quiz_id = ?;
+WHERE participation.quiz_id = ?
+ORDER BY participation.created_at DESC;
 

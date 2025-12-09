@@ -75,6 +75,7 @@ SELECT user.id, user.created_at, user.updated_at, user.nick, user.password, user
 FROM user
 JOIN participation ON user.id = participation.user_id
 WHERE participation.quiz_id = ?
+ORDER BY participation.created_at DESC
 `
 
 type SelectApplicationsRow struct {
