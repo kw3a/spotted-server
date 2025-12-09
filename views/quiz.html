@@ -31,7 +31,7 @@
 </head>
 
 <body class="bg-black" hx-ext="head-support">
-  <div class="flex flex-row h-screen p-2 gap-2">
+  <div class="flex flex-row h-screen p-2 gap-2" id="quiz-content">
     <script>
       function changeProblem(id) {
         let targets = [
@@ -93,7 +93,16 @@
           <span class="font-light text-lg" id="timer" class=""></span>
         </p>
         <div class="w-1/4 flex flex-col items-center justify-center p-2">
-          <div class="flex gap-3 items-center">
+          <p class="text-shark-200 text-sm font-semibold mb-1">Grabación</p>
+
+          <!-- Start Button (Visible initially) -->
+          <button id="btn-start-recording"
+            class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded transition-colors">
+            Iniciar
+          </button>
+
+          <!-- Status Icons (Hidden initially) -->
+          <div id="recording-status-icons" class="hidden flex gap-3 items-center">
             <div class="flex flex-col items-center">
               <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z" />

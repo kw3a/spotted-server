@@ -1,11 +1,6 @@
 // Quiz Recording - Auto-start recording for quiz sessions
 // Adapted from recording.js with auto-start, no preview, and ParticipationID integration
 (function () {
-    // Status elements (to be defined in HTML)
-    const micStateEl = document.getElementById('micState');
-    const camStateEl = document.getElementById('camState');
-    const screenStateEl = document.getElementById('screenState');
-
     // ParticipationID will be set globally by the template
     const sessionID = window.participationID;
 
@@ -25,7 +20,12 @@
         console.log('[Quiz Recording]', ...args);
     }
 
-    function setStateEl(el, state) {
+    function getEl(id) {
+        return document.getElementById(id);
+    }
+
+    function setStateEl(id, state) {
+        const el = getEl(id);
         if (!el) return;
         // Reset classes
         el.className = 'w-3 h-3 rounded-full mt-1';
@@ -90,9 +90,9 @@
         }
 
         if (navigator.mediaDevices && typeof navigator.mediaDevices.getDisplayMedia === 'function') {
-            setStateEl(screenStateEl, 'not-allowed');
+            setStateEl('screenState', 'not-allowed');
         } else {
-            setStateEl(screenStateEl, 'not-available');
+            setStateEl('screenState', 'not-available');
         }
 
         try {
@@ -100,21 +100,21 @@
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const hasCam = devices.some(d => d.kind === 'videoinput');
                 const hasMic = devices.some(d => d.kind === 'audioinput');
-                if (!hasCam) setStateEl(camStateEl, 'not-available');
-                if (!hasMic) setStateEl(micStateEl, 'not-available');
+                if (!hasCam) setStateEl('camState', 'not-available');
+                if (!hasMic) setStateEl('micState', 'not-available');
             }
         } catch { }
     }
 
     function updateStateFromPermission(which, permState) {
         if (which === 'cam') {
-            if (permState === 'granted') setStateEl(camStateEl, 'working');
-            else if (permState === 'denied') setStateEl(camStateEl, 'not-allowed');
-            else setStateEl(camStateEl, 'not-available');
+            if (permState === 'granted') setStateEl('camState', 'working');
+            else if (permState === 'denied') setStateEl('camState', 'not-allowed');
+            else setStateEl('camState', 'not-available');
         } else if (which === 'mic') {
-            if (permState === 'granted') setStateEl(micStateEl, 'working');
-            else if (permState === 'denied') setStateEl(micStateEl, 'not-allowed');
-            else setStateEl(micStateEl, 'not-available');
+            if (permState === 'granted') setStateEl('micState', 'working');
+            else if (permState === 'denied') setStateEl('micState', 'not-allowed');
+            else setStateEl('micState', 'not-available');
         }
     }
 
@@ -128,8 +128,8 @@
         const micTrack = camStream.getAudioTracks()[0];
 
         // Update status
-        setStateEl(camStateEl, camTrack ? 'working' : 'not-available');
-        setStateEl(micStateEl, micTrack ? 'working' : 'not-available');
+        setStateEl('camState', camTrack ? 'working' : 'not-available');
+        setStateEl('micState', micTrack ? 'working' : 'not-available');
 
         // Request screen share
         screenStream = await navigator.mediaDevices.getDisplayMedia({
@@ -137,7 +137,7 @@
             audio: false
         });
 
-        setStateEl(screenStateEl, 'working');
+        setStateEl('screenState', 'working');
 
         // Create canvas for mixing screen + camera
         const canvas = document.createElement('canvas');
@@ -186,9 +186,9 @@
             isRecording = true;
         } catch (err) {
             log('Error obtaining media:', err);
-            setStateEl(micStateEl, 'not-allowed');
-            setStateEl(camStateEl, 'not-allowed');
-            setStateEl(screenStateEl, 'not-allowed');
+            setStateEl('micState', 'not-allowed');
+            setStateEl('camState', 'not-allowed');
+            setStateEl('screenState', 'not-allowed');
             return;
         }
 
@@ -229,6 +229,7 @@
 
             await pc.setRemoteDescription({ type: 'answer', sdp: answerSDP });
             log('RemoteDescription set. Recording in progress.');
+            return true;
         } catch (err) {
             log('Error publishing stream:', err);
             pc?.close();
@@ -237,6 +238,8 @@
             localStream = null;
             stopAllDevices();
             isRecording = false;
+            // Throw so the UI knows
+            throw err;
         }
     }
 
@@ -287,14 +290,75 @@
         }
     }
 
-    // Auto-start on page load
-    window.addEventListener('load', async () => {
-        await checkDevicesAndPermissions();
-        // Small delay to ensure UI is ready
-        setTimeout(async () => {
-            await startRecording();
-        }, 500);
-    });
+    // Initialization logic
+    function init() {
+        log('Initializing recording logic...');
+
+        const startBtn = document.getElementById('btn-start-recording');
+        const statusIcons = document.getElementById('recording-status-icons');
+
+        if (startBtn) {
+            log('Start button found in DOM');
+
+            // Clean up: Clone to remove old listeners
+            const newBtn = startBtn.cloneNode(true);
+
+            // Validate: If parentNode is missing, the button is detached -> unexpected
+            if (!startBtn.parentNode) {
+                log('Warning: Start button parent missing');
+                return;
+            }
+
+            startBtn.parentNode.replaceChild(newBtn, startBtn);
+            log('Start button listener attached');
+
+            newBtn.addEventListener('click', async () => {
+                log('Button clicked');
+                newBtn.disabled = true;
+                newBtn.textContent = 'Iniciando...';
+
+                // NOW we check permissions/devices
+                await checkDevicesAndPermissions();
+
+                try {
+                    const success = await startRecording();
+                    log('startRecording returned', success);
+
+                    if (success) {
+                        // Toggle UI: Hide button, Show icons
+                        newBtn.style.display = 'none';
+                        const currentStatusIcons = document.getElementById('recording-status-icons');
+                        if (currentStatusIcons) {
+                            log('Showing status icons');
+                            currentStatusIcons.classList.remove('hidden');
+                        } else {
+                            console.error('Error: recording-status-icons not found in DOM');
+                            alert('Error UI: Iconos no encontrados');
+                        }
+                    } else {
+                        newBtn.disabled = false;
+                        newBtn.textContent = 'Reintentar';
+                        // If startRecording returned false (was handled internally) but we want to know why.
+                        // Ideally startRecording should throw.
+                        // For now, let's assume if it returns false, an error was logged.
+                        // We can't alert here easily without changing startRecording.
+                    }
+                } catch (err) {
+                    console.error("Failed to start recording:", err);
+                    alert('Error al iniciar grabación: ' + err.message);
+                    newBtn.disabled = false;
+                    newBtn.textContent = 'Reintentar';
+                }
+            });
+        } else {
+            console.error('Fatal: Start recording button not found');
+        }
+    }
+
+    // Since this script is placed at the end of the body (inserted by HTMX),
+    // it executes immediately when the snippet is parsed.
+    // We can just call init().
+    init();
 
     // Stop recording on page unload (quiz finish, browser close, etc.)
     window.addEventListener('beforeunload', () => {
