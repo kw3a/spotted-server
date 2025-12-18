@@ -173,7 +173,7 @@ func ValidateProblem(p ProblemJ) (shared.Problem, error) {
 	return shared.Problem{
 		Title:       p.Title,
 		Description: p.Description,
-		TimeLimit:   int32(timeLimit),
+		TimeLimit:   shared.IntToInt32(timeLimit),
 		MemoryLimit: memoryLimit,
 		Examples:    exs,
 		TestCases:   tcs,

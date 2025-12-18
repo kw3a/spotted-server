@@ -121,12 +121,21 @@ func ValidateUUID(id string) error {
 }
 
 func IntToInt32(n int) int32 {
-    if n > math.MaxInt32 {
-        return math.MaxInt32
-    }
-    if n < math.MinInt32 {
-        return math.MinInt32
-    }
-    return int32(n)
+	if n > math.MaxInt32 {
+		return math.MaxInt32
+	}
+	if n < math.MinInt32 {
+		return math.MinInt32
+	}
+	return int32(n)
 }
 
+func Int64ToInt32(n int64) int32 {
+	if n > math.MaxInt32 {
+		return math.MaxInt32
+	}
+	if n < math.MinInt32 {
+		return math.MinInt32
+	}
+	return int32(n)
+}

@@ -342,7 +342,7 @@ func (s MysqlStorage) UpdateTestCaseResult(
 		ID:           sql.NullString{String: input.Token, Valid: true},
 		Output:       input.Stdout,
 		Status:       input.Status.Description,
-		Time:         int32(intTime),
+		Time:         shared.Int64ToInt32(intTime),
 		Memory:       input.Memory,
 		SubmissionID: submissionID,
 		TestCaseID:   testCaseID,

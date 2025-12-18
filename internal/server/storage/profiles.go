@@ -84,7 +84,7 @@ func (mysql *MysqlStorage) DeleteSkill(ctx context.Context, userID string, skill
 
 func (mysql *MysqlStorage) CountSkills(ctx context.Context, userID string) (int32, error) {
 	count, err := mysql.Queries.CountSkills(ctx, userID)
-	return int32(count), err
+	return shared.Int64ToInt32(count), err
 }
 
 func (mysql *MysqlStorage) RegisterSkill(ctx context.Context, skillID, userID, name string) error {
@@ -104,7 +104,7 @@ func (mysql *MysqlStorage) DeleteLink(ctx context.Context, userID string, linkID
 
 func (mysql *MysqlStorage) CountLinks(ctx context.Context, userID string) (int32, error) {
 	count, err := mysql.Queries.CountLinks(ctx, userID)
-	return int32(count), err
+	return shared.Int64ToInt32(count), err
 }
 
 func (mysql *MysqlStorage) RegisterLink(ctx context.Context, linkID, userID, url, name string) error {
@@ -143,7 +143,7 @@ func (mysql *MysqlStorage) SelectEducation(ctx context.Context, userID string) (
 
 func (mysql *MysqlStorage) CountEducation(ctx context.Context, userID string) (int32, error) {
 	count, err := mysql.Queries.CountEducation(ctx, userID)
-	return int32(count), err
+	return shared.Int64ToInt32(count), err
 }
 
 func (mysql *MysqlStorage) SelectExperiences(ctx context.Context, userID string) ([]shared.ExperienceEntry, error) {
@@ -172,7 +172,7 @@ func (mysql *MysqlStorage) SelectExperiences(ctx context.Context, userID string)
 
 func (mysql *MysqlStorage) CountExperience(ctx context.Context, userID string) (int32, error) {
 	count, err := mysql.Queries.CountExperience(ctx, userID)
-	return int32(count), err
+	return shared.Int64ToInt32(count), err
 }
 
 func (mysql *MysqlStorage) SelectLinks(ctx context.Context, userID string) ([]shared.Link, error) {
