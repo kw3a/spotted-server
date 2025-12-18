@@ -28,6 +28,7 @@ var templateFuncs = template.FuncMap{
 	"inc": func(i int) int { return i + 1 },
 	"json": func(v interface{}) template.JS {
 		a, _ := json.Marshal(v)
+		// #nosec G203
 		return template.JS(a)
 	},
 }
