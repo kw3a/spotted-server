@@ -1,10 +1,10 @@
-FROM --platform=linux/amd64 debian:stable-slim
+FROM alpine:latest
 
-RUN apt-get update && apt-get install -y ca-certificates
+RUN apk add --no-cache curl
 
 WORKDIR /app
 
 COPY ./views /app/views
-ADD cmd/api/out /app/out
+ADD cmd/api/out /app/bin
 
-CMD ["./out"]
+CMD ["./bin"]

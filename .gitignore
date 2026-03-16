@@ -1,4 +1,4 @@
-.env
+.env*
 out
 *.txt
 tmp
@@ -8,3 +8,4 @@ internal/server/static/json-enc-custom.js
 internal/server/static/sse.js
 internal/server/static/tailwind.js
 node_modules
+*.sql

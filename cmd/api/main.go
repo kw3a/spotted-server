@@ -9,16 +9,12 @@ import (
 )
 
 func main() {
-	env := os.Getenv("ENV")
-	if env == "" {
-		env = "development"
+	log.Println("Loading .env file")
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Println("Error loading.env file. Running without env variables")
 	}
-	if env == "development" {
-		log.Println("Loading .env file")
-		err := godotenv.Load(".env")
-		if err != nil {
-			log.Fatal("Error loading.env file")
-		}
-	}
+	port := os.Getenv("PORT")
+	log.Println("PORT: ", port)
 	log.Fatal(server.Run())
 }

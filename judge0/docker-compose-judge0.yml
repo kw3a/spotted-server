@@ -16,13 +16,13 @@ services:
     <<: *default-logging
     restart: always
 
-#healthcheck:
-#  test: ["CMD", "curl", "-f", "http://localhost:2358/workers?X-Auth-Token=${AUTH_TOKEN}"]
-#  interval: 1m30s
-#  timeout: 10s
-#  retries: 3
-#  start_period: 40s
-#  start_interval: 5s
+healthcheck:
+  test: ["CMD", "curl", "-f", "http://localhost:2358/workers?X-Auth-Token=${AUTH_TOKEN}"]
+  interval: 1m30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+  start_interval: 5s
 
   workers:
     image: judge0/judge0:1.13.1
@@ -51,16 +51,16 @@ services:
     <<: *default-logging
     restart: always
   
-  #app:
-  #  build: .
-  #  depends_on:
-  #    server:
-  #      condition: service_healthy
-  #      restart: true
-  #  ports:
-  #    - "42069:42069"
-  #  env_file:
-  #    - ./.env 
+  app:
+    build: .
+    depends_on:
+      server:
+        condition: service_healthy
+        restart: true
+    ports:
+      - "42069:42069"
+    env_file:
+      - ./.env 
 
 volumes:
   data:
