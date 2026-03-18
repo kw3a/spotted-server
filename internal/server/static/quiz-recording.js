@@ -5,7 +5,7 @@
     const sessionID = window.participationID;
 
     //const BASE_URL = 'http://localhost:8889/';
-    const BASE_URL = window.videoBrokerURL + ":8889";
+    const BASE_URL = "http://mediamtx:8889";
 
     let pc = null;
     let localStream = null;
