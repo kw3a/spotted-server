@@ -143,9 +143,10 @@ func CreateQuizPageHandler(
 			http.Error(w, "src not found", http.StatusInternalServerError)
 			return
 		}
+		videoBrokerURL := os.Getenv("VIDEO_BROKER_URL")
 		data := QuizPageData{
 			QuizID:          input.OfferID,
-			VideoBrokerURL:  os.Getenv("VIDEO_BROKER_URL"),
+			VideoBrokerURL:  videoBrokerURL,
 			Problems:        enumerateProblemsFn(problemIDs),
 			ExpiresAt:       partiData.ExpiresAt,
 			ParticipationID: partiData.ID,

@@ -16,12 +16,12 @@ type ApplicantsInput struct {
 
 type ApplicantsData struct {
 	VideoBrokerURL string
-	User       auth.AuthUser
-	Offer      shared.Offer
-	Quiz       shared.Quiz
-	Problems   []shared.Problem
-	Languages  []shared.Language
-	Applicants []shared.Application
+	User           auth.AuthUser
+	Offer          shared.Offer
+	Quiz           shared.Quiz
+	Problems       []shared.Problem
+	Languages      []shared.Language
+	Applicants     []shared.Application
 }
 
 type ApplicantsStorage interface {
@@ -84,14 +84,15 @@ func CreateApplicantsHandler(
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		videoBrokerURL := os.Getenv("VIDEO_BROKER_URL")
 		data := ApplicantsData{
-			VideoBrokerURL: os.Getenv("VIDEO_BROKER_URL"),
-			User:       user,
-			Offer:      offer,
-			Quiz:       quiz,
-			Problems:   problems,
-			Languages:  languages,
-			Applicants: applications,
+			VideoBrokerURL: videoBrokerURL,
+			User:           user,
+			Offer:          offer,
+			Quiz:           quiz,
+			Problems:       problems,
+			Languages:      languages,
+			Applicants:     applications,
 		}
 		if err := templ.Render(w, "offerAdmin", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
