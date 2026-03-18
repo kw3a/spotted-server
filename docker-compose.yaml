@@ -56,7 +56,7 @@ services:
     container_name: mediamtx-rtsp
     restart: unless-stopped
     volumes:
-      - mediamtx.yml:/mediamtx.yml
+      - ./mediamtx.yml:/mediamtx.yml
     ports:
       - 8889:8889
       - 9996:9996
