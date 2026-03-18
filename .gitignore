@@ -9,3 +9,4 @@ internal/server/static/sse.js
 internal/server/static/tailwind.js
 node_modules
 *.sql
+mediamtx_*

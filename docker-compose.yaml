@@ -50,6 +50,16 @@ services:
     env_file: judge0.conf
     <<: *default-logging
     restart: always
+
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: mediamtx-rtsp
+    restart: unless-stopped
+    volumes:
+      - mediamtx.yml:/mediamtx.yml
+    ports:
+      - 8889:8889
+      - 9996:9996
   
   #mysql:
   #  image: mysql
