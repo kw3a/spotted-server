@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 
 type QuizPageData struct {
 	QuizID          string
+	VideoBrokerURL  string
 	Problems        []ProblemSelector
 	ExpiresAt       time.Time
 	ParticipationID string
@@ -143,6 +145,7 @@ func CreateQuizPageHandler(
 		}
 		data := QuizPageData{
 			QuizID:          input.OfferID,
+			VideoBrokerURL:  os.Getenv("VIDEO_BROKER_URL"),
 			Problems:        enumerateProblemsFn(problemIDs),
 			ExpiresAt:       partiData.ExpiresAt,
 			ParticipationID: partiData.ID,

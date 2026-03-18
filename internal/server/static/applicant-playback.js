@@ -1,7 +1,7 @@
 // Applicant Recording Playback - Button-triggered loading for offerAdmin page
 // Adapted from playback.js for multiple applicants with on-demand loading
 (function () {
-    const BASE = 'http://localhost:9996';
+    const BASE = window.videoBrokerURL + ':9996';
 
     function buildGetUrl(path, start, duration) {
         const url = new URL('/get', BASE);

@@ -3,6 +3,7 @@ package offers
 import (
 	"context"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kw3a/spotted-server/internal/auth"
@@ -14,6 +15,7 @@ type ApplicantsInput struct {
 }
 
 type ApplicantsData struct {
+	VideoBrokerURL string
 	User       auth.AuthUser
 	Offer      shared.Offer
 	Quiz       shared.Quiz
@@ -83,6 +85,7 @@ func CreateApplicantsHandler(
 			return
 		}
 		data := ApplicantsData{
+			VideoBrokerURL: os.Getenv("VIDEO_BROKER_URL"),
 			User:       user,
 			Offer:      offer,
 			Quiz:       quiz,
