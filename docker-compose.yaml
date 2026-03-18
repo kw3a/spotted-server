@@ -72,8 +72,8 @@ services:
         restart: true
     ports:
       - "42069:42069"
-    #env_file:
-    #  - ./.env 
+    env_file:
+      - ./.env 
 
 
 volumes:
