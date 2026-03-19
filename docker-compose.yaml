@@ -57,6 +57,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./mediamtx.yml:/mediamtx.yml
+      - ./recordings:/recordings
     ports:
       - 8889:8889
       - 9996:9996
