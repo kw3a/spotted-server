@@ -1,7 +1,7 @@
 // Applicant Recording Playback - Button-triggered loading for offerAdmin page
 // Adapted from playback.js for multiple applicants with on-demand loading
 (function () {
-  const BASE = "https://mediamtx.menudencia.site"
+  const BASE = "https://mediamtx.menudencia.site/playback"
 
     function buildGetUrl(path, start, duration) {
         const url = new URL('/get', BASE);
