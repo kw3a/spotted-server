@@ -61,6 +61,7 @@ services:
     ports:
       - 8889:8889
       - 9996:9996
+      - 8189:8189
   
   #mysql:
   #  image: mysql
