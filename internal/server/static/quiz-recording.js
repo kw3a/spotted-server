@@ -5,7 +5,7 @@
     const sessionID = window.participationID;
 
     //const BASE_URL = 'http://localhost:8889/';
-    const BASE_URL = "https://rtc.menudencia.site:8889/";
+    const BASE_URL = "https://rtc.menudencia.site/";
 
     let pc = null;
     let localStream = null;
