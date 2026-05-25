@@ -90,7 +90,7 @@
     </ul>
     <div class="flex flex-col">
       <div class="flex flex-row items-center divide-x bg-shark-950 rounded-t border border-shark-900">
-        <p class="w-1/4 text-center p-2 text-shark-200 text-xl font-semibold">Tiempo restante:
+        <p class="w-1/4 flex items-center justify-center p-2 text-shark-200 text-xl font-semibold">Tiempo restante:
           <span class="font-light text-lg" id="timer" class=""></span>
         </p>
         <div class="w-1/4 flex flex-col items-center justify-center p-2">
@@ -132,7 +132,7 @@
             </div>
           </div>
         </div>
-        <div id="score" class="w-1/4 text-center p-2" data-problem_id="{{(index .Problems 0).ID}}"
+        <div id="score" class="w-1/4 flex items-center justify-center p-2" data-problem_id="{{(index .Problems 0).ID}}"
           hx-on:evtproblemchange="this.dataset.problem_id = event.detail.problem_id; this.dispatchEvent(new Event('evtscore'));"
           hx-get="/score" hx-trigger="evtscore, evtrunfinished"
           hx-vals="js:{problemID: event.target.dataset.problem_id}">
