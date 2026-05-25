@@ -98,8 +98,11 @@
 
           <!-- Start Button (Visible initially) -->
           <button id="btn-start-recording"
-            class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded transition-colors">
-            Iniciar
+            class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white text-sm font-bold rounded-lg transition-all duration-200 shadow-lg shadow-blue-600/30 hover:shadow-blue-500/50 active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <span>Iniciar</span>
           </button>
 
           <!-- Status Icons (Hidden initially) -->
@@ -143,7 +146,7 @@
           </button>
         </div>
       </div>
-      <section id="workspace" class="flex-1 gap-2 overflow-y-auto xl:flex-row xl:flex">
+      <section id="workspace" class="flex-1 gap-2 overflow-y-auto flex flex-col xl:flex-row">
         <section id="problem-content"
           class="flex-1 xl:w-1/2 p-8 bg-shark-950 border border-shark-900 rounded-sm overflow-y-auto">
           <div id="problem-info" hx-get="/problems" hx-trigger="evtproblemchange"
@@ -158,7 +161,7 @@
           </div>
         </section>
         <section id="editor-section" class="flex-1 xl:w-1/2 flex flex-col">
-          <div id="code-editor" class="h-96 xl:h-3/4 border border-shark-900"></div>
+          <div id="code-editor" class="h-[50vh] min-h-[250px] xl:h-3/4 border border-shark-900"></div>
           {{template "codeEditor" .EditorData}}
           <form id="editor-form" class="h-1/12 text-xl flex flex-row">
             <select id="language-select" name="languageID"

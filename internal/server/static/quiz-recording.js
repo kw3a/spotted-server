@@ -316,7 +316,8 @@
             newBtn.addEventListener('click', async () => {
                 log('Button clicked');
                 newBtn.disabled = true;
-                newBtn.textContent = 'Iniciando...';
+                const btnText = newBtn.querySelector('span') || newBtn;
+                btnText.textContent = 'Iniciando...';
 
                 // NOW we check permissions/devices
                 await checkDevicesAndPermissions();
@@ -338,7 +339,7 @@
                         }
                     } else {
                         newBtn.disabled = false;
-                        newBtn.textContent = 'Reintentar';
+                        (newBtn.querySelector('span') || newBtn).textContent = 'Reintentar';
                         // If startRecording returned false (was handled internally) but we want to know why.
                         // Ideally startRecording should throw.
                         // For now, let's assume if it returns false, an error was logged.
@@ -348,7 +349,7 @@
                     console.error("Failed to start recording:", err);
                     alert('Error al iniciar grabación: ' + err.message);
                     newBtn.disabled = false;
-                    newBtn.textContent = 'Reintentar';
+                    (newBtn.querySelector('span') || newBtn).textContent = 'Reintentar';
                 }
             });
         } else {
