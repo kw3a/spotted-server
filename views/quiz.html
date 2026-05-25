@@ -90,9 +90,9 @@
     </ul>
     <div class="flex flex-col">
       <div class="flex flex-row items-center divide-x bg-shark-950 rounded-t border border-shark-900">
-        <p class="w-1/4 flex items-center justify-center p-2 text-shark-200 text-xl font-semibold">Tiempo restante:
+        <div class="w-1/4 flex items-center justify-center p-2 text-shark-200 text-xl font-semibold">Tiempo restante:
           <span class="font-light text-lg" id="timer" class=""></span>
-        </p>
+        </div>
         <div class="w-1/4 flex flex-col items-center justify-center p-2">
           <p class="text-shark-200 text-sm font-semibold mb-1">Grabación</p>
 
@@ -138,9 +138,9 @@
           hx-vals="js:{problemID: event.target.dataset.problem_id}">
           {{template "score" .Score}}
         </div>
-        <div class="w-1/4 flex justify-center">
+        <div class="w-1/4 flex items-center justify-center">
           <button
-            class="w-40 cursor-pointer self-center h-6 font-bold text-xl text-blue-400 hover:text-blue-600 rounded-sm"
+            class="w-40 cursor-pointer font-bold text-xl text-blue-400 hover:text-blue-600 rounded-sm"
             hx-post="/end" hx-vals="js:{quizID: '{{.QuizID}}'}" hx-confirm="Are you sure you want to end the quiz?">
             Finalizar
           </button>
