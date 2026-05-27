@@ -241,6 +241,7 @@ func (mysql *MysqlStorage) RegisterOffer(
 	err = qtx.InsertOffer(ctx, database.InsertOfferParams{
 		ID:           offerID,
 		Title:        offer.Title,
+		Status:       1,
 		About:        offer.About,
 		Requirements: offer.Requirements,
 		Benefits:     offer.Benefits,

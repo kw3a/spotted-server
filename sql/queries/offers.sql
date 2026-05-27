@@ -65,8 +65,8 @@ LIMIT 1;
 
 -- name: InsertOffer :exec
 INSERT INTO offer
-(id, title, about, requirements, benefits, min_wage, max_wage, company_id)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+(id, title, status, about, requirements, benefits, min_wage, max_wage, company_id)
+VALUES (?, ?, ?,  ?, ?, ?, ?, ?, ?);
 
 -- name: ArchiveOffer :exec
 UPDATE offer
