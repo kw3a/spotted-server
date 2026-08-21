@@ -57,12 +57,15 @@ type AnalysisPoint struct {
 	IsProfile   bool    `json:"isProfile"`
 	IsInactive  bool    `json:"isInactive"`
 	StrokeCount int32   `json:"strokeCount"`
+	StartAt     int64   `json:"startAt"`
 }
 
 type KeystrokeReportData struct {
 	Points          []AnalysisPoint `json:"points"`
 	ParticipationID string
 }
+
+const strokeWindowInterval = 60
 
 func AnalyzeKeystrokes(windows []shared.StrokeWindow, participationID string) KeystrokeReportData {
 	if len(windows) < 2 {
@@ -87,6 +90,7 @@ func AnalyzeKeystrokes(windows []shared.StrokeWindow, participationID string) Ke
 		point := AnalysisPoint{
 			WindowIndex: i,
 			StrokeCount: w.StrokeAmount,
+			StartAt:     w.CreatedAt.Unix() - strokeWindowInterval,
 		}
 
 		if i == profileIndex {

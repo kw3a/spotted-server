@@ -131,7 +131,7 @@ window.renderKeystrokeReport = function (config) {
             const yPos = height - padding.bottom - 15;
 
             // Group for hover
-            html += `<g>`;
+            html += `<g class="ks-window" data-start="${result.startAt}" style="cursor:pointer;">`;
             html += `<title>Ventana ${index + 1}: ${result.strokeCount} teclas (Inactivo)</title>`;
 
             // Background circle
@@ -143,7 +143,7 @@ window.renderKeystrokeReport = function (config) {
             html += `</g>`;
         } else if (result.isProfile) {
             // Profile: green square
-            html += `<g>`;
+            html += `<g class="ks-window" data-start="${result.startAt}" style="cursor:pointer;">`;
             html += `<title>Ventana ${index + 1}: ${result.strokeCount} teclas (Perfil) - SMD: ${result.smd.toFixed(2)}</title>`;
             html += `<rect x="${x - 6}" y="${y - 6}" width="12" height="12" fill="#28a745" stroke="#1e7e34" stroke-width="2"/>`;
             html += `</g>`;
@@ -154,7 +154,7 @@ window.renderKeystrokeReport = function (config) {
             const strokeColor = isSuspicious ? '#b71c1c' : '#2e7d32';
             const status = isSuspicious ? 'Sospechoso' : 'Legítimo';
 
-            html += `<g>`;
+            html += `<g class="ks-window" data-start="${result.startAt}" style="cursor:pointer;">`;
             html += `<title>Ventana ${index + 1}: ${result.strokeCount} teclas (${status}) - SMD: ${result.smd.toFixed(2)}</title>`;
             html += `<circle cx="${x}" cy="${y}" r="5" fill="${color}" stroke="${strokeColor}" stroke-width="2"/>`;
             html += `</g>`;
@@ -173,6 +173,22 @@ window.renderKeystrokeReport = function (config) {
 
     // Render chart
     container.innerHTML = html;
+
+    // Wire window clicks to seek the recording
+    const participationID = config.data.participationID;
+    container.querySelectorAll('.ks-window').forEach(g => {
+        g.addEventListener('click', () => {
+            if (window.seekRecording) {
+                window.seekRecording(
+                    participationID,
+                    parseInt(g.dataset.start, 10),
+                    document.getElementById(`telemetry-recordings-${participationID}`),
+                    document.getElementById(`telemetry-video-${participationID}`),
+                    document.getElementById(`telemetry-status-${participationID}`)
+                );
+            }
+        });
+    });
 
     // Render legend
     let legendHtml = '<div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">';

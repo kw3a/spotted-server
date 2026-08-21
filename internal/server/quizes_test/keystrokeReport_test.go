@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/kw3a/spotted-server/internal/server/quizes"
 	"github.com/kw3a/spotted-server/internal/server/shared"
@@ -105,4 +106,18 @@ func TestKeyStrokeReportHandlerSuccess(t *testing.T) {
 	handler(w, req)
 
 	require.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestAnalyzeKeystrokesStartAt(t *testing.T) {
+	created := time.Date(2026, 8, 20, 12, 0, 30, 0, time.UTC)
+	windows := []shared.StrokeWindow{
+		{StrokeAmount: 100, UdMean: 10, CreatedAt: created},
+		{StrokeAmount: 50, UdMean: 12, CreatedAt: created.Add(60 * time.Second)},
+	}
+
+	data := quizes.AnalyzeKeystrokes(windows, "part-id")
+
+	require.Len(t, data.Points, 2)
+	require.Equal(t, created.Unix()-60, data.Points[0].StartAt)
+	require.Equal(t, created.Add(60*time.Second).Unix()-60, data.Points[1].StartAt)
 }

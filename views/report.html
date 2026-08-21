@@ -29,6 +29,15 @@
             <!-- Legend will be rendered here -->
         </div>
 
+        <div class="mt-4 border-t border-shark-700 pt-4">
+            <span class="text-shark-200 font-semibold">Grabaciones</span>
+            <p class="text-xs text-shark-400 mt-1">Haz clic en una ventana del gráfico para saltar la grabación a ese momento.</p>
+            <video id="telemetry-video-{{.ParticipationID}}" controls
+                class="w-full rounded bg-black mt-2 hidden"></video>
+            <p id="telemetry-status-{{.ParticipationID}}" class="text-sm text-shark-300 mt-2 hidden"></p>
+            <div id="telemetry-recordings-{{.ParticipationID}}" class="mt-2 flex flex-wrap gap-2"></div>
+        </div>
+
         <script>
             // Ensure script works even if loaded via HTMX
             (function () {
@@ -59,6 +68,14 @@
 
             const dialog = document.getElementById(`report-modal-${participationID}`);
             if (dialog) dialog.showModal();
+            if (window.setupTelemetryModal) {
+                window.setupTelemetryModal(
+                    participationID,
+                    `telemetry-recordings-${participationID}`,
+                    `telemetry-video-${participationID}`,
+                    `telemetry-status-${participationID}`
+                );
+            }
             }) ();
         </script>
         <script src="/static/keystroke-report.js"></script>

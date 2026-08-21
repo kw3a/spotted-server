@@ -162,6 +162,7 @@ type Summary struct {
 
 type StrokeWindow struct {
 	ID           string
+	CreatedAt    time.Time
 	StrokeAmount int32
 	UdMean       int32
 	UdStdDev     int32

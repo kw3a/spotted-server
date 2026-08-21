@@ -42,6 +42,7 @@ func (s *MysqlStorage) SelectStrokeWindows(ctx context.Context, participationID 
 	for _, dbWindow := range dbWindows {
 		windows = append(windows, shared.StrokeWindow{
 			ID:           dbWindow.ID,
+			CreatedAt:    dbWindow.CreatedAt,
 			StrokeAmount: dbWindow.StrokeAmount,
 			UdMean:       dbWindow.UdMean,
 			UdStdDev:     dbWindow.UdStdDev,

@@ -1,119 +1,135 @@
-// Applicant Recording Playback - Button-triggered loading for offerAdmin page
-// Adapted from playback.js for multiple applicants with on-demand loading
+// Applicant Recording Playback - shared loader for the telemetry modal
 (function () {
-  const BASE = "https://playback.menudencia.site"
+  const BASE = window.videoBrokerURL || "";
 
-    function buildGetUrl(path, start, duration) {
-        const url = new URL('/get', BASE);
-        url.searchParams.set('path', path);
-        url.searchParams.set('start', start);
-        url.searchParams.set('duration', String(duration));
-        url.searchParams.set('format', 'mp4');
-        return url.toString();
+  function buildGetUrl(path, start, duration) {
+    const url = new URL('/get', BASE);
+    url.searchParams.set('path', path);
+    url.searchParams.set('start', start);
+    url.searchParams.set('duration', String(duration));
+    url.searchParams.set('format', 'mp4');
+    return url.toString();
+  }
+
+  function listUrl(path) {
+    const url = new URL('/list', BASE);
+    url.searchParams.set('path', path);
+    return url.toString();
+  }
+
+  async function loadRecordings(participationID, container, video, status) {
+    if (!participationID) return;
+    if (!BASE) {
+      if (status) {
+        status.textContent = 'Grabaciones no disponibles (sin servidor de video configurado).';
+        status.classList.remove('hidden');
+      }
+      return;
     }
 
-    function renderList(items, path, container) {
-        container.innerHTML = '';
+    try {
+      const resp = await fetch(listUrl(participationID));
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const items = await resp.json();
 
-        if (!Array.isArray(items) || items.length === 0) {
-            const p = document.createElement('p');
-            p.className = 'text-shark-300 text-center py-4';
-            p.textContent = 'Grabaciones no disponibles';
-            container.appendChild(p);
-            return;
+      if (!Array.isArray(items) || items.length === 0) {
+        if (status) {
+          status.textContent = 'Grabaciones no disponibles';
+          status.classList.remove('hidden');
         }
+        return;
+      }
 
-        const list = document.createElement('div');
-        list.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 mt-4';
+      container.innerHTML = '';
+      items.forEach((it, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'px-3 py-1 bg-shark-700 hover:bg-shark-600 border border-shark-600 text-shark-200 rounded text-xs font-medium transition-colors';
+        btn.textContent = `Grabación #${idx + 1} • ${it.start} • ${it.duration}s`;
+        btn.onclick = () => loadVideo(participationID, it, video, status);
+        container.appendChild(btn);
+      });
 
-        items.forEach((it, idx) => {
-            const card = document.createElement('div');
-            card.className = 'border border-shark-700 bg-shark-800/50 rounded-lg p-4';
-
-            const title = document.createElement('div');
-            title.className = 'font-semibold text-shark-200 mb-3';
-            title.textContent = `Grabación #${idx + 1} • ${it.start} • ${it.duration}s`;
-
-            const video = document.createElement('video');
-            video.controls = true;
-            video.className = 'w-full rounded bg-black';
-            const src = document.createElement('source');
-            src.type = 'video/mp4';
-            src.src = buildGetUrl(path, it.start, it.duration);
-            video.appendChild(src);
-
-            card.appendChild(title);
-            card.appendChild(video);
-            list.appendChild(card);
-        });
-
-        container.appendChild(list);
+      // Load first recording by default
+      loadVideo(participationID, items[0], video, status);
+    } catch (err) {
+      if (status) {
+        status.textContent = 'Grabaciones no disponibles';
+        status.classList.remove('hidden');
+      }
+      console.error('Error loading recordings:', err);
     }
+  }
 
-    async function loadRecordings(participationID, container, button) {
-        if (!participationID) {
-            console.error('No participationID provided');
-            return;
+  function loadVideo(participationID, it, video, status) {
+    video.src = buildGetUrl(participationID, it.start, it.duration);
+    video.classList.remove('hidden');
+    video.load();
+  }
+
+  // Find the recording segment covering unixTs (seconds) and seek the video to that offset
+  window.seekRecording = async function (participationID, unixTs, container, video, status) {
+    if (!video) return;
+    if (!BASE) return;
+
+    try {
+      const resp = await fetch(listUrl(participationID));
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const items = await resp.json();
+
+      if (!Array.isArray(items) || items.length === 0) {
+        status.textContent = 'Sin grabación para esta ventana.';
+        status.classList.remove('hidden');
+        return;
+      }
+
+      let target = null;
+      let offset = 0;
+      for (const it of items) {
+        const end = it.start + it.duration;
+        if (unixTs >= it.start && unixTs < end) {
+          target = it;
+          offset = unixTs - it.start;
+          break;
         }
+      }
 
-        // Disable button and show loading state
-        button.disabled = true;
-        button.textContent = 'Cargando...';
-        container.innerHTML = '<p class="text-shark-300 text-center py-4">Cargando grabaciones...</p>';
+      if (!target) {
+        status.textContent = 'Sin grabación para esta ventana.';
+        status.classList.remove('hidden');
+        return;
+      }
 
-        try {
-            const url = new URL('/list', BASE);
-            url.searchParams.set('path', participationID);
-            const resp = await fetch(url.toString());
-
-            if (!resp.ok) {
-                throw new Error(`HTTP ${resp.status}`);
-            }
-
-            const data = await resp.json();
-            renderList(data, participationID, container);
-
-            // Hide button after successful load
-            button.style.display = 'none';
-        } catch (err) {
-            container.innerHTML = '';
-            const p = document.createElement('p');
-            p.className = 'text-shark-300 text-center py-4';
-            p.textContent = 'Grabaciones no disponibles';
-            container.appendChild(p);
-
-            // Re-enable button on error
-            button.disabled = false;
-            button.textContent = 'Ver grabación';
-            console.error('Error loading recordings:', err);
+      // Activate the matching recording button if present
+      const btns = container.querySelectorAll('button');
+      btns.forEach((b, i) => {
+        if (b.textContent.startsWith(`Grabación #${items.indexOf(target) + 1}`)) {
+          b.classList.add('bg-shark-600');
+        } else {
+          b.classList.remove('bg-shark-600');
         }
+      });
+
+      status.classList.add('hidden');
+      video.src = buildGetUrl(participationID, target.start, target.duration);
+      video.classList.remove('hidden');
+      video.load();
+      video.addEventListener('loadedmetadata', () => {
+        video.currentTime = Math.max(0, offset);
+        video.play().catch(() => { });
+      }, { once: true });
+    } catch (err) {
+      status.textContent = 'Sin grabación para esta ventana.';
+      status.classList.remove('hidden');
+      console.error('Error seeking recording:', err);
     }
+  };
 
-    // Initialize all recording sections
-    function initializeRecordingSections() {
-        const sections = document.querySelectorAll('[data-recording-section]');
-
-        sections.forEach(section => {
-            const participationID = section.dataset.participationId;
-            const button = section.querySelector('[data-load-recordings]');
-            const container = section.querySelector('[data-recordings-container]');
-
-            if (button && container && participationID) {
-                button.addEventListener('click', () => {
-                    loadRecordings(participationID, container, button);
-                });
-            }
-        });
+  window.setupTelemetryModal = function (participationID, containerId, videoId, statusId) {
+    const container = document.getElementById(containerId);
+    const video = document.getElementById(videoId);
+    const status = document.getElementById(statusId);
+    if (container && video && status) {
+      loadRecordings(participationID, container, video, status);
     }
-
-    // Initialize on DOM ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeRecordingSections);
-    } else {
-        initializeRecordingSections();
-    }
-
-    // Expose for dynamic content (HTMX swaps, etc.)
-    window.initializeRecordingSections = initializeRecordingSections;
-
+  };
 })();
