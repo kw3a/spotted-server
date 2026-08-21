@@ -17,6 +17,12 @@
     return url.toString();
   }
 
+  // Format a Unix timestamp (seconds) as GMT-4 wall-clock time
+  function formatGmt4(unixSeconds) {
+    const d = new Date((unixSeconds - 4 * 3600) * 1000);
+    return d.toISOString().replace('T', ' ').slice(0, 19);
+  }
+
   async function loadRecordings(participationID, container, video, status) {
     if (!participationID) return;
     if (!BASE) {
@@ -29,6 +35,14 @@
 
     try {
       const resp = await fetch(listUrl(participationID));
+      if (resp.status === 400 || resp.status === 404) {
+        // MediaMTX: no recording directory exists for this path
+        if (status) {
+          status.textContent = 'Grabaciones no disponibles';
+          status.classList.remove('hidden');
+        }
+        return;
+      }
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const items = await resp.json();
 
@@ -44,7 +58,7 @@
       items.forEach((it, idx) => {
         const btn = document.createElement('button');
         btn.className = 'px-3 py-1 bg-shark-700 hover:bg-shark-600 border border-shark-600 text-shark-200 rounded text-xs font-medium transition-colors';
-        btn.textContent = `Grabación #${idx + 1} • ${it.start} • ${it.duration}s`;
+        btn.textContent = `Grabación #${idx + 1} • ${formatGmt4(it.start)} • ${it.duration}s`;
         btn.onclick = () => loadVideo(participationID, it, video, status);
         container.appendChild(btn);
       });
@@ -73,6 +87,12 @@
 
     try {
       const resp = await fetch(listUrl(participationID));
+      if (resp.status === 400 || resp.status === 404) {
+        // MediaMTX: no recording directory exists for this path
+        status.textContent = 'Sin grabación para esta ventana.';
+        status.classList.remove('hidden');
+        return;
+      }
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const items = await resp.json();
 
@@ -86,9 +106,11 @@
       let offset = 0;
       for (const it of items) {
         const end = it.start + it.duration;
-        if (unixTs >= it.start && unixTs < end) {
+        // Overlap check: the window [unixTs, unixTs+60) may straddle the segment start
+        // when the recording was activated manually later than page load.
+        if (unixTs < end && unixTs + 60 > it.start) {
           target = it;
-          offset = unixTs - it.start;
+          offset = Math.max(0, unixTs - it.start);
           break;
         }
       }
@@ -114,7 +136,7 @@
       video.classList.remove('hidden');
       video.load();
       video.addEventListener('loadedmetadata', () => {
-        video.currentTime = Math.max(0, offset);
+        video.currentTime = offset;
         video.play().catch(() => { });
       }, { once: true });
     } catch (err) {
