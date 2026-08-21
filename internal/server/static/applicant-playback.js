@@ -17,10 +17,19 @@
     return url.toString();
   }
 
-  // Format a Unix timestamp (seconds) as GMT-4 wall-clock time
-  function formatGmt4(unixSeconds) {
-    const d = new Date((unixSeconds - 4 * 3600) * 1000);
-    return d.toISOString().replace('T', ' ').slice(0, 19);
+  // MediaMTX /list returns `start` as an ISO-8601 string (e.g. "2026-03-18T18:23:16-04:00").
+  // Convert any start value to epoch seconds (absolute instant).
+  function toEpochSeconds(value) {
+    const ms = typeof value === 'number' ? value * 1000 : Date.parse(value);
+    return Number.isFinite(ms) ? ms / 1000 : NaN;
+  }
+
+  // Format a MediaMTX start value as GMT-4 wall-clock time
+  function formatGmt4(value) {
+    const ms = typeof value === 'number' ? value * 1000 : Date.parse(value);
+    if (!Number.isFinite(ms)) return String(value);
+    const d = new Date(ms - 4 * 3600 * 1000);
+    return d.toISOString().replace('T', ' ').slice(0, 19) + ' GMT-4';
   }
 
   async function loadRecordings(participationID, container, video, status) {
@@ -105,12 +114,14 @@
       let target = null;
       let offset = 0;
       for (const it of items) {
-        const end = it.start + it.duration;
+        const segStart = toEpochSeconds(it.start);
+        if (!Number.isFinite(segStart)) continue;
+        const end = segStart + it.duration;
         // Overlap check: the window [unixTs, unixTs+60) may straddle the segment start
         // when the recording was activated manually later than page load.
-        if (unixTs < end && unixTs + 60 > it.start) {
+        if (unixTs < end && unixTs + 60 > segStart) {
           target = it;
-          offset = Math.max(0, unixTs - it.start);
+          offset = Math.max(0, unixTs - segStart);
           break;
         }
       }
