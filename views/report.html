@@ -2,7 +2,7 @@
 <dialog id="report-modal-{{.ParticipationID}}"
     class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-0 rounded-lg bg-transparent backdrop:bg-black/50 open:animate-fade-in m-0">
     <div
-        class="flex flex-col lg:flex-row bg-shark-900 rounded-lg text-shark-200 font-mono w-[1100px] max-w-[95vw] h-[90vh] border border-shark-700 relative shadow-2xl overflow-hidden">
+        class="flex flex-col bg-shark-900 rounded-lg text-shark-200 font-mono w-[1100px] max-w-[95vw] h-[90vh] border border-shark-700 relative shadow-2xl overflow-hidden">
         <div class="flex justify-between items-start p-6 pb-4 shrink-0">
             <h2 class="text-xl font-bold text-white">Análisis de la dinámica de pulsaciones</h2>
             <button type="button" onclick="this.closest('dialog').close()"
@@ -16,7 +16,7 @@
 
         <div class="flex flex-1 min-h-0 flex-col lg:flex-row">
             <div
-                class="flex-1 min-h-0 overflow-y-auto p-6 pt-2 border-b lg:border-b-0 lg:border-r border-shark-700">
+                class="flex-1 lg:w-1/2 min-h-0 overflow-y-auto p-6 pt-2 border-b lg:border-b-0 lg:border-r border-shark-700">
                 <div id="no-data-param-{{.ParticipationID}}"
                     class="hidden mb-4 p-4 rounded bg-shark-800 text-shark-300 text-center">
                     No hay suficientes datos para generar un reporte.
@@ -33,7 +33,7 @@
                 </div>
             </div>
 
-            <div class="flex-1 min-h-0 overflow-y-auto p-6 pt-2">
+            <div class="flex-1 lg:w-1/2 min-h-0 overflow-y-auto p-6 pt-2">
                 <span class="text-shark-200 font-semibold">Grabaciones</span>
                 <p class="text-xs text-shark-400 mt-1">Haz clic en una ventana del gráfico para saltar la grabación a ese momento.</p>
                 <video id="telemetry-video-{{.ParticipationID}}" controls
