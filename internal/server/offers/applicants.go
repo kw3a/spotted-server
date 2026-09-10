@@ -15,7 +15,7 @@ type ApplicantsInput struct {
 }
 
 type ApplicantsData struct {
-	VideoBrokerURL string
+	VideoRecordsURL string
 	User           auth.AuthUser
 	Offer          shared.Offer
 	Quiz           shared.Quiz
@@ -84,9 +84,9 @@ func CreateApplicantsHandler(
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		videoBrokerURL := os.Getenv("VIDEO_BROKER_URL")
+		videoRecordsURL := os.Getenv("VIDEO_RECORDS_URL")
 		data := ApplicantsData{
-			VideoBrokerURL: videoBrokerURL,
+			VideoRecordsURL: videoRecordsURL,
 			User:           user,
 			Offer:          offer,
 			Quiz:           quiz,

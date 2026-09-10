@@ -1,6 +1,6 @@
 // Applicant Recording Playback - shared loader for the telemetry modal
 (function () {
-  const BASE = window.videoBrokerURL || "";
+  const BASE = window.videoRecordsURL || "";
 
   function buildGetUrl(path, start, duration) {
     const url = new URL('/get', BASE);

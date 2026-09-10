@@ -4,8 +4,7 @@
     // ParticipationID will be set globally by the template
     const sessionID = window.participationID;
 
-    //const BASE_URL = 'http://localhost:8889/';
-    const BASE_URL = "https://rtc.menudencia.site/";
+    const BASE_URL = (window.videoPublishURL || "").replace(/\/?$/, "/");
 
     let pc = null;
     let localStream = null;

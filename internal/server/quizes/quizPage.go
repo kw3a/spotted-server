@@ -14,7 +14,8 @@ import (
 
 type QuizPageData struct {
 	QuizID          string
-	VideoBrokerURL  string
+	VideoRecordsURL string
+	VideoPublishURL string
 	Problems        []ProblemSelector
 	ExpiresAt       time.Time
 	ParticipationID string
@@ -143,10 +144,12 @@ func CreateQuizPageHandler(
 			http.Error(w, "src not found", http.StatusInternalServerError)
 			return
 		}
-		videoBrokerURL := os.Getenv("VIDEO_BROKER_URL")
+		videoRecordsURL := os.Getenv("VIDEO_RECORDS_URL")
+		videoPublishURL := os.Getenv("VIDEO_PUBLISH_URL")
 		data := QuizPageData{
 			QuizID:          input.OfferID,
-			VideoBrokerURL:  videoBrokerURL,
+			VideoRecordsURL: videoRecordsURL,
+			VideoPublishURL: videoPublishURL,
 			Problems:        enumerateProblemsFn(problemIDs),
 			ExpiresAt:       partiData.ExpiresAt,
 			ParticipationID: partiData.ID,
