@@ -36,10 +36,6 @@
             return;
         }
 
-        if (buffer.length === 0) {
-            return; // Nothing to send
-        }
-
         try {
             // Aggregate stats
             const stats = {

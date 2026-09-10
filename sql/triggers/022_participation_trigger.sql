@@ -1,4 +1,5 @@
 -- +goose Up
+DROP TRIGGER IF EXISTS before_participation_insert;
 -- +goose StatementBegin
 CREATE TRIGGER before_participation_insert
 BEFORE INSERT ON participation

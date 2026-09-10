@@ -706,6 +706,9 @@
   .max-w-lg {
     max-width: var(--container-lg);
   }
+  .max-w-md {
+    max-width: var(--container-md);
+  }
   .min-w-0 {
     min-width: 0px;
   }
@@ -1530,6 +1533,18 @@
   }
   .bg-black {
     background-color: var(--color-black);
+  }
+  .bg-black\/60 {
+    background-color: color-mix(in srgb, #000 60%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-black) 60%, transparent);
+    }
+  }
+  .bg-black\/90 {
+    background-color: color-mix(in srgb, #000 90%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-black) 90%, transparent);
+    }
   }
   .bg-blue-600 {
     background-color: var(--color-blue-600);
@@ -2548,6 +2563,9 @@
     .hover\:border-red-500:hover {
       border-color: var(--color-red-500);
     }
+    .hover\:border-shark-400:hover {
+      border-color: var(--color-shark-400);
+    }
     .hover\:border-shark-500:hover {
       border-color: var(--color-shark-500);
     }
@@ -2614,6 +2632,9 @@
     }
     .hover\:text-green-400:hover {
       color: var(--color-green-400);
+    }
+    .hover\:text-shark-100:hover {
+      color: var(--color-shark-100);
     }
     .hover\:text-white:hover {
       color: var(--color-white);

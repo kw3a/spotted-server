@@ -88,7 +88,7 @@
       </li>
       {{ $first = false }} {{end}}
     </ul>
-    <div class="flex flex-col">
+    <div class="flex flex-1 min-w-0 flex-col">
       <div class="flex flex-row items-center divide-x bg-shark-950 rounded-t border border-shark-900">
         <div class="w-1/4 flex items-center justify-center p-2 text-shark-200 text-xl font-semibold">Tiempo restante:
           <span class="font-light text-lg" id="timer" class=""></span>
@@ -199,6 +199,15 @@
     window.quizID = "{{.QuizID}}";
     window.videoPublishURL = "{{.VideoPublishURL}}";
   </script>
+  <div id="recording-lock"
+    class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/90 px-4 text-center">
+    <p class="text-2xl font-semibold text-white">Para comenzar la prueba debes iniciar la grabación</p>
+    <p class="text-sm text-shark-300">Se solicitarán permisos de cámara, micrófono y pantalla.</p>
+    <button type="button" onclick="document.getElementById('btn-start-recording').click()"
+      class="cursor-pointer rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 font-bold text-white shadow-lg shadow-blue-600/30 transition-all duration-200 hover:from-blue-500 hover:to-blue-400 active:scale-95">
+      Iniciar grabación
+    </button>
+  </div>
   <script src="/static/quiz-recording.js"></script>
   <script src="/static/keystroke-recording.js"></script>
 </body>

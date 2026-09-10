@@ -328,6 +328,8 @@
                     if (success) {
                         // Toggle UI: Hide button, Show icons
                         newBtn.style.display = 'none';
+                        const recordingLock = document.getElementById('recording-lock');
+                        if (recordingLock) recordingLock.remove();
                         const currentStatusIcons = document.getElementById('recording-status-icons');
                         if (currentStatusIcons) {
                             log('Showing status icons');

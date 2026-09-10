@@ -129,8 +129,14 @@
             src="/public/help.svg"
             title="Si un problema no aparece, es porque el aplicante no ha enviado ninguna solución para ese problema. Pueden aparecer múltiples grabaciones de una sola prueba debido a desconexiones" />
         </span>
+        {{if .Applicants}}
         {{range .Applicants}}
         {{template "applicantCard" .}}
+        {{end}}
+        {{else}}
+        <div class="rounded-2xl border border-dashed border-shark-700 bg-shark-900/50 p-8 text-center">
+          <p class="text-shark-300">Esta oferta todavía no tiene aplicantes.</p>
+        </div>
         {{end}}
       </div>
     </div>
