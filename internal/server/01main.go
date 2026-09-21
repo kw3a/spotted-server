@@ -43,6 +43,15 @@ func Run() error {
 	return srv.ListenAndServe()
 }
 
+// noCache forces browsers to revalidate embedded static assets, whose
+// filesystem modification time is always zero.
+func noCache(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache")
+		h.ServeHTTP(w, r)
+	})
+}
+
 func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 	app, err := NewApp(envVars)
 	if err != nil {
@@ -56,7 +65,7 @@ func viewRoutes(r *chi.Mux, envVars EnvVariables) {
 	}
 	fileServer := http.FileServer(http.FS(Files))
 	r.Handle("/public/*", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
-	r.Handle("/static/*", fileServer)
+	r.Handle("/static/*", noCache(fileServer))
 
 	r.NotFound(app.NotFoundHandler())
 	r.Post("/register", app.UserHandler())
