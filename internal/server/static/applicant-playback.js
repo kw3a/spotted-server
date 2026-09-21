@@ -172,6 +172,7 @@
   async function loadRecordings(participationID, container, video, status) {
     if (!BASE) {
       setStatus(status, 'Grabaciones no disponibles (sin servidor de video configurado).');
+      publishSegments(participationID, []);
       return;
     }
 
@@ -186,12 +187,14 @@
       const resp = await fetch(listUrl(participationID));
       if (resp.status === 400 || resp.status === 404) {
         setStatus(status, 'Grabaciones no disponibles');
+        publishSegments(participationID, []);
         return;
       }
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const items = await resp.json();
       if (!Array.isArray(items) || items.length === 0) {
         setStatus(status, 'Grabaciones no disponibles');
+        publishSegments(participationID, []);
         return;
       }
 
@@ -283,6 +286,7 @@
     } catch (err) {
       console.error('Error loading recordings:', err);
       setStatus(status, 'Grabaciones no disponibles');
+      publishSegments(participationID, []);
     }
   }
 

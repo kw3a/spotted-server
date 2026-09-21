@@ -2,6 +2,8 @@
 (function () {
     const WINDOW_SECONDS = 60;
     const states = new Map();
+    // ponytail: participaciones cuya disponibilidad de video ya se resolvió (haya o no segmentos).
+    const segmentsResolved = new Set();
 
     function formatTime(timestamp, seconds) {
         if (!Number.isFinite(timestamp)) return 'Hora no disponible';
@@ -177,7 +179,7 @@
             html += `<rect x="${x}" y="${coverageY}" width="${segmentWidth}" height="${trackHeight}" fill="#2563eb" rx="2"/>`;
             html += '</g>';
         });
-        if (!segments.length) html += `<text x="${padding.left + chartWidth / 2}" y="${coverageY + 16}" text-anchor="middle" font-size="11" fill="#64748b">Cargando disponibilidad de video…</text>`;
+        if (!segments.length) html += `<text x="${padding.left + chartWidth / 2}" y="${coverageY + 16}" text-anchor="middle" font-size="11" fill="#64748b">${segmentsResolved.has(participationID) ? 'Sin grabación disponible.' : 'Cargando disponibilidad de video…'}</text>`;
         const cursorX = Number.isFinite(selectedAt) ? xFor(selectedAt) : -20;
         html += `<line class="timeline-cursor${Number.isFinite(selectedAt) ? '' : ' hidden'}" x1="${cursorX}" x2="${cursorX}" y1="${padding.top}" y2="${coverageY + trackHeight}" stroke="#0f172a" stroke-width="2" stroke-dasharray="4 3" pointer-events="none"/>`;
         html += '</svg>';
@@ -202,6 +204,7 @@
 
     window.renderKeystrokeReport = config => render(config);
     window.setTelemetryRecordingSegments = (participationID, segments) => {
+        segmentsResolved.add(participationID);
         const state = states.get(participationID);
         if (!state) return;
         state.segments = segments;
