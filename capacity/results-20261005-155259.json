@@ -1,0 +1,1056 @@
+{
+  "target_base": "https://rtc.menudencia.site",
+  "started_at": "2026-10-05T15:53:12-04:00",
+  "users": 20,
+  "summary": {
+    "succeeded": 20,
+    "failed": 0,
+    "avg_signaling_ms": 1194.8006639000002,
+    "avg_ice_establishment_ms": 601.3283570000001,
+    "total_kbps": 56098.41638724716,
+    "packets_sent": 72460,
+    "packets_lost": 0
+  },
+  "results": [
+    {
+      "target": "https://rtc.menudencia.site/vu1/whip",
+      "signaling": {
+        "latency_ms": 896.985025,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 606.520919,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "connected"
+      },
+      "dtls": {
+        "handshake_ms": 408.189462,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1035.518153,
+        "first_rtp_after_dtls_ms": 20.807772,
+        "video": {
+          "packets_sent": 3132,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 227.0333957421875,
+          "jitter_ms": 0.5444444444444444,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 226.91778679687502,
+          "jitter_ms": 4.104166666666667,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2711.0231342062007,
+        "audio_kbps": 79.40419295406582,
+        "total_kbps": 2790.4273271602665,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu2/whip",
+      "signaling": {
+        "latency_ms": 1353.975692,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 415.378,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 415.179463,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 851.177164,
+        "first_rtp_after_dtls_ms": 20.619701,
+        "video": {
+          "packets_sent": 3132,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 210.00256349218748,
+          "jitter_ms": 0.32222222222222224,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 210.5816468984375,
+          "jitter_ms": 3.5833333333333335,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2800.554002122646,
+        "audio_kbps": 82.02649677054114,
+        "total_kbps": 2882.5804988931873,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu3/whip",
+      "signaling": {
+        "latency_ms": 1352.756185,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 611.025619,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "connected"
+      },
+      "dtls": {
+        "handshake_ms": 422.953281,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1054.577721,
+        "first_rtp_after_dtls_ms": 20.598821,
+        "video": {
+          "packets_sent": 3132,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 216.18106792187496,
+          "jitter_ms": 0.7555555555555555,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 216.09362339843753,
+          "jitter_ms": 3.4166666666666665,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2718.382169145113,
+        "audio_kbps": 79.6197345416208,
+        "total_kbps": 2798.001903686734,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu4/whip",
+      "signaling": {
+        "latency_ms": 1328.866518,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 616.68104,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 423.962364,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1060.873178,
+        "first_rtp_after_dtls_ms": 20.229774,
+        "video": {
+          "packets_sent": 3140,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 215.22913524999998,
+          "jitter_ms": 0.2777777777777778,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 215.33224898437498,
+          "jitter_ms": 3.2708333333333335,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2725.7044201995395,
+        "audio_kbps": 79.6388279684702,
+        "total_kbps": 2805.3432481680097,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu5/whip",
+      "signaling": {
+        "latency_ms": 1329.061612,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 618.026106,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "connected"
+      },
+      "dtls": {
+        "handshake_ms": 425.016402,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1063.718157,
+        "first_rtp_after_dtls_ms": 20.675649,
+        "video": {
+          "packets_sent": 3140,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 213.150500546875,
+          "jitter_ms": 0.8333333333333334,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 213.22790549218752,
+          "jitter_ms": 3.5625,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2725.704630509114,
+        "audio_kbps": 79.63883411323332,
+        "total_kbps": 2805.3434646223473,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu6/whip",
+      "signaling": {
+        "latency_ms": 1364.093811,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 610.976515,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 422.915188,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1054.615754,
+        "first_rtp_after_dtls_ms": 20.724051,
+        "video": {
+          "packets_sent": 3140,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 215.33705010156245,
+          "jitter_ms": 0.7555555555555555,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 215.35294846874996,
+          "jitter_ms": 3.5625,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2725.7049438216645,
+        "audio_kbps": 79.63884326750713,
+        "total_kbps": 2805.3437870891717,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu7/whip",
+      "signaling": {
+        "latency_ms": 909.788729,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 607.211781,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 412.319132,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1040.341761,
+        "first_rtp_after_dtls_ms": 20.810848,
+        "video": {
+          "packets_sent": 3132,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 228.67470602343752,
+          "jitter_ms": 0.6555555555555556,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 228.67893439062505,
+          "jitter_ms": 4,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2711.0235374353356,
+        "audio_kbps": 79.4042047643984,
+        "total_kbps": 2790.427742199734,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu8/whip",
+      "signaling": {
+        "latency_ms": 1141.802202,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 613.404263,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 462.269211,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1096.347229,
+        "first_rtp_after_dtls_ms": 20.673755,
+        "video": {
+          "packets_sent": 3140,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 212.66356260937502,
+          "jitter_ms": 0.5888888888888889,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 212.718876765625,
+          "jitter_ms": 3.7291666666666665,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2734.229056309317,
+        "audio_kbps": 79.8878982725023,
+        "total_kbps": 2814.1169545818193,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu9/whip",
+      "signaling": {
+        "latency_ms": 1303.340609,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 606.179397,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 415.047261,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1041.98249,
+        "first_rtp_after_dtls_ms": 20.755832,
+        "video": {
+          "packets_sent": 3140,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 209.21616028125,
+          "jitter_ms": 0.5666666666666667,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 209.25368185937498,
+          "jitter_ms": 4,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2718.3442424214786,
+        "audio_kbps": 79.42378046458816,
+        "total_kbps": 2797.768022886067,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu10/whip",
+      "signaling": {
+        "latency_ms": 1129.360972,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 610.441841,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 418.337762,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1049.22452,
+        "first_rtp_after_dtls_ms": 20.444917,
+        "video": {
+          "packets_sent": 3140,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 212.79096634375,
+          "jitter_ms": 0.4666666666666667,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 212.617919875,
+          "jitter_ms": 3.4583333333333335,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2718.34380920338,
+        "audio_kbps": 79.4237678069494,
+        "total_kbps": 2797.767577010329,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu11/whip",
+      "signaling": {
+        "latency_ms": 1143.687603,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 611.212135,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 423.134008,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1055.427588,
+        "first_rtp_after_dtls_ms": 21.081445,
+        "video": {
+          "packets_sent": 3140,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 206.53309038281247,
+          "jitter_ms": 0.32222222222222224,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 206.53901975,
+          "jitter_ms": 3.5416666666666665,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2725.549665020795,
+        "audio_kbps": 79.63430637729334,
+        "total_kbps": 2805.1839713980885,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu12/whip",
+      "signaling": {
+        "latency_ms": 1277.64627,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 612.647986,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "connected"
+      },
+      "dtls": {
+        "handshake_ms": 429.666632,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1063.419328,
+        "first_rtp_after_dtls_ms": 21.10471,
+        "video": {
+          "packets_sent": 3140,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 216.5267814296875,
+          "jitter_ms": 0.35555555555555557,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 216.84977999999998,
+          "jitter_ms": 4.208333333333333,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2725.7833438280154,
+        "audio_kbps": 79.64113393577327,
+        "total_kbps": 2805.4244777637887,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu13/whip",
+      "signaling": {
+        "latency_ms": 1376.836407,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 611.49619,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 421.840831,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1053.548029,
+        "first_rtp_after_dtls_ms": 20.211008,
+        "video": {
+          "packets_sent": 3132,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 215.63881848437504,
+          "jitter_ms": 0.5444444444444444,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 215.77013700781245,
+          "jitter_ms": 3.7291666666666665,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2718.817024977199,
+        "audio_kbps": 79.63247120032474,
+        "total_kbps": 2798.4494961775235,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu14/whip",
+      "signaling": {
+        "latency_ms": 1155.919301,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 611.716952,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 422.196843,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1054.614341,
+        "first_rtp_after_dtls_ms": 20.700546,
+        "video": {
+          "packets_sent": 3132,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 207.99391805468747,
+          "jitter_ms": 0.4444444444444444,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 208.08483100000004,
+          "jitter_ms": 3.5208333333333335,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2718.2266004237476,
+        "audio_kbps": 79.6151780298701,
+        "total_kbps": 2797.8417784536177,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu15/whip",
+      "signaling": {
+        "latency_ms": 673.243417,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 611.652346,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 424.612087,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1057.114526,
+        "first_rtp_after_dtls_ms": 20.850093,
+        "video": {
+          "packets_sent": 3140,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 230.97654754687503,
+          "jitter_ms": 0.2777777777777778,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 487,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 230.89683781250002,
+          "jitter_ms": 2.8125,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2725.5661452856143,
+        "audio_kbps": 79.80081165174806,
+        "total_kbps": 2805.3669569373624,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu16/whip",
+      "signaling": {
+        "latency_ms": 1283.725943,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 609.45461,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 424.9718,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1055.244592,
+        "first_rtp_after_dtls_ms": 20.818182,
+        "video": {
+          "packets_sent": 3132,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 216.17080932031251,
+          "jitter_ms": 0.4222222222222222,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 216.24899726562495,
+          "jitter_ms": 4.458333333333333,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2718.8177712926495,
+        "audio_kbps": 79.63249305944328,
+        "total_kbps": 2798.4502643520927,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu17/whip",
+      "signaling": {
+        "latency_ms": 1340.480963,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 609.522309,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "connected"
+      },
+      "dtls": {
+        "handshake_ms": 422.698744,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1052.276604,
+        "first_rtp_after_dtls_ms": 20.055551,
+        "video": {
+          "packets_sent": 3140,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 214.17244703125004,
+          "jitter_ms": 0.8555555555555555,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 486,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 214.56413554687504,
+          "jitter_ms": 3.375,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2718.7706078698234,
+        "audio_kbps": 79.43623788452715,
+        "total_kbps": 2798.2068457543505,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu18/whip",
+      "signaling": {
+        "latency_ms": 1283.589261,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 613.109048,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 432.038555,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1066.172911,
+        "first_rtp_after_dtls_ms": 21.025308,
+        "video": {
+          "packets_sent": 3132,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 214.950447796875,
+          "jitter_ms": 0.37777777777777777,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 487,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 215.41302046875,
+          "jitter_ms": 4.125,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2718.824926846464,
+        "audio_kbps": 79.79872205276888,
+        "total_kbps": 2798.623648899233,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu19/whip",
+      "signaling": {
+        "latency_ms": 885.139005,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 613.830528,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 424.847046,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1058.90202,
+        "first_rtp_after_dtls_ms": 20.224446,
+        "video": {
+          "packets_sent": 3140,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 235.4046638359375,
+          "jitter_ms": 0.7666666666666667,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 487,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 235.3045953124999,
+          "jitter_ms": 3.9375,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2725.721170391524,
+        "audio_kbps": 79.80535057269844,
+        "total_kbps": 2805.5265209642225,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    },
+    {
+      "target": "https://rtc.menudencia.site/vu20/whip",
+      "signaling": {
+        "latency_ms": 1365.713753,
+        "http_status": 201,
+        "sdp_rejected": false
+      },
+      "ice": {
+        "establishment_ms": 606.079555,
+        "failed": false,
+        "connectivity_check_timeout": false,
+        "final_state": "closed"
+      },
+      "dtls": {
+        "handshake_ms": 412.912541,
+        "failed": false
+      },
+      "transport": {
+        "first_rtp_ms": 1039.62339,
+        "first_rtp_after_dtls_ms": 20.631294,
+        "video": {
+          "packets_sent": 3140,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 208.61146063281254,
+          "jitter_ms": 0.15555555555555556,
+          "rtx_packets": 0
+        },
+        "audio": {
+          "packets_sent": 487,
+          "packets_lost": 0,
+          "loss_ratio": 0,
+          "rtt_ms": 207.8968479453125,
+          "jitter_ms": 3.6041666666666665,
+          "rtx_packets": 0
+        },
+        "rr_received": 20
+      },
+      "steady": {
+        "duration_s": 10,
+        "video_kbps": 2718.6243352071797,
+        "audio_kbps": 79.59756504203006,
+        "total_kbps": 2798.2219002492097,
+        "nack_count": 0,
+        "nack_rate_per_s": 0,
+        "rtx_kbps": 0,
+        "pli_count": 5,
+        "repeated_pli": 0,
+        "fir_count": 0,
+        "stalls": []
+      }
+    }
+  ]
+}

@@ -4,6 +4,7 @@
   const BASE = window.videoRecordsURL || "";
   const states = new Map();
   const recordingSegments = new Map();
+  const loads = new Map();
 
   function listUrl(path) {
     const url = new URL('/list', BASE);
@@ -97,21 +98,27 @@
     return { init: bytes, media: bytes.subarray(bytes.length) };
   }
 
-  function appendBuffer(sb, data) {
+  function appendBuffer(sb, data, signal) {
     return new Promise((resolve, reject) => {
+      if (signal.aborted) { reject(signal.reason); return; }
       if (!data || data.byteLength === 0) return resolve();
-      const onEnd = () => {
+      const cleanup = () => {
         sb.removeEventListener('updateend', onEnd);
         sb.removeEventListener('error', onErr);
+        signal.removeEventListener('abort', onAbort);
+      };
+      const onEnd = () => {
+        cleanup();
         resolve();
       };
       const onErr = () => {
-        sb.removeEventListener('updateend', onEnd);
-        sb.removeEventListener('error', onErr);
+        cleanup();
         reject(new Error('SourceBuffer append failed'));
       };
+      const onAbort = () => { cleanup(); reject(signal.reason); };
       sb.addEventListener('updateend', onEnd);
       sb.addEventListener('error', onErr);
+      signal.addEventListener('abort', onAbort, { once: true });
       try {
         sb.appendBuffer(data);
       } catch (e) {
@@ -126,8 +133,8 @@
     return true;
   }
 
-  async function fetchBytes(url) {
-    const resp = await fetch(url);
+  async function fetchBytes(url, signal) {
+    const resp = await fetch(url, { signal });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     return new Uint8Array(await resp.arrayBuffer());
   }
@@ -170,6 +177,10 @@
   // --- Loading ---
 
   async function loadRecordings(participationID, container, video, status) {
+    window.disposeTelemetryRecording(participationID);
+    const controller = new AbortController();
+    const { signal } = controller;
+    loads.set(participationID, controller);
     if (!BASE) {
       setStatus(status, 'Grabaciones no disponibles (sin servidor de video configurado).');
       publishSegments(participationID, []);
@@ -184,7 +195,7 @@
     setStatus(status, 'Cargando grabación...');
 
     try {
-      const resp = await fetch(listUrl(participationID));
+      const resp = await fetch(listUrl(participationID), { signal });
       if (resp.status === 400 || resp.status === 404) {
         setStatus(status, 'Grabaciones no disponibles');
         publishSegments(participationID, []);
@@ -208,7 +219,7 @@
       publishSegments(participationID, segments);
 
       const first = splitInitAndMedia(
-        await fetchBytes(getUrl(participationID, segments[0].start, segments[0].duration))
+        await fetchBytes(getUrl(participationID, segments[0].start, segments[0].duration), signal)
       );
       const mime = codecString(first.init);
 
@@ -224,10 +235,17 @@
       states.set(participationID, st);
       video.src = objectUrl;
 
-      await new Promise((resolve) => mediaSource.addEventListener('sourceopen', resolve, { once: true }));
+      await new Promise((resolve, reject) => {
+        const onAbort = () => reject(signal.reason);
+        signal.addEventListener('abort', onAbort, { once: true });
+        mediaSource.addEventListener('sourceopen', () => {
+          signal.removeEventListener('abort', onAbort);
+          resolve();
+        }, { once: true, signal });
+      });
       const sb = mediaSource.addSourceBuffer(mime);
       st.sourceBuffer = sb;
-      await appendBuffer(sb, first.init);
+      await appendBuffer(sb, first.init, signal);
 
       let offset = 0;
       let currentInit = first.init;
@@ -238,7 +256,7 @@
           segMedia = first.media;
         } else {
           const seg = splitInitAndMedia(
-            await fetchBytes(getUrl(participationID, segments[k].start, segments[k].duration))
+            await fetchBytes(getUrl(participationID, segments[k].start, segments[k].duration), signal)
           );
           segInit = seg.init;
           segMedia = seg.media;
@@ -253,13 +271,13 @@
           } catch (e) {
             console.warn('SourceBuffer.changeType failed for segment', k, e);
           }
-          await appendBuffer(sb, segInit);
+          await appendBuffer(sb, segInit, signal);
           currentInit = segInit;
         }
 
         segments[k].timelineStart = offset;
         sb.timestampOffset = offset;
-        await appendBuffer(sb, segMedia);
+        await appendBuffer(sb, segMedia, signal);
 
         if (sb.buffered.length > 0) offset = sb.buffered.end(sb.buffered.length - 1);
         setStatus(status, `Cargando grabación... ${k + 1}/${segments.length}`);
@@ -275,15 +293,18 @@
         if (Number.isFinite(timestamp) && window.setTelemetrySelection) {
           window.setTelemetrySelection(participationID, timestamp);
         }
-      });
+      }, { signal });
       video.addEventListener('seeked', () => {
         const timestamp = timestampAtPlayerTime(st, video.currentTime || 0);
         if (Number.isFinite(timestamp) && window.setTelemetrySelection) {
           window.setTelemetrySelection(participationID, timestamp);
         }
-      });
+      }, { signal });
+      const initialTimestamp = timestampAtPlayerTime(st, video.currentTime || 0);
+      if (Number.isFinite(initialTimestamp)) window.setTelemetrySelection?.(participationID, initialTimestamp);
       setStatus(status, '');
     } catch (err) {
+      if (signal.aborted) return;
       console.error('Error loading recordings:', err);
       setStatus(status, 'Grabaciones no disponibles');
       publishSegments(participationID, []);
@@ -334,6 +355,20 @@
     if (container && video && status) {
       loadRecordings(participationID, container, video, status);
     }
+  };
+
+  window.disposeTelemetryRecording = function (participationID) {
+    loads.get(participationID)?.abort();
+    loads.delete(participationID);
+    const state = states.get(participationID);
+    if (state) {
+      state.video.pause();
+      state.video.removeAttribute('src');
+      state.video.load();
+      if (state.objectUrl) URL.revokeObjectURL(state.objectUrl);
+    }
+    states.delete(participationID);
+    recordingSegments.delete(participationID);
   };
 
   window.getTelemetryRecordingSegments = function (participationID) {

@@ -1,0 +1,764 @@
+{
+    "root_group": {
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                        "offer_read_ok": {
+                            "fails": 0,
+                            "name": "offer_read_ok",
+                            "path": "::setup::offer_read_ok",
+                            "id": "6488720c16ea5bb28ed0297d02e51cef",
+                            "passes": 10
+                        }
+                    }
+            }
+        },
+        "checks": {
+            "register_ok": {
+                "name": "register_ok",
+                "path": "::register_ok",
+                "id": "81b9f676ca921fb1099f33c605d9cc79",
+                "passes": 25,
+                "fails": 0
+            },
+            "search_ok": {
+                "fails": 0,
+                "name": "search_ok",
+                "path": "::search_ok",
+                "id": "b69f87d58a854f7ac29abff62f0a3e50",
+                "passes": 45
+            },
+            "offer_read_ok": {
+                "passes": 71,
+                "fails": 0,
+                "name": "offer_read_ok",
+                "path": "::offer_read_ok",
+                "id": "0b9583510a0ff0f62b2aaec7ad884822"
+            },
+            "participate_ok": {
+                "name": "participate_ok",
+                "path": "::participate_ok",
+                "id": "ac8e80621e889dba85bd5de2404d9e25",
+                "passes": 25,
+                "fails": 0
+            },
+            "quiz_page_ok": {
+                "name": "quiz_page_ok",
+                "path": "::quiz_page_ok",
+                "id": "d5a43062c736fe8f4ac4ef4900b884b0",
+                "passes": 25,
+                "fails": 0
+            },
+            "problem_read_ok": {
+                "passes": 75,
+                "fails": 0,
+                "name": "problem_read_ok",
+                "path": "::problem_read_ok",
+                "id": "67fdae50c7e865ca08eb88d41aceee10"
+            },
+            "examples_ok": {
+                "name": "examples_ok",
+                "path": "::examples_ok",
+                "id": "0065c6c2f2a0c9bc037e417782b0f320",
+                "passes": 75,
+                "fails": 0
+            },
+            "keystrokes_ok": {
+                "name": "keystrokes_ok",
+                "path": "::keystrokes_ok",
+                "id": "f365255229d37e0ec1faa919e4f8c55f",
+                "passes": 1911,
+                "fails": 0
+            },
+            "submit_ok": {
+                "fails": 0,
+                "name": "submit_ok",
+                "path": "::submit_ok",
+                "id": "c686f51230c3660fff7e30d5d1f81dd1",
+                "passes": 225
+            },
+            "results_ok": {
+                "passes": 225,
+                "fails": 0,
+                "name": "results_ok",
+                "path": "::results_ok",
+                "id": "78805f3f6902a7534fe5040b99325487"
+            },
+            "score_ok": {
+                "name": "score_ok",
+                "path": "::score_ok",
+                "id": "c8b6002cf5fbcd323d8ffe5b8a532948",
+                "passes": 225,
+                "fails": 0
+            },
+            "quiz_end_ok": {
+                "name": "quiz_end_ok",
+                "path": "::quiz_end_ok",
+                "id": "ba0fb5994732cdca21bc00c2de8d69e5",
+                "passes": 25,
+                "fails": 0
+            },
+            "logout_ok": {
+                "passes": 25,
+                "fails": 0,
+                "name": "logout_ok",
+                "path": "::logout_ok",
+                "id": "418af384ddb6389c4eace466fbe6e925"
+            }
+        },
+        "name": ""
+    },
+    "metrics": {
+        "http_reqs{action:offer_read,phase:load}": {
+            "count": 71,
+            "rate": 0.08222765411713953,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "functional_errors{action:results,language:java,phase:load}": {
+            "passes": 0,
+            "fails": 111,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "functional_errors{action:submit,phase:load}": {
+            "passes": 0,
+            "fails": 225,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "functional_errors{action:register,phase:load}": {
+            "passes": 0,
+            "fails": 25,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "functional_errors{action:participate,phase:load}": {
+            "passes": 0,
+            "fails": 25,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_reqs{action:examples,phase:load}": {
+            "count": 75,
+            "rate": 0.08686019801106289,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "http_reqs{action:results,phase:load}": {
+            "count": 225,
+            "rate": 0.2605805940331887,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "http_req_waiting": {
+            "p(95)": 318.3128469,
+            "p(99)": 371.54035791999985,
+            "max": 478.60965,
+            "avg": 225.2798975554068,
+            "med": 215.741705,
+            "p(90)": 231.64543920000003
+        },
+        "http_reqs{action:submit,phase:load}": {
+            "count": 225,
+            "rate": 0.2605805940331887,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "http_req_blocked": {
+            "p(90)": 0.000571,
+            "p(95)": 0.000641,
+            "p(99)": 0.0012403999999999478,
+            "max": 546.143814,
+            "avg": 3.763233968530337,
+            "med": 0.00045
+        },
+        "http_req_receiving": {
+            "p(99)": 41205.12429413996,
+            "max": 51537.354317,
+            "avg": 2185.365203659525,
+            "med": 0.058661,
+            "p(90)": 1.0233912000000014,
+            "p(95)": 26303.2589309
+        },
+        "http_req_duration{action:participate,phase:load}": {
+            "avg": 216.64621812000001,
+            "med": 215.775577,
+            "p(90)": 223.293619,
+            "p(95)": 230.41166499999997,
+            "p(99)": 232.51387748,
+            "max": 232.681025,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "functional_errors{action:logout,phase:load}": {
+            "passes": 0,
+            "fails": 25,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "vus_max": {
+            "max": 25,
+            "value": 25,
+            "min": 25
+        },
+        "judge_e2e{solution_type:valid}": {
+            "med": 33992,
+            "p(90)": 42944.8,
+            "p(95)": 44171.2,
+            "p(99)": 50099.220000000016,
+            "max": 52058,
+            "avg": 31612.333333333332,
+            "thresholds": {
+                "p(95)<60000": false
+            }
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 2987,
+            "value": 0
+        },
+        "functional_errors": {
+            "passes": 0,
+            "fails": 2987,
+            "value": 0
+        },
+        "functional_errors{action:results,solution_type:valid,phase:load}": {
+            "passes": 0,
+            "fails": 75,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "functional_errors{action:results,solution_type:partial,phase:load}": {
+            "fails": 75,
+            "passes": 0,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_duration{action:score,phase:load}": {
+            "p(99)": 221.69219876,
+            "max": 225.072654,
+            "avg": 212.16863435999986,
+            "med": 212.080616,
+            "p(90)": 216.0613076,
+            "p(95)": 217.0442616,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "iteration_duration": {
+            "max": 785682.026261,
+            "avg": 724450.75607032,
+            "med": 728878.454477,
+            "p(90)": 766767.9273568,
+            "p(95)": 771358.2399888,
+            "p(99)": 782431.1716369999
+        },
+        "data_sent": {
+            "count": 1019547,
+            "rate": 1180.7740573544686
+        },
+        "submissions_verified": {
+            "count": 225,
+            "rate": 0.2605805940331887
+        },
+        "http_reqs{action:search,phase:load}": {
+            "count": 45,
+            "rate": 0.05211611880663774,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "http_req_duration{action:keystrokes,phase:load}": {
+            "p(99)": 240.77668610000006,
+            "max": 351.209819,
+            "avg": 217.73938651753,
+            "med": 216.797677,
+            "p(90)": 223.39126,
+            "p(95)": 226.98663399999998,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "http_req_duration{action:login,phase:load}": {
+            "avg": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "max": 0,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "http_req_duration{action:offer_read,phase:load}": {
+            "med": 213.91561,
+            "p(90)": 219.520893,
+            "p(95)": 221.49034699999999,
+            "p(99)": 227.23408569999998,
+            "max": 233.239511,
+            "avg": 214.3746255492958,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "http_req_duration{action:submit,phase:load}": {
+            "p(95)": 388.79471599999994,
+            "p(99)": 428.41280820000003,
+            "max": 478.776896,
+            "avg": 333.5483868711111,
+            "med": 327.554591,
+            "p(90)": 378.56363200000004,
+            "thresholds": {
+                "p(95)<8000": false
+            }
+        },
+        "http_req_duration{action:problem_read,phase:load}": {
+            "max": 223.289696,
+            "avg": 210.81115491999998,
+            "med": 210.203282,
+            "p(90)": 214.1060492,
+            "p(95)": 216.1789889,
+            "p(99)": 220.94825312,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "functional_errors{action:offer_read,phase:load}": {
+            "passes": 0,
+            "fails": 71,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "functional_errors{action:examples,phase:load}": {
+            "passes": 0,
+            "fails": 75,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "functional_errors{action:quiz_end,phase:load}": {
+            "passes": 0,
+            "fails": 25,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "submissions_verified{solution_type:partial}": {
+            "count": 75,
+            "rate": 0.08686019801106289,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "functional_errors{action:results,phase:load}": {
+            "fails": 225,
+            "passes": 0,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "problems_solved": {
+            "count": 75,
+            "rate": 0.08686019801106289,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "iterations": {
+            "count": 25,
+            "rate": 0.028953399337020964
+        },
+        "functional_errors{action:problem_read,phase:load}": {
+            "passes": 0,
+            "fails": 75,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "functional_errors{action:quiz_page,phase:load}": {
+            "passes": 0,
+            "fails": 25,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "functional_errors{action:results,language:cpp,phase:load}": {
+            "passes": 0,
+            "fails": 114,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_reqs{action:participate,phase:load}": {
+            "count": 25,
+            "rate": 0.028953399337020964,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "http_req_failed{phase:load}": {
+            "passes": 0,
+            "fails": 2977,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        },
+        "vus": {
+            "max": 25,
+            "value": 1,
+            "min": 0
+        },
+        "http_req_duration": {
+            "med": 217.083643,
+            "p(90)": 384.0095944000001,
+            "p(95)": 26510.387689,
+            "p(99)": 41416.724084539965,
+            "max": 51745.392029,
+            "avg": 2410.7539521057884
+        },
+        "http_req_duration{action:quiz_page,phase:load}": {
+            "avg": 425.70298664,
+            "med": 423.807857,
+            "p(90)": 434.7281742,
+            "p(95)": 436.3980006,
+            "p(99)": 451.34728355999994,
+            "max": 455.939061,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "functional_errors{action:login,phase:load}": {
+            "passes": 0,
+            "fails": 0,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_duration{action:results,phase:load}": {
+            "p(90)": 42492.587863199995,
+            "p(95)": 45059.60276799999,
+            "p(99)": 48979.702653759996,
+            "max": 51745.392029,
+            "avg": 29166.751313359993,
+            "med": 31103.194802,
+            "thresholds": {
+                "p(95)<60000": false
+            }
+        },
+        "http_req_duration{action:quiz_end,phase:load}": {
+            "p(90)": 224.95809020000002,
+            "p(95)": 228.56675860000001,
+            "p(99)": 230.7521162,
+            "max": 231.248315,
+            "avg": 218.59850787999997,
+            "med": 218.11162,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "submissions_verified{solution_type:valid}": {
+            "count": 75,
+            "rate": 0.08686019801106289,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "submissions_verified{language:cpp}": {
+            "count": 114,
+            "rate": 0.1320275009768156,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "http_reqs{action:score,phase:load}": {
+            "count": 225,
+            "rate": 0.2605805940331887,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "http_req_sending": {
+            "med": 0.115709,
+            "p(90)": 0.140832,
+            "p(95)": 0.1500947,
+            "p(99)": 0.17244354,
+            "max": 1.860123,
+            "avg": 0.10885089086039537
+        },
+        "http_reqs{action:problem_read,phase:load}": {
+            "count": 75,
+            "rate": 0.08686019801106289,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "data_received": {
+            "count": 2739739,
+            "rate": 3172.9902938484192
+        },
+        "submissions_verified{language:java}": {
+            "count": 111,
+            "rate": 0.12855309305637308,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "http_reqs{action:register,phase:load}": {
+            "count": 25,
+            "rate": 0.028953399337020964,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "functional_errors{action:results,solution_type:syntax_error,phase:load}": {
+            "passes": 0,
+            "fails": 75,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "judge_e2e{language:cpp}": {
+            "avg": 28278.63157894737,
+            "med": 30523.5,
+            "p(90)": 41670.7,
+            "p(95)": 43513.6,
+            "p(99)": 44796.5,
+            "max": 48927,
+            "thresholds": {
+                "p(95)<60000": false
+            }
+        },
+        "http_req_tls_handshaking": {
+            "avg": 1.9313552162705052,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "max": 230.850804
+        },
+        "checks": {
+            "passes": 2987,
+            "fails": 0,
+            "value": 1
+        },
+        "http_reqs": {
+            "count": 2987,
+            "rate": 3.4593521527872646
+        },
+        "judge_e2e{solution_type:syntax_error}": {
+            "p(90)": 39964,
+            "p(95)": 42109.299999999996,
+            "p(99)": 49579.34000000001,
+            "max": 51436,
+            "avg": 24965.533333333333,
+            "med": 27166,
+            "thresholds": {
+                "p(95)<60000": false
+            }
+        },
+        "http_req_duration{action:register,phase:load}": {
+            "p(95)": 309.144558,
+            "p(99)": 322.49657768,
+            "max": 326.24498,
+            "avg": 294.29782788,
+            "med": 291.901284,
+            "p(90)": 302.9439596,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "http_reqs{action:logout,phase:load}": {
+            "count": 25,
+            "rate": 0.028953399337020964,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "http_req_duration{action:examples,phase:load}": {
+            "p(99)": 217.90931892000003,
+            "max": 222.239608,
+            "avg": 210.32201439999997,
+            "med": 210.215577,
+            "p(90)": 214.2903502,
+            "p(95)": 214.58832809999998,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "functional_errors{action:search,phase:load}": {
+            "passes": 0,
+            "fails": 45,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_reqs{action:quiz_page,phase:load}": {
+            "count": 25,
+            "rate": 0.028953399337020964,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "judge_e2e{language:java}": {
+            "avg": 30755.972972972973,
+            "med": 32183,
+            "p(90)": 44533,
+            "p(95)": 47410.5,
+            "p(99)": 51233.500000000015,
+            "max": 52058,
+            "thresholds": {
+                "p(95)<60000": false
+            }
+        },
+        "functional_errors{action:keystrokes,phase:load}": {
+            "passes": 0,
+            "fails": 1911,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "functional_errors{action:score,phase:load}": {
+            "passes": 0,
+            "fails": 225,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "judge_e2e": {
+            "p(99)": 49294.84,
+            "max": 52058,
+            "avg": 29500.786666666667,
+            "med": 31441,
+            "p(90)": 42865.4,
+            "p(95)": 45354.19999999999,
+            "thresholds": {
+                "p(95)<60000": false
+            }
+        },
+        "http_reqs{action:keystrokes,phase:load}": {
+            "count": 1911,
+            "rate": 2.2131978453218824,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "submissions_verified{solution_type:syntax_error}": {
+            "count": 75,
+            "rate": 0.08686019801106289,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "http_reqs{action:quiz_end,phase:load}": {
+            "count": 25,
+            "rate": 0.028953399337020964,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 2410.7539521057884,
+            "med": 217.083643,
+            "p(90)": 384.0095944000001,
+            "p(95)": 26510.387689,
+            "p(99)": 41416.724084539965,
+            "max": 51745.392029
+        },
+        "functional_errors{phase:load}": {
+            "passes": 0,
+            "fails": 2977,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_connecting": {
+            "avg": 1.7914766936725812,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "max": 211.589545
+        },
+        "judge_e2e{solution_type:partial}": {
+            "avg": 31924.493333333332,
+            "med": 34053,
+            "p(90)": 44304.600000000006,
+            "p(95)": 46132.6,
+            "p(99)": 47599.96,
+            "max": 47671,
+            "thresholds": {
+                "p(95)<60000": false
+            }
+        },
+        "http_req_duration{action:search,phase:load}": {
+            "avg": 356.73816635555556,
+            "med": 412.40726,
+            "p(90)": 420.5903126,
+            "p(95)": 422.7866424,
+            "p(99)": 426.94600816,
+            "max": 427.794531,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "journeys_completed": {
+            "count": 25,
+            "rate": 0.028953399337020964,
+            "thresholds": {
+                "count>0": false
+            }
+        },
+        "http_req_duration{action:logout,phase:load}": {
+            "max": 233.594713,
+            "avg": 217.20946108,
+            "med": 217.266355,
+            "p(90)": 221.7544046,
+            "p(95)": 224.0309758,
+            "p(99)": 231.40458916,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        }
+    }
+}

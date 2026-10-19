@@ -1,0 +1,251 @@
+<!doctype html>
+<!-- capacity/k6browser/whip-page.html
+     Página de prueba para carga WHIP con k6 browser.
+     Chromium aporta los medios (reales): con --use-fake-device-for-media-stream
+     genera video sintético en movimiento + tono de audio, sin archivos.
+     Servir por HTTP y abrir con ?whip=<base>&stream=<id>&duration=<s>.
+     Publica window.__report y window.__done=true al terminar (siempre,
+     incluso en fallo parcial, para que k6 recoja el reporte). -->
+<html><body><pre id="log"></pre><script>
+(async () => {
+  const q = new URLSearchParams(location.search);
+  const cfg = {
+    whip: q.get('whip'),
+    stream: q.get('stream') || 'test',
+    durationMs: (parseFloat(q.get('duration')) || 10) * 1000,
+    iceTimeoutMs: (parseFloat(q.get('ice_timeout')) || 8) * 1000,
+    statsMs: 500,
+    // Resolución de captura (bajarla reduce CPU/RAM por navegador).
+    width: parseInt(q.get('width') || '1280', 10),
+    height: parseInt(q.get('height') || '720', 10),
+    fps: parseInt(q.get('fps') || '30', 10),
+    // audio=0 desactiva el micrófono (para aislar contención de dispositivos).
+    withAudio: q.get('audio') !== '0',
+  };
+  const t0ref = performance.now();
+  const ms = (t) => +(t - t0ref).toFixed(1);
+  const rep = {
+    target: '', signaling: {}, ice: {}, dtls: {},
+    transport: { video: {}, audio: {}, rr_received: null },
+    steady: { duration_s: cfg.durationMs / 1000 }, error: '',
+  };
+  const finish = () => { window.__report = rep; window.__done = true; };
+  const fail = (stage, message) => { throw { stage, message }; };
+  const waitFor = (fn, timeoutMs, what) => new Promise((res, rej) => {
+    const t = Date.now();
+    const h = setInterval(() => {
+      if (fn()) { clearInterval(h); res(); }
+      else if (Date.now() - t > timeoutMs) { clearInterval(h); rej(new Error(what)); }
+    }, 100);
+  });
+  const sleep = (ms_) => new Promise((r) => setTimeout(r, ms_));
+
+  try {
+    if (!cfg.whip) fail('setup', 'falta parámetro whip');
+    const publishURL = cfg.whip.replace(/\/+$/, '') + '/' + encodeURIComponent(cfg.stream) + '/whip';
+    rep.target = publishURL;
+
+    // 1. Captura (dispositivos falsos aportados por flags de Chromium).
+    // Reintentos: con varios navegadores concurrentes el dispositivo
+    // virtual puede reportarse ocupado en el primer intento.
+    const gumConstraints = {
+      video: { width: { ideal: cfg.width }, height: { ideal: cfg.height }, frameRate: { ideal: cfg.fps } },
+      audio: cfg.withAudio,
+    };
+    let local = null, gumErr = null;
+    for (let attempt = 1; attempt <= 3 && !local; attempt++) {
+      try {
+        local = await navigator.mediaDevices.getUserMedia(gumConstraints);
+      } catch (e) {
+        gumErr = e;
+        if (attempt < 3) await sleep(1000 * attempt);
+      }
+    }
+    if (!local) fail('media', 'getUserMedia: ' + (gumErr && gumErr.message));
+
+    const pc = new RTCPeerConnection({ iceServers: [] });
+    local.getTracks().forEach((t) => pc.addTrack(t, local));
+
+    let iceConnectedAt = 0, pcConnectedAt = 0, pcFailed = false;
+    pc.addEventListener('iceconnectionstatechange', () => {
+      const s = pc.iceConnectionState;
+      rep.ice.final_state = s;
+      if ((s === 'connected' || s === 'completed') && !iceConnectedAt) iceConnectedAt = performance.now();
+      if (s === 'failed') rep.ice.failed = true;
+    });
+    pc.addEventListener('connectionstatechange', () => {
+      if (pc.connectionState === 'connected' && !pcConnectedAt) pcConnectedAt = performance.now();
+      if (pc.connectionState === 'failed') pcFailed = true;
+    });
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await new Promise((res) => {
+      if (pc.iceGatheringState === 'complete') return res();
+      pc.addEventListener('icegatheringstatechange', () => {
+        if (pc.iceGatheringState === 'complete') res();
+      });
+    });
+
+    // 2. Señalización WHIP (sin trickle).
+    const tSig = performance.now();
+    let resp;
+    try {
+      resp = await fetch(publishURL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/sdp', 'Accept': 'application/sdp' },
+        body: pc.localDescription.sdp,
+      });
+    } catch (e) { fail('signaling', 'red: ' + e.message); }
+    const sigMs = performance.now() - tSig;
+    rep.signaling = { latency_ms: +sigMs.toFixed(1), http_status: resp.status };
+    if (resp.status !== 200 && resp.status !== 201) {
+      const body = (await resp.text().catch(() => '')).slice(0, 300);
+      rep.signaling.sdp_rejected = resp.status >= 400;
+      rep.signaling.sdp_detail = 'http ' + resp.status + ': ' + body;
+      fail('signaling', rep.signaling.sdp_detail);
+    }
+    const answerSDP = await resp.text();
+    const location = resp.headers.get('Location');
+    if (!answerSDP.trim()) fail('signaling', 'respuesta sdp vacía');
+    try {
+      await pc.setRemoteDescription({ type: 'answer', sdp: answerSDP });
+    } catch (e) { fail('signaling', 'answer inválida: ' + e.message); }
+    const tAnswer = performance.now();
+
+    // 3. ICE + DTLS por eventos.
+    try { await waitFor(() => iceConnectedAt, cfg.iceTimeoutMs, 'ice timeout'); }
+    catch (e) { rep.ice.connectivity_check_timeout = true; fail('ice', 'ice no establecido'); }
+    rep.ice.establishment_ms = +(iceConnectedAt - tAnswer).toFixed(1);
+    try { await waitFor(() => pcConnectedAt || pcFailed, 5000, 'dtls timeout'); }
+    catch (e) { fail('dtls', 'dtls handshake timeout'); }
+    if (pcFailed) fail('dtls', 'dtls falló');
+    rep.dtls.handshake_ms = +(pcConnectedAt - iceConnectedAt).toFixed(1);
+
+    // 4. Transporte: primer RTP = primer sondeo con bytesSent > 0.
+    const kinds = ['video', 'audio'];
+    const agg = () => ({ bytes: 0, pkts: 0, nack: 0, pli: 0, fir: 0, lost: 0, rtt: null, jit: null });
+    const byKind = { video: agg(), audio: agg() };
+    let firstRtpAt = 0;
+    const snaps = [];
+    let lastPli = { video: 0, audio: 0 };
+    let lastPliAt = { video: 0, audio: 0 };
+    let repPli = { video: 0, audio: 0 };
+    const stalls = [];
+    const statsOnce = async () => {
+      const stats = await pc.getStats();
+      const cur = { video: agg(), audio: agg() };
+      stats.forEach((s) => {
+        const k = s.kind;
+        if (k !== 'video' && k !== 'audio') return;
+        if (s.type === 'outbound-rtp' && !s.isRemote) {
+          cur[k].bytes += s.bytesSent || 0;
+          cur[k].pkts += s.packetsSent || 0;
+          cur[k].nack += s.nackCount || 0;
+          cur[k].pli += s.pliCount || 0;
+          cur[k].fir += s.firCount || 0;
+        } else if (s.type === 'remote-inbound-rtp') {
+          cur[k].lost = s.packetsLost || 0;
+          if (typeof s.roundTripTime === 'number') cur[k].rtt = s.roundTripTime * 1000;
+          if (typeof s.jitter === 'number') {
+            const clock = k === 'video' ? 90000 : 48000;
+            cur[k].jit = (s.jitter * 1000) / clock;
+          }
+        }
+      });
+      return cur;
+    };
+    try {
+      const tRtpEnd = performance.now() + 5000;
+      while (!firstRtpAt && performance.now() < tRtpEnd) {
+        const c = await statsOnce();
+        if (c.video.bytes + c.audio.bytes > 0) firstRtpAt = performance.now();
+        else await sleep(250);
+      }
+      if (!firstRtpAt) fail('transport', 'sin primer rtp');
+    } catch (e) { fail('transport', e.message || 'sin primer rtp'); }
+    rep.transport.first_rtp_ms = +(firstRtpAt - tAnswer).toFixed(1);
+    rep.transport.first_rtp_after_dtls_ms = +Math.max(0, firstRtpAt - pcConnectedAt).toFixed(1);
+    try {
+      const vs = local.getVideoTracks()[0] && local.getVideoTracks()[0].getSettings();
+      const as = local.getAudioTracks()[0] && local.getAudioTracks()[0].getSettings();
+      rep.transport.captured = {
+        video: vs ? { width: vs.width, height: vs.height, frameRate: vs.frameRate } : null,
+        audio: as ? { sampleRate: as.sampleRate, channelCount: as.channelCount } : null,
+      };
+    } catch (e) { /* informativo */ }
+
+    // 5. Steady state durante durationMs.
+    const tEnd = performance.now() + cfg.durationMs;
+    while (performance.now() < tEnd) {
+      await sleep(cfg.statsMs);
+      const c = await statsOnce();
+      const t = performance.now();
+      kinds.forEach((k) => {
+        const d = {
+          bytes: c[k].bytes, pkts: c[k].pkts,
+          nack: c[k].nack - byKind[k].nack, pli: c[k].pli - byKind[k].pli,
+        };
+        if (d.pli > 0) {
+          if (lastPli[k] && t - lastPliAt[k] < 500) repPli[k] += d.pli;
+          lastPli[k] += d.pli; lastPliAt[k] = t;
+        }
+        Object.assign(byKind[k], { bytes: c[k].bytes, pkts: c[k].pkts, nack: c[k].nack, pli: c[k].pli, fir: c[k].fir, lost: c[k].lost, rtt: c[k].rtt, jit: c[k].jit });
+      });
+      snaps.push({ t, bytes: byKind.video.bytes + byKind.audio.bytes });
+    }
+    // Cierre best-effort (libera la sesión en el servidor).
+    try {
+      let loc = location;
+      if (loc && !/^https?:\/\//i.test(loc)) loc = new URL(loc, publishURL).toString();
+      if (loc) await fetch(loc, { method: 'DELETE' });
+    } catch (e) { /* best-effort */ }
+    pc.getSenders().forEach((s) => { try { s.track && s.track.stop(); } catch (e) {} });
+    pc.close();
+
+    kinds.forEach((k) => {
+      const b = byKind[k];
+      rep.transport[k] = {
+        packets_sent: b.pkts, packets_lost: b.lost,
+        loss_ratio: 0, rtt_ms: b.rtt, jitter_ms: b.jit == null ? null : +b.jit.toFixed(3),
+        nack_messages: b.nack, pli_count: b.pli, repeated_pli: repPli[k], fir_count: b.fir,
+      };
+    });
+    // Tasa sin el primer segundo + stalls (huecos >= 1s sin bytes).
+    const cut = snaps.length ? snaps[0].t + 1000 : 0;
+    let si = 0;
+    snaps.forEach((s, i) => { si = s.t < cut ? i : si; });
+    const a = snaps[si] || snaps[0], z = snaps[snaps.length - 1];
+    const dt = z && a ? (z.t - a.t) / 1000 : 0;
+    const totalKbps = dt > 0 ? ((z.bytes - a.bytes) * 8) / dt / 1000 : 0;
+    const totBytes = (byKind.video.bytes || 0) + (byKind.audio.bytes || 0);
+    const vKbps = totBytes ? (totalKbps * (byKind.video.bytes || 0)) / totBytes : 0;
+    let lastProg = 0, open = 0;
+    snaps.forEach((s, i) => {
+      if (i === 0 || s.bytes > snaps[i - 1].bytes) {
+        if (open) { stalls.push({ start_ms: +(open - t0ref).toFixed(1), duration_ms: +(s.t - open).toFixed(1) }); open = 0; }
+        lastProg = s.t;
+      } else if (s.t - (lastProg || snaps[0].t) >= 1000 && !open) open = lastProg || snaps[0].t;
+    });
+    if (open && snaps.length) stalls.push({ start_ms: +(open - t0ref).toFixed(1), duration_ms: +(snaps[snaps.length - 1].t - open).toFixed(1) });
+    rep.steady = {
+      duration_s: cfg.durationMs / 1000,
+      video_kbps: +vKbps.toFixed(1), audio_kbps: +(totalKbps - vKbps).toFixed(1), total_kbps: +totalKbps.toFixed(1),
+      nack_count: byKind.video.nack + byKind.audio.nack,
+      nack_rate_per_s: +((byKind.video.nack + byKind.audio.nack) / (cfg.durationMs / 1000)).toFixed(1),
+      pli_count: byKind.video.pli + byKind.audio.pli,
+      repeated_pli: repPli.video + repPli.audio,
+      fir_count: byKind.video.fir + byKind.audio.fir,
+      stalls,
+    };
+  } catch (e) {
+    rep.error = (e && e.stage ? '[' + e.stage + '] ' : '') + ((e && e.message) || String(e));
+  }
+  // loss_ratio con base en rango esperado no observable en navegador: usar enviados.
+  ['video', 'audio'].forEach((k) => {
+    const t = rep.transport[k];
+    if (t && t.packets_sent) t.loss_ratio = +Math.min(1, (t.packets_lost || 0) / t.packets_sent).toFixed(4);
+  });
+  finish();
+})();
+</script></body></html>

@@ -36,6 +36,7 @@ type kindTransport struct {
 	LossRatio   float64  `json:"loss_ratio"`
 	RTTMs       *float64 `json:"rtt_ms"`
 	JitterMs    *float64 `json:"jitter_ms"`
+	RtxPackets  uint64   `json:"rtx_packets"`
 }
 
 type transportMetrics struct {
@@ -58,6 +59,7 @@ type steadyMetrics struct {
 	TotalKbps   float64      `json:"total_kbps"`
 	NACKCount   uint64       `json:"nack_count"`
 	NACKRate    float64      `json:"nack_rate_per_s"`
+	RtxKbps     float64      `json:"rtx_kbps"`
 	PLICount    uint64       `json:"pli_count"`
 	RepeatedPLI uint64       `json:"repeated_pli"`
 	FIRCount    uint64       `json:"fir_count"`
@@ -76,9 +78,10 @@ type Report struct {
 }
 
 type statsSample struct {
-	t       time.Time
-	bytes   uint64
-	packets uint64
+	t        time.Time
+	bytes    uint64
+	packets  uint64
+	rtxBytes uint64
 }
 
 // Metrics acumula eventos con mutex; t0 = instante de SetRemoteDescription.
@@ -111,11 +114,14 @@ type Metrics struct {
 	steadyT0  time.Time // inicio de ventana steady (primer RTP)
 
 	// Salida real (tap RTP) por SSRC + estado RR por SSRC.
-	sentPkts map[uint32]uint64
-	sentBits map[uint32]uint64
-	ssrcKind map[uint32]string
-	srMarks  map[uint32][]srMark // últimos SR propios por SSRC (para RTT)
-	rrState  map[uint32]*rrSource
+	sentPkts  map[uint32]uint64
+	sentBits  map[uint32]uint64
+	rtxPkts   map[uint32]uint64
+	rtxBits   map[uint32]uint64
+	ssrcKind  map[uint32]string
+	ssrcIsRTX map[uint32]bool
+	srMarks   map[uint32][]srMark // últimos SR propios por SSRC (para RTT)
+	rrState   map[uint32]*rrSource
 
 	samples []statsSample
 }
@@ -139,11 +145,14 @@ type rrSource struct {
 
 func newMetrics() *Metrics {
 	return &Metrics{
-		sentPkts: map[uint32]uint64{},
-		sentBits: map[uint32]uint64{},
-		ssrcKind: map[uint32]string{},
-		srMarks:  map[uint32][]srMark{},
-		rrState:  map[uint32]*rrSource{},
+		sentPkts:  map[uint32]uint64{},
+		sentBits:  map[uint32]uint64{},
+		rtxPkts:   map[uint32]uint64{},
+		rtxBits:   map[uint32]uint64{},
+		ssrcKind:  map[uint32]string{},
+		ssrcIsRTX: map[uint32]bool{},
+		srMarks:   map[uint32][]srMark{},
+		rrState:   map[uint32]*rrSource{},
 	}
 }
 
@@ -227,13 +236,16 @@ func (m *Metrics) addRR()  { m.mu.Lock(); m.rr++; m.mu.Unlock() }
 
 // --- tap RTP/RTCP ---
 
-func (m *Metrics) bindSSRC(ssrc uint32, kind string) {
+func (m *Metrics) bindSSRC(ssrc uint32, kind string, isRTX bool) {
 	if kind == "" {
 		return
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.ssrcKind[ssrc] = kind
+	if isRTX {
+		m.ssrcIsRTX[ssrc] = true
+	}
 }
 
 func (m *Metrics) countRTP(ssrc uint32, sizeBytes int) {
@@ -244,6 +256,10 @@ func (m *Metrics) countRTP(ssrc uint32, sizeBytes int) {
 	defer m.mu.Unlock()
 	m.sentPkts[ssrc]++
 	m.sentBits[ssrc] += uint64(sizeBytes) // #nosec G115 -- acotado a no-negativo arriba
+	if m.ssrcIsRTX[ssrc] {
+		m.rtxPkts[ssrc]++
+		m.rtxBits[ssrc] += uint64(sizeBytes) // #nosec G115 -- acotado a no-negativo arriba
+	}
 }
 
 func (m *Metrics) trackSR(ssrc, lsr uint32, at time.Time) {
@@ -298,14 +314,17 @@ func (m *Metrics) sampleLoop(interval time.Duration, done <-chan struct{}) {
 			return
 		case now := <-t.C:
 			m.mu.Lock()
-			var b, p uint64
+			var b, p, rb uint64
 			for _, v := range m.sentBits {
 				b += v
 			}
 			for _, v := range m.sentPkts {
 				p += v
 			}
-			m.samples = append(m.samples, statsSample{t: now, bytes: b, packets: p})
+			for _, v := range m.rtxBits {
+				rb += v
+			}
+			m.samples = append(m.samples, statsSample{t: now, bytes: b, packets: p, rtxBytes: rb})
 			m.mu.Unlock()
 		}
 	}
@@ -323,6 +342,7 @@ func kindReport(m *Metrics, kind string) kindTransport {
 			continue
 		}
 		out.PacketsSent += m.sentPkts[ssrc]
+		out.RtxPackets += m.rtxPkts[ssrc]
 		st := m.rrState[ssrc]
 		if st == nil {
 			continue
@@ -416,6 +436,7 @@ func (m *Metrics) report(target string, steadyS float64, errStr string) Report {
 		winA, winB, hasWin = a, b, true
 		if dt := b.t.Sub(a.t).Seconds(); dt > 0 {
 			r.Steady.TotalKbps = float64(b.bytes-a.bytes) * 8 / dt / 1000
+			r.Steady.RtxKbps = float64(b.rtxBytes-a.rtxBytes) * 8 / dt / 1000
 		}
 		var lastProg time.Time
 		var stallOpen time.Time

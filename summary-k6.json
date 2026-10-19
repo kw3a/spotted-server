@@ -1,0 +1,10 @@
+{
+  "vus": 2,
+  "whip_failed_rate": 0.5,
+  "signaling_latency_p95": 905.2,
+  "ice_establishment_p95": 382.4,
+  "video_kbps_avg": 0,
+  "video_loss_ratio_max": 0,
+  "packets_sent": 413,
+  "packets_lost": 0
+}

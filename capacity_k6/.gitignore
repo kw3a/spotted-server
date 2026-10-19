@@ -1,0 +1,11 @@
+fixtures.local.json
+fixtures.json
+runs/
+*.summary.json
+*.results.json
+tests/__pycache__/
+.bin/
+
+!.env.example
+
+judge0.verification.json

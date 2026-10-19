@@ -23,9 +23,9 @@ type tap struct{ m *Metrics }
 
 func (t *tap) BindLocalStream(info *interceptor.StreamInfo, writer interceptor.RTPWriter) interceptor.RTPWriter {
 	kind := kindFromMime(info.MimeType)
-	t.m.bindSSRC(info.SSRC, kind)
+	t.m.bindSSRC(info.SSRC, kind, false)
 	if info.SSRCRetransmission != 0 {
-		t.m.bindSSRC(info.SSRCRetransmission, kind)
+		t.m.bindSSRC(info.SSRCRetransmission, kind, true)
 	}
 	return interceptor.RTPWriterFunc(func(h *rtp.Header, p []byte, a interceptor.Attributes) (int, error) {
 		t.m.countRTP(h.SSRC, h.MarshalSize()+len(p))

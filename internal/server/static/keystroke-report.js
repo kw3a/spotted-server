@@ -55,7 +55,7 @@
                 block.setAttribute('stroke-width', selected ? '2' : '0');
             }
         });
-        if (source !== 'video' && window.seekRecording) window.seekRecording(participationID, timestamp);
+        if (source === 'chart' && window.seekRecording) window.seekRecording(participationID, timestamp);
     }
 
     function render(config) {
@@ -85,7 +85,7 @@
         const t1 = Math.max(pointsEnd, ...(segments.map(s => s.epoch + s.duration)));
         const timeSpan = Math.max(t1 - t0, WINDOW_SECONDS);
 
-        const width = Math.max(360, Math.min(1100, (container.clientWidth || 1000) - 32));
+        const width = Math.max(1, container.clientWidth - 32);
         const height = 318;
         const chartWidth = width - 54 - 24;
         const twoRows = chartWidth < 560;
@@ -103,7 +103,7 @@
         const labelEvery = chartWidth / tickCount < 24 ? 4 : chartWidth / tickCount < 48 ? 2 : 1;
         const selectedAt = existing?.selectedAt;
 
-        let html = `<svg class="telemetry-timeline" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Telemetría y cobertura de video en una línea de tiempo compartida" style="background:#fff;border:1px solid #ddd;border-radius:6px">`;
+        let html = `<svg class="telemetry-timeline w-full min-w-0 max-w-full shrink-0 rounded border border-gray-200 bg-white" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Telemetría y cobertura de video en una línea de tiempo compartida">`;
         html += `<defs><pattern id="no-video" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#f1f5f9"/><line x1="0" y1="0" x2="0" y2="8" stroke="#cbd5e1" stroke-width="3"/></pattern></defs>`;
         html += `<text x="${padding.left}" y="14" font-size="12" fill="#374151" font-weight="600">Dinámica de pulsaciones (SMD)</text>`;
         // ponytail: leyenda dentro del gráfico, arriba; una fila, dos si no cabe.
@@ -186,7 +186,7 @@
         container.innerHTML = html;
 
         const svg = container.querySelector('svg');
-        const state = { config, segments, selectedAt, selection, svg, xFor };
+        const state = { config, segments, selectedAt, selection, svg, xFor, observer: existing?.observer };
         states.set(participationID, state);
         const activate = event => setSelection(participationID, Number(event.currentTarget.dataset.start), 'chart');
         svg.querySelectorAll('.ks-window, .video-segment').forEach(el => {
@@ -202,7 +202,24 @@
         if (legendContainer) { legendContainer.innerHTML = ''; legendContainer.classList.add('hidden'); }
     }
 
-    window.renderKeystrokeReport = config => render(config);
+    window.renderKeystrokeReport = config => {
+        render(config);
+        const state = states.get(config.data.participationID);
+        const container = document.getElementById(config.containerId);
+        if (!state || !container || state.observer) return;
+        let previousWidth = container.clientWidth;
+        state.observer = new ResizeObserver(() => {
+            if (container.clientWidth === previousWidth || !container.isConnected) return;
+            previousWidth = container.clientWidth;
+            render(config);
+        });
+        state.observer.observe(container);
+    };
+    window.disposeKeystrokeReport = participationID => {
+        states.get(participationID)?.observer?.disconnect();
+        states.delete(participationID);
+        segmentsResolved.delete(participationID);
+    };
     window.setTelemetryRecordingSegments = (participationID, segments) => {
         segmentsResolved.add(participationID);
         const state = states.get(participationID);

@@ -102,7 +102,7 @@
         pending = null;
       }
 
-      document.body.addEventListener('htmx:confirm', function (evt) {
+      document.getElementById('start-quiz')?.addEventListener('htmx:confirm', function (evt) {
         evt.preventDefault();
         pending = evt.detail;
         messageEl.textContent = evt.detail.question || '¿Estás seguro?';
@@ -131,6 +131,7 @@
 {{if eq .User.Role "verified"}}
 <div class="flex justify-center">
   <button
+    id="start-quiz"
     class="border rounded-sm border-blue-400 cursor-pointer hover:border-blue-600 hover:text-blue-600 text-blue-400 font-bold w-32 text-center py-2 px-4"
     hx-post="/participate" hx-vals="js:{quizID: '{{.Quiz.ID}}'}"
     hx-confirm="Estás seguro de que quieres tomar esta prueba?">

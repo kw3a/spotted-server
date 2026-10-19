@@ -274,7 +274,10 @@ func runPublisher(cfg runConfig, stream string, progress func(string, ...any)) (
 	}{{videoSender, "video"}, {audioSender, "audio"}} {
 		for _, enc := range s.sender.GetParameters().Encodings {
 			if enc.SSRC != 0 {
-				m.bindSSRC(uint32(enc.SSRC), s.kind)
+				m.bindSSRC(uint32(enc.SSRC), s.kind, false)
+			}
+			if enc.RTX.SSRC != 0 {
+				m.bindSSRC(uint32(enc.RTX.SSRC), s.kind, true)
 			}
 		}
 	}
