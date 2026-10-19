@@ -1,243 +1,134 @@
 {{block "offerAdmin" .}}
 <!doctype html>
-<html lang="en">
-
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Aplicantes</title>
+  <title>Aplicantes · {{.Offer.Title}}</title>
   <script src="/static/htmx.min.js"></script>
   <link href="/static/output.css" rel="stylesheet" />
   <script src="/static/head-support.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
   <link rel="icon" href="/public/favicon.ico" type="image/x-icon">
-  <script src="/static/offerAdmin.js" type="module" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="/static/offerAdmin.js" type="module"></script>
   <script src="/static/applicant-playback.js" defer></script>
   <script src="/static/keystroke-report.js" defer></script>
 </head>
-
-<body class="" hx-ext="head-support">
-  <script>window.videoRecordsURL = "{{.VideoRecordsURL}}";</script>
-  <section class="bg-shark-950 h-screen flex flex-col font-mono">
+<body hx-ext="head-support">
+  <script>window.videoRecordsURL = {{.VideoRecordsURL}};</script>
+  <section id="applicant-review" data-offer="{{.Offer.ID}}" class="flex h-screen flex-col bg-shark-950 font-sans text-shark-200">
     {{template "navBar" .User}}
-    <div class="flex-1 w-full flex flex-col xl:flex-row sm:gap-8 xl:gap-0 text-shark-200 overflow-hidden">
-      <section class="flex-1 min-h-0 xl:w-1/2 overflow-y-auto p-8">
-        <strong class="font-semibold text-2xl">{{.Offer.Title}}</strong>
-        <span class="text-shark-300 font-light">Publicado {{.Offer.RelativeTime}}</span>
+    <header class="flex shrink-0 items-center justify-between gap-6 border-b border-shark-800 px-8 py-5">
+      <div class="min-w-0">
+        <a href="/offers/admin" class="text-sm text-shark-400 hover:text-white">← Mis ofertas</a>
+        <h1 class="mt-1 truncate text-2xl font-semibold text-white">{{.Offer.Title}}</h1>
+        <p class="mt-1 text-sm text-shark-400">{{len .Applicants}} aplicantes <span aria-hidden="true">·</span> {{len .Problems}} problemas <span aria-hidden="true">·</span> {{.Quiz.Duration}} min <span aria-hidden="true">·</span> Publicado {{.Offer.RelativeTime}}</p>
+      </div>
+      <button type="button" data-open-test class="shrink-0 rounded-lg border border-shark-600 px-4 py-2 text-sm font-medium text-white hover:bg-shark-800 focus-visible:outline-2 focus-visible:outline-blue-400">Ver prueba</button>
+    </header>
 
-        <section class="flex flex-col gap-4">
-          <strong class="text-shark-300 text-sm xl font-semibold">Detalles de la prueba</strong>
-          <p class="flex items-center text-shark-200 gap-2 font-medium">
-            Duración:
-            <img class="inline" src="/public/clock.svg" width="20" height="20" alt="clock icon" />
-            {{.Quiz.Duration}} minutos
-          </p>
-          <div class="flex flex-wrap gap-2 overflow-x-auto max-w-full">
-            <span class="font-medium">Lenguajes permitidos:</span>
-            {{range .Languages}}
-            <span class="rounded border border-shark-200 text-shark-200 px-2">{{.DisplayName}}</span>
-            {{end}}
-          </div>
+    <div class="flex min-h-0 flex-1 overflow-hidden">
+      <aside aria-label="Lista de aplicantes" class="flex w-80 min-w-72 shrink-0 flex-col border-r border-shark-800 bg-shark-900/30">
+        <div class="space-y-3 border-b border-shark-800 p-4">
+          <div class="flex items-center justify-between"><h2 class="font-semibold text-white">Aplicantes</h2><span id="candidate-count" class="text-xs text-shark-400" aria-live="polite"></span></div>
+            <label class="block text-xs text-shark-400">Ordenar
+              <select id="candidate-sort" class="mt-1 w-full rounded border border-shark-700 bg-shark-950 px-2 py-2 text-sm text-shark-200">
+                <option value="original">Orden original</option><option value="score">Mejor resultado</option><option value="name">Nombre A–Z</option>
+              </select>
+            </label>
+        </div>
+        <div id="candidate-list" class="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
+          {{range $index, $candidate := .Applicants}}
+          <button type="button" data-candidate="{{.Participation.ID}}" data-name="{{.Applicant.Name}}" data-score="{{.Percentage}}" data-order="{{$index}}" aria-controls="candidate-{{.Participation.ID}}" aria-pressed="{{if eq $index 0}}true{{else}}false{{end}}" class="w-full rounded-lg border border-shark-800 p-3 text-left transition-colors hover:bg-shark-800 aria-pressed:border-blue-400 aria-pressed:bg-blue-500/10 focus-visible:outline-2 focus-visible:outline-blue-400">
+            <span class="flex items-center gap-3">
+              <img src="{{if .Applicant.ImageURL}}{{.Applicant.ImageURL}}{{else}}/public/user.svg{{end}}" alt="" width="36" height="36" class="h-9 w-9 shrink-0 rounded-full object-cover">
+              <span class="min-w-0 flex-1"><span class="block truncate font-semibold text-white">{{.Applicant.Name}}</span><span class="block text-xs text-shark-400">{{.Solved}}/{{len .Problems}} problemas resueltos</span></span>
+              <span class="shrink-0 font-mono text-sm {{if gt .Total 0}}text-blue-400{{else}}text-shark-400{{end}}">{{if gt .Total 0}}{{.Percentage}}%{{else}}—{{end}}</span>
+            </span>
+            <span class="mt-3 flex justify-between gap-2 text-xs text-shark-400"><span>{{.Accepted}}/{{.Total}} casos aprobados</span><span>{{if not .Problems}}Sin problemas{{else if gt .Unanswered 0}}{{.Unanswered}} sin responder{{else}}Todos respondidos{{end}}</span></span>
+          </button>
+          {{end}}
+        </div>
+        <p class="shrink-0 border-t border-shark-800 px-4 py-3 text-xs text-shark-400">Alt + ← / → cambia de aplicante</p>
+      </aside>
 
-          <div class="flex flex-col">
-            <p class="text-white font-bold">Problemas</p>
-            <section class="flex flex-wrap gap-4 overflow-x-auto">
-              {{ $first := true }}
-              {{range .Problems}}
-              <div class="bg-shark-900 rounded">
-                <input type="radio" name="problem-group" id="problem-{{.ID}}" class="hidden peer"
-                  onclick="window.openModal('modal-{{.ID}}')" {{if $first}} checked {{end}}>
-                <label for="problem-{{.ID}}"
-                  class="block w-full font-semibold hover:bg-gray-900 px-4 py-2 rounded cursor-pointer text-left peer-checked:bg-gray-900 select-none">
-                  {{.Title}}
-                </label>
+      <main id="review-main" class="flex min-w-0 flex-1 flex-col">
+        <div id="review-empty" class="{{if .Applicants}}hidden {{end}}m-auto max-w-md p-8 text-center"><h2 class="text-xl font-semibold text-white">Todavía no hay aplicantes</h2><p class="mt-2 text-sm text-shark-400">Las participaciones aparecerán aquí cuando alguien inicie la prueba.</p></div>
+        {{range $index, $candidate := .Applicants}}
+        <article id="candidate-{{.Participation.ID}}" data-review="{{.Participation.ID}}" data-name="{{.Applicant.Name}}" class="{{if ne $index 0}}hidden {{end}}flex min-h-0 min-w-0 flex-1 flex-col">
+          <header class="shrink-0 border-b border-shark-800 px-7 py-5">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0"><h2 class="truncate text-xl font-semibold text-white">{{.Applicant.Name}}</h2><p class="mt-1 truncate text-sm text-shark-400" title="{{.Applicant.Description}}">{{.Applicant.Description}}</p></div>
+              <div class="flex shrink-0 items-center gap-2">
+                <a href="/profile/{{.Applicant.ID}}" class="rounded border border-shark-700 px-3 py-2 text-sm hover:bg-shark-800">Ver perfil</a>
+                <button type="button" data-previous class="rounded border border-shark-700 px-3 py-2 text-sm hover:bg-shark-800 disabled:cursor-default disabled:opacity-40" aria-label="Aplicante anterior">←</button>
+                <button type="button" data-next class="rounded border border-shark-700 px-3 py-2 text-sm hover:bg-shark-800 disabled:cursor-default disabled:opacity-40" aria-label="Aplicante siguiente">→</button>
               </div>
-              {{ $first = false }}
-              {{end}}
-            </section>
-
-            <section class="">
-              {{ $first := true }}
-              {{range .Problems}}
-              <div id="modal-{{.ID}}" class="w-full bg-gray-900 rounded 
-                  {{if not $first}} hidden {{end}}">
-                <div class="flex flex-col gap-8 p-8">
-                  <details>
-                    <summary class="cursor-pointer hover:bg-gray-800 p-2 font-bold">Descripción</summary>
-                    <div>
-                      <pre class="whitespace-pre-wrap">{{.Description}}</pre>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm"><span><strong class="text-white">{{.Solved}}/{{len .Problems}}</strong> problemas resueltos</span><span><strong class="text-white">{{.Accepted}}/{{.Total}}</strong> casos aprobados</span><span class="text-shark-400">Fin programado: {{.Participation.ExpiresAt.Format "02/01/2006 15:04 MST"}}</span></div>
+            <div class="mt-5 flex items-center justify-between gap-4">
+              <div role="tablist" aria-label="Revisión del aplicante" class="flex gap-1 rounded-lg bg-shark-900 p-1">
+                <button type="button" role="tab" data-tab="results" id="results-tab-{{.Participation.ID}}" aria-controls="results-{{.Participation.ID}}" aria-selected="true" class="rounded px-4 py-2 text-sm aria-selected:bg-shark-700 aria-selected:text-white">Resultados</button>
+                <button type="button" role="tab" data-tab="code" id="code-tab-{{.Participation.ID}}" aria-controls="code-{{.Participation.ID}}" aria-selected="false" tabindex="-1" class="rounded px-4 py-2 text-sm aria-selected:bg-shark-700 aria-selected:text-white">Código</button>
+              </div>
+              <button type="button" data-supervision="{{.Applicant.Name}}" hx-get="/keystrokes/report" hx-vals='{"participationID":"{{.Participation.ID}}"}' hx-target="body" hx-swap="beforeend" hx-disabled-elt="this" class="rounded-lg border border-blue-400/50 bg-blue-500/10 px-4 py-2 text-sm font-medium text-blue-400 hover:bg-blue-500/20 disabled:opacity-50">Supervisión: video y actividad</button>
+            </div>
+          </header>
+          <div data-review-scroll class="min-h-0 flex-1 overflow-y-auto p-7">
+            <label class="mb-5 block text-sm font-medium text-shark-300">Problema
+              <select data-problem-select {{if not .Problems}}disabled{{end}} class="mt-2 w-full rounded-lg border border-shark-700 bg-shark-900 px-3 py-3 text-white disabled:opacity-50">
+                {{range .Problems}}<option value="{{.ID}}">{{.Title}} · {{if .Submission.ID}}{{.Accepted}}/{{.Total}} casos aprobados{{else}}Sin respuesta{{end}}</option>{{end}}
+              </select>
+            </label>
+            {{if not .Problems}}<p class="text-shark-400">Esta prueba no tiene problemas configurados.</p>{{end}}
+            <section role="tabpanel" data-view="results" id="results-{{.Participation.ID}}" aria-labelledby="results-tab-{{.Participation.ID}}" tabindex="0">
+              {{range $pi, $problem := .Problems}}
+              <div data-problem="{{.ID}}" class="{{if ne $pi 0}}hidden{{end}}">
+                <div class="mb-4"><h3 class="font-semibold text-white">Casos de prueba <span class="ml-2 text-sm font-normal text-shark-400">{{.Accepted}}/{{.Total}} aprobados</span></h3></div>
+                {{if not .Submission.ID}}<p class="mb-4 rounded-lg border border-shark-700 bg-shark-900 p-4 text-sm text-shark-300">El aplicante no envió una solución para este problema.</p>{{end}}
+                <div class="overflow-hidden rounded-lg border border-shark-800">
+                  {{range $ci, $case := .Cases}}
+                  <details class="border-b border-shark-800 last:border-b-0">
+                    <summary class="flex cursor-pointer items-center justify-between gap-4 bg-shark-900/50 px-4 py-3 text-sm hover:bg-shark-800">
+                      <span class="font-medium text-white">Caso {{add $ci 1}}</span>
+                      <span class="{{if eq .Result.Status "Accepted"}}text-green-400{{else if .Result.Status}}text-amber-400{{else}}text-shark-400{{end}}">{{if .Result.Status}}{{.Result.Status}}{{else}}Sin resultado{{end}}</span>
+                      <span class="ml-auto font-mono text-xs text-shark-400">{{if .Result.Status}}{{.Result.Time}} ms · {{.Result.Memory}} KB{{else}}—{{end}}</span>
+                    </summary>
+                    <div class="grid grid-cols-3 gap-px bg-shark-800">
+                      <div class="min-w-0 bg-shark-950 p-4"><p class="mb-2 text-xs font-medium text-shark-400">ENTRADA</p><pre class="overflow-x-auto font-mono text-sm text-shark-200">{{.Input}}</pre></div>
+                      <div class="min-w-0 bg-shark-950 p-4"><p class="mb-2 text-xs font-medium text-shark-400">SALIDA ESPERADA</p><pre class="overflow-x-auto font-mono text-sm text-shark-200">{{.Output}}</pre></div>
+                      <div class="min-w-0 bg-shark-950 p-4"><p class="mb-2 text-xs font-medium text-shark-400">SALIDA OBTENIDA</p><pre class="overflow-x-auto font-mono text-sm text-shark-200">{{if .Result.Status}}{{.Result.Output}}{{else}}Sin resultado disponible{{end}}</pre></div>
                     </div>
                   </details>
-                  <div class="flex flex-col">
-                    <span class="text-shark-200">
-                      Tiempo límite: {{.TimeLimit}} ms</span>
-                    <span class="text-shark-200">
-                      Memoria límite: {{.MemoryLimit}} kb</span>
-                  </div>
-
-                  <div class="flex flex-col gap-4 bg-gray-800 p-2">
-                    <span class="text-center font-medium">Casos de prueba</span>
-                    {{range $index, $testCase := .TestCases}}
-                    <details class="rounded">
-                      <summary class="bg-sky-600 select-none cursor-pointer hover:bg-sky-500 list-none">
-                        <div class="flex justify-between p-2 font-mono">
-                          <span class="text-white font-medium">TC {{add $index 1}}</span>
-                          <span class="text-white opacity-50">{{$testCase.ID}}</span>
-                        </div>
-                      </summary>
-                      <div class="flex flex-row divide-x divide-sky-600">
-                        <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg overflow-x-auto">
-                          <span class="text-white px-2">ENTRADA</span>
-                          <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{$testCase.Input}}</pre>
-                        </div>
-                        <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
-                          <span class="text-white px-2">SALIDA ESPERADA</span>
-                          <pre
-                            class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg overflow-x-auto">{{$testCase.Output}}</pre>
-                        </div>
-                      </div>
-                    </details>
-                    {{end}}
-                  </div>
-
-                  <div class="flex flex-col gap-4 bg-gray-800 p-2">
-                    <span class="text-center font-medium">Ejemplos</span>
-                    {{range .Examples}}
-                    <div class="flex flex-row divide-x divide-gray-800">
-                      <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
-                        <span class="text-white px-2">ENTRADA</span>
-                        <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{.Input}}</pre>
-                      </div>
-                      <div class="w-1/2 bg-shark-800/70 border border-shark-700 rounded-lg">
-                        <span class="text-shark-200 px-2 font-semibold">SALIDA</span>
-                        <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg">{{.Output}}</pre>
-                      </div>
-                    </div>
-                    {{end}}
-                  </div>
+                  {{else}}<p class="p-4 text-sm text-shark-400">No hay casos de prueba configurados.</p>{{end}}
                 </div>
               </div>
-              {{ $first = false }}
+              {{end}}
+            </section>
+            <section role="tabpanel" data-view="code" id="code-{{.Participation.ID}}" aria-labelledby="code-tab-{{.Participation.ID}}" tabindex="0" class="hidden">
+              {{range $pi, $problem := .Problems}}
+              <div data-problem="{{.ID}}" class="{{if ne $pi 0}}hidden{{end}}">
+                {{if .Submission.ID}}
+                <div class="mb-3 flex items-center justify-between"><h3 class="text-sm text-shark-300">Solución enviada · {{.Submission.Language}}</h3><button type="button" data-copy-code class="rounded border border-shark-700 px-3 py-1.5 text-sm hover:bg-shark-800">Copiar código</button></div>
+                <div class="overflow-x-auto rounded-lg border border-shark-800 bg-shark-900"><div class="flex min-w-full items-start py-4 font-mono text-sm leading-6"><pre data-line-numbers aria-hidden="true" class="sticky left-0 shrink-0 select-none border-r border-shark-700 bg-shark-900 px-4 text-right text-shark-500"></pre><pre class="min-w-0 px-4"><code data-source class="block bg-transparent! p-0!">{{.Submission.Src}}</code></pre></div></div>
+                {{else}}<p class="rounded-lg border border-shark-700 bg-shark-900 p-5 text-sm text-shark-300">No hay código enviado para este problema.</p>{{end}}
+              </div>
               {{end}}
             </section>
           </div>
-        </section>
-      </section>
-      <div class="flex-1 min-h-0 xl:w-1/2 overflow-y-auto flex flex-col gap-4 p-8">
-        <span class="text-2xl text-white font-bold tracking-wide">
-          <span>Aplicantes</span>
-          <img class="inline cursor-pointer ml-2 opacity-70 hover:opacity-100 transition-all" width="18" height="18"
-            src="/public/help.svg"
-            title="Si un problema no aparece, es porque el aplicante no ha enviado ninguna solución para ese problema. Pueden aparecer múltiples grabaciones de una sola prueba debido a desconexiones" />
-        </span>
-        {{if .Applicants}}
-        {{range .Applicants}}
-        {{template "applicantCard" .}}
+        </article>
         {{end}}
-        {{else}}
-        <div class="rounded-2xl border border-dashed border-shark-700 bg-shark-900/50 p-8 text-center">
-          <p class="text-shark-300">Esta oferta todavía no tiene aplicantes.</p>
-        </div>
-        {{end}}
-      </div>
+      </main>
     </div>
+
+    <dialog id="test-reference" aria-labelledby="test-reference-title" class="m-auto max-h-[85vh] w-[900px] max-w-[90vw] rounded-xl border border-shark-700 bg-shark-900 p-0 text-shark-200 backdrop:bg-black/60">
+      <header class="sticky top-0 z-10 flex items-center justify-between border-b border-shark-700 bg-shark-900 px-6 py-4"><div><h2 id="test-reference-title" class="text-lg font-semibold text-white">Prueba de referencia</h2><p class="text-xs text-shark-400">{{.Quiz.Duration}} min · {{range .Languages}}{{.DisplayName}} {{end}}</p></div><button type="button" data-close-test class="rounded px-3 py-2 hover:bg-shark-700" aria-label="Cerrar prueba de referencia">✕</button></header>
+      <div class="space-y-4 p-6">
+        {{range .Problems}}<details class="rounded-lg border border-shark-700"><summary class="cursor-pointer px-4 py-3 font-medium text-white">{{.Title}}</summary><div class="space-y-4 border-t border-shark-700 p-4"><p class="text-xs text-shark-400">Tiempo límite: {{.TimeLimit}} ms · Memoria límite: {{.MemoryLimit}} KB</p><pre class="whitespace-pre-wrap font-sans text-sm leading-relaxed">{{.Description}}</pre><h3 class="font-semibold text-white">Ejemplos</h3>{{range .Examples}}<div class="grid grid-cols-2 gap-4"><div class="min-w-0"><p class="text-xs text-shark-400">Entrada</p><pre class="overflow-x-auto rounded bg-shark-950 p-3 text-sm">{{.Input}}</pre></div><div class="min-w-0"><p class="text-xs text-shark-400">Salida</p><pre class="overflow-x-auto rounded bg-shark-950 p-3 text-sm">{{.Output}}</pre></div></div>{{else}}<p class="text-sm text-shark-400">Sin ejemplos.</p>{{end}}<h3 class="font-semibold text-white">Casos de prueba</h3>{{range $i, $case := .TestCases}}<details><summary class="cursor-pointer py-2 text-sm">Caso {{add $i 1}}</summary><div class="grid grid-cols-2 gap-4"><pre class="overflow-x-auto rounded bg-shark-950 p-3 text-sm">{{.Input}}</pre><pre class="overflow-x-auto rounded bg-shark-950 p-3 text-sm">{{.Output}}</pre></div></details>{{end}}</div></details>{{else}}<p class="text-shark-400">No hay problemas configurados.</p>{{end}}
+      </div>
+    </dialog>
+    <p id="review-feedback" role="status" aria-live="polite" class="sr-only"></p>
   </section>
 </body>
-
 </html>
-{{end}}
-
-{{block "applicantCard" .}}
-<div class="rounded-2xl border border-shark-700 bg-shark-900/50 hover:border-shark-600 transition-all duration-300">
-  <div class="w-full p-6">
-    <div class="flex flex-wrap justify-between">
-      <div class="flex gap-2 truncate items-center">
-        <div class="flex-shrink-0">
-          <img
-            class="border border-shark-700 hover:border-shark-500 cursor-pointer object-cover aspect-square rounded-full transition-all duration-300"
-            hx-get="/profile/{{.Applicant.ID}}" hx-push-url="true" hx-target="body" hx-boost="true" {{if
-            .Applicant.ImageURL}} src="{{.Applicant.ImageURL}}" {{else}} src="/public/user.svg" {{end}} width="40"
-            height="40" />
-        </div>
-        <div class="flex flex-col flex-1 justify-center min-w-0">
-          <span class="font-semibold text-xl truncate">{{.Applicant.Name}}</span>
-          <span class="truncate">{{.Applicant.Description}}</span>
-        </div>
-      </div>
-      <span class="text-shark-300 font-light">Entregado {{.Participation.RelativeTime}}</span>
-    </div>
-
-    <div class="flex flex-col gap-2">
-      {{ $applicant := .Applicant }}
-      {{range .Summary}}
-      <details class="bg-gray-900">
-        <summary class="flex-auto flex hover:bg-gray-800 justify-between cursor-pointer px-4 py-2">
-          <span class="text-shark-200">{{.Title}}</span>
-          {{if eq .Score.AcceptedTestCases 0}}
-          <span class="text-red-500">
-            {{else}}
-            {{if eq .Score.AcceptedTestCases .Score.TotalTestCases}}
-            <span class="text-green-600">
-              {{else}}
-              <span class="text-yellow-600">
-                {{end}}
-                {{end}}
-                {{.Score.AcceptedTestCases}}/{{.Score.TotalTestCases}}</span>
-        </summary>
-        {{template "sourceCard" .}}
-      </details>
-      {{end}}
-    </div>
-
-    <div class="mt-4 border-t border-shark-700 pt-4">
-      <button
-        class="px-4 py-1 bg-shark-700 hover:bg-shark-600 border border-shark-600 text-shark-200 rounded text-sm font-medium transition-colors"
-        hx-get="/keystrokes/report" hx-vals='{"participationID": "{{.Participation.ID}}"}' hx-target="body"
-        hx-swap="beforeend">
-        Telemetría
-      </button>
-    </div>
-  </div>
-</div>
-{{end}}
-
-{{block "sourceCard" .}}
-{{if eq .Submission.ID ""}}
-<section class="px-4 py-2 rounded bg-gray-900">
-  <span class="text-sm">No se ha respondido esta pregunta</span>
-</section>
-{{else}}
-<section class="p-4">
-  <span class="text-sm opacity-50">{{.Submission.Language}}</span>
-  <pre>
-    <code>{{.Submission.Src | html}}
-    </code>
-  </pre>
-  <div class="flex flex-col gap-4">
-    {{range $index, $tc := .Results}}
-    <details class="">
-      <summary
-        class="flex flex-wrap font-mono justify-between text-white bg-sky-600 hover:bg-sky-500 p-2 cursor-pointer select-none">
-        <span class="font-medium">TC {{add $index 1}}</span>
-        {{if eq $tc.Status "Accepted"}}
-        <span class="text-green-400 font-semibold">{{$tc.Status}}</span>
-        {{else}}
-        <span class="text-red-600 font-semibold">{{$tc.Status}}</span>
-        {{end}}
-        <span class="flex items-center gap-2">
-          <img class="inline" src="/public/clock.svg" width="20" height="20" alt="clock icon" />
-          {{$tc.Time}} ms
-        </span>
-        <span class="">{{$tc.Memory}} Kb</span>
-        <span class="opacity-50">{{$tc.TestCaseID}}</span>
-      </summary>
-      <div class="w-full bg-shark-700">
-        <span class="text-white px-2">SALIDA OBTENIDA</span>
-        <pre class="text-shark-100 p-4 bg-shark-900/50 rounded-b-lg overflow-x-auto">{{$tc.Output}}</pre>
-      </div>
-    </details>
-    {{end}}
-  </div>
-</section>
-{{end}}
 {{end}}

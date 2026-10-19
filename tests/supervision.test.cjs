@@ -9,7 +9,8 @@ const readScript = name => fs.readFileSync(path.join(__dirname, '../internal/ser
 function element() {
     const classes = new Set();
     return {
-        clientWidth: 520, isConnected: true, innerHTML: '', textContent: '',
+        clientWidth: 520, clientHeight: 320, isConnected: true, innerHTML: '', textContent: '',
+        closest: () => null,
         classList: {
             add: value => classes.add(value), remove: value => classes.delete(value),
             contains: value => classes.has(value),
@@ -24,6 +25,7 @@ test('cursor updates the new chart after closing and reopening; resizing does no
     const window = { seekRecording() { seeks++; } };
     const context = {
         window, document: { getElementById: id => elements.get(id) }, Intl,
+        getComputedStyle: () => ({ fontSize: '16px' }),
         ResizeObserver: class {
             constructor(callback) { this.callback = callback; observers.push(this); }
             observe() {}
@@ -50,6 +52,14 @@ test('cursor updates the new chart after closing and reopening; resizing does no
     window.renderKeystrokeReport(config);
     window.setTelemetrySelection('candidate', 1010);
     const firstX = first.cursor.attributes.x1;
+    const selectedWindow = elements.get('selection').textContent;
+    window.setTelemetrySelection('candidate', 1040);
+    assert.equal(elements.get('selection').textContent, selectedWindow, 'The telemetry window range must not slide with playback');
+    window.setTelemetrySelection('candidate', 1010);
+    window.setTelemetryRecordingSegments('candidate', [{ epoch: 1000, duration: 30 }]);
+    assert.match(elements.get('selection').textContent, /Video parcial/);
+    window.setTelemetryRecordingSegments('candidate', [{ epoch: 1000, duration: 60 }]);
+    assert.match(elements.get('selection').textContent, /Video completo/);
     window.disposeKeystrokeReport('candidate');
     assert.equal(observers[0].disconnected, true);
     const second = mount();
@@ -59,9 +69,40 @@ test('cursor updates the new chart after closing and reopening; resizing does no
     assert.equal(second.cursor.classList.contains('hidden'), false);
     assert.equal(first.cursor.attributes.x1, firstX);
     second.chart.clientWidth = 360;
+    second.chart.clientHeight = 240;
     observers[1].callback();
-    assert.match(second.chart.innerHTML, /viewBox="0 0 328 318"/);
+    assert.match(second.chart.innerHTML, /viewBox="0 0 360 240"/);
+    second.chart.clientHeight = 400;
+    observers[1].callback();
+    assert.match(second.chart.innerHTML, /viewBox="0 0 360 400"/);
+    assert.doesNotMatch(second.chart.innerHTML, /<svg[^>]*\s(?:width|height)="/);
     assert.equal(seeks, 0);
+});
+
+test('60 windows keep distinct markers at both compact and wide chart sizes', () => {
+    for (const width of [420, 1000]) {
+        const chart = element();
+        chart.clientWidth = width;
+        chart.clientHeight = 360;
+        chart.querySelector = () => ({ querySelectorAll: () => [] });
+        const window = {};
+        vm.runInNewContext(readScript('keystroke-report.js'), {
+            window, Intl, getComputedStyle: () => ({ fontSize: '16px' }),
+            document: { getElementById: id => id === 'chart' ? chart : element() },
+            ResizeObserver: class { observe() {} },
+        });
+        window.renderKeystrokeReport({
+            data: { participationID: 'dense', points: Array.from({ length: 60 }, (_, index) => ({ startAt: index * 60, smd: 1, strokeCount: 20 })) },
+            containerId: 'chart',
+        });
+        const markers = [...chart.innerHTML.matchAll(/<circle cx="([^"]+)" cy="[^"]+" r="([^"]+)"[^>]*stroke-width="([^"]+)"/g)];
+        assert.equal(markers.length, 60);
+        for (let index = 1; index < markers.length; index++) {
+            const previousRight = Number(markers[index - 1][1]) + Number(markers[index - 1][2]) + Number(markers[index - 1][3]) / 2;
+            const currentLeft = Number(markers[index][1]) - Number(markers[index][2]) - Number(markers[index][3]) / 2;
+            assert.ok(currentLeft >= previousRight, `Markers must not overlap at chart width ${width}`);
+        }
+    }
 });
 
 test('closing during recording fetch aborts the old load before reopening', async () => {

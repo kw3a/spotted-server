@@ -1,95 +1,99 @@
 {{block "keystrokeReport" .}}
-<dialog id="report-modal-{{.ParticipationID}}"
-    class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-0 rounded-lg bg-transparent backdrop:bg-black/50 open:animate-fade-in m-0">
-    <div
-        class="flex flex-col bg-shark-900 rounded-lg text-shark-200 font-mono w-[1100px] max-w-[95vw] h-auto max-h-[90vh] border border-shark-700 relative shadow-2xl overflow-hidden">
-        <div class="flex justify-between items-start p-6 pb-4 shrink-0">
-            <h2 class="text-xl font-bold text-white">Supervisión de actividades</h2>
-            <button type="button" onclick="this.closest('dialog').close()"
-                class="text-shark-400 hover:text-white transition-colors cursor-pointer z-50 ml-4">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                    </path>
+<dialog id="report-modal-{{.ParticipationID}}" aria-labelledby="report-heading-{{.ParticipationID}}"
+    class="fixed inset-0 m-auto h-5/6 max-h-none w-11/12 max-w-none overflow-hidden rounded-xl border border-shark-700 bg-shark-900 p-0 text-shark-200 shadow-2xl backdrop:bg-black/60">
+    <div class="flex h-full min-h-0 w-full flex-col font-sans">
+        <header class="flex shrink-0 items-center justify-between gap-4 border-b border-shark-700 px-5 py-4">
+            <div class="min-w-0">
+                <h2 id="report-heading-{{.ParticipationID}}" class="truncate text-xl font-semibold text-white">Supervisión de actividades</h2>
+                <p class="mt-1 text-xs text-shark-400">Selecciona un intervalo para revisar su actividad y grabación.</p>
+            </div>
+            <button type="button" aria-label="Cerrar supervisión" onclick="this.closest('dialog').close()"
+                class="shrink-0 rounded-lg p-2 text-shark-400 hover:bg-shark-800 hover:text-white focus-visible:outline-2 focus-visible:outline-blue-400">
+                <svg aria-hidden="true" class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
-        </div>
+        </header>
 
-        <div class="flex flex-1 min-h-0 min-w-0 px-6 pb-6 overflow-hidden">
-            <section class="flex flex-1 min-w-0 min-h-0 flex-row gap-6" aria-labelledby="timeline-heading">
-                <div class="flex min-w-0 basis-0 grow-[4] flex-col">
-                    <h3 id="timeline-heading" class="text-shark-200 font-semibold mb-2">Informe de la dinámica de pulsaciones</h3>
-                <div id="chart-container-{{.ParticipationID}}"
-                    class="bg-white rounded p-4 overflow-hidden h-[350px] flex items-center justify-center">
-                    <span class="text-gray-400">Generando línea de tiempo...</span>
+        <div class="grid min-h-0 min-w-0 flex-1 grid-cols-12 gap-5 p-5">
+            <section aria-labelledby="timeline-heading-{{.ParticipationID}}" class="col-span-7 flex min-h-0 min-w-0 flex-col gap-3">
+                <h3 id="timeline-heading-{{.ParticipationID}}" class="shrink-0 text-sm font-semibold text-white">Dinámica de pulsaciones (SMD)</h3>
+                <div id="legend-container-{{.ParticipationID}}" class="flex shrink-0 flex-wrap gap-x-4 gap-y-1 text-xs text-shark-300">
+                    <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-green-600"></span>Dentro del umbral</span>
+                    <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-red-600"></span>Fuera (&gt;1.2)</span>
+                    <span class="flex items-center gap-1.5"><span class="size-2.5 bg-slate-400"></span>Pocas teclas</span>
+                    <span class="flex items-center gap-1.5"><span class="size-2.5 bg-blue-400"></span>Perfil</span>
+                    <span class="flex items-center gap-1.5"><span aria-hidden="true" class="text-slate-400">▧</span>Sin video</span>
                 </div>
-                    <p class="mt-3 text-xs text-shark-400">Hora local. Cada bloque de telemetría representa un minuto; la pista de video conserva los huecos reales de grabación.</p>
-                <div id="timeline-selection-{{.ParticipationID}}" aria-live="polite"
-                    class="mt-2 rounded border border-shark-700 bg-shark-800 px-3 py-2 text-sm text-shark-300">
+                <div class="relative min-h-0 flex-1 overflow-hidden rounded-lg bg-white">
+                    <div id="chart-container-{{.ParticipationID}}" class="h-full min-h-0 w-full min-w-0 overflow-hidden">
+                        <span class="flex h-full items-center justify-center text-sm text-gray-500">Generando línea de tiempo…</span>
+                    </div>
+                    <div id="no-data-param-{{.ParticipationID}}" class="absolute inset-0 hidden items-center justify-center p-5 text-center text-sm text-gray-500">
+                        No hay suficientes datos para generar un reporte.
+                    </div>
+                </div>
+                <div class="flex shrink-0 flex-wrap items-center gap-2 text-xs">
+                    <button type="button" data-window-step="-1" class="rounded-lg border border-shark-600 px-3 py-2 hover:bg-shark-800">← Ventana</button>
+                    <button type="button" data-window-step="1" class="rounded-lg border border-shark-600 px-3 py-2 hover:bg-shark-800">Ventana →</button>
+                    <button type="button" data-window-step="deviation" class="rounded-lg border border-shark-600 px-3 py-2 hover:bg-shark-800">Siguiente fuera del umbral</button>
+                </div>
+                <div id="timeline-selection-{{.ParticipationID}}" aria-live="polite" class="shrink-0 rounded-lg border border-shark-700 bg-shark-800 px-3 py-2 text-xs leading-relaxed text-shark-200">
                     Selecciona una ventana de telemetría o un tramo de video para inspeccionarlo.
                 </div>
-                <div id="no-data-param-{{.ParticipationID}}"
-                    class="hidden mt-4 p-4 rounded bg-shark-800 text-shark-300 text-center">
-                    No hay suficientes datos para generar un reporte.
-                </div>
-                <div id="legend-container-{{.ParticipationID}}" class="mt-3 text-sm text-shark-300"></div>
-                </div>
+                <p class="shrink-0 text-xs text-shark-400">Hora local · Ventanas de 1 minuto · Las franjas rayadas indican ausencia de video.</p>
+            </section>
 
-                <div class="flex min-w-0 basis-0 grow-[3] flex-col border-l border-shark-700 pl-6" aria-labelledby="recording-heading">
-                        <h3 id="recording-heading" class="text-shark-200 font-semibold mb-2">Grabación</h3>
-                        <video id="telemetry-video-{{.ParticipationID}}" controls class="w-full min-w-0 max-w-full aspect-video object-contain rounded bg-black hidden"></video>
-                        <p id="telemetry-status-{{.ParticipationID}}" class="text-sm text-shark-300 mt-2 hidden" aria-live="polite"></p>
-                    <div class="mt-3 rounded border border-shark-700 bg-shark-800 p-4 text-sm text-shark-300">
-                        <p class="font-semibold text-shark-200">Cómo leerla</p>
-                        <p class="mt-2">La reproducción une los segmentos disponibles. Usa la línea de tiempo superior como referencia de hora real: las franjas rayadas no tienen video.</p>
-                        <div id="telemetry-recordings-{{.ParticipationID}}" class="mt-3"></div>
-                    </div>
+            <section aria-labelledby="recording-heading-{{.ParticipationID}}" class="col-span-5 flex min-h-0 min-w-0 flex-col gap-3 border-l border-shark-700 pl-5">
+                <h3 id="recording-heading-{{.ParticipationID}}" class="shrink-0 text-sm font-semibold text-white">Grabación</h3>
+                <div class="min-h-0 flex-1 overflow-hidden rounded-lg bg-black">
+                    <video id="telemetry-video-{{.ParticipationID}}" controls class="hidden h-full max-h-full w-full min-w-0 max-w-full object-contain"></video>
+                </div>
+                <div class="flex shrink-0 flex-wrap items-center gap-2 text-xs">
+                    <button type="button" data-video-step="-10" class="rounded-lg border border-shark-600 px-3 py-2 hover:bg-shark-800">−10 s</button>
+                    <button type="button" data-video-step="10" class="rounded-lg border border-shark-600 px-3 py-2 hover:bg-shark-800">+10 s</button>
+                    <label class="ml-auto flex items-center gap-2">Velocidad
+                        <select data-video-speed class="rounded-lg border border-shark-600 bg-shark-900 px-2 py-2">
+                            <option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option>
+                        </select>
+                    </label>
+                </div>
+                <p id="telemetry-position-{{.ParticipationID}}" class="shrink-0 font-mono text-xs text-shark-300">Selecciona un instante de la línea de tiempo.</p>
+                <p id="telemetry-status-{{.ParticipationID}}" aria-live="polite" class="hidden shrink-0 text-xs text-shark-300"></p>
+                <div class="shrink-0 rounded-lg border border-shark-700 bg-shark-800 p-3 text-xs leading-relaxed text-shark-300">
+                    <div id="telemetry-recordings-{{.ParticipationID}}"></div>
                 </div>
             </section>
         </div>
-
-        <script>
-            // Ensure script works even if loaded via HTMX
-            (function () {
-                const participationID = "{{.ParticipationID}}";
-                const config = {
-                    data: {
-                        points: {{.Points | json
-            }},
-            participationID: participationID
-                    },
-            containerId: `chart-container-${participationID}`,
-                legendId: `legend-container-${participationID}`,
-                    noDataId: `no-data-param-${participationID}`,
-                    selectionId: `timeline-selection-${participationID}`
-                };
-
-            const dialog = document.getElementById(`report-modal-${participationID}`);
-            if (dialog) {
-                dialog.showModal();
-                window.renderKeystrokeReport(config);
-                dialog.addEventListener('close', () => {
-                    window.disposeTelemetryRecording(participationID);
-                    window.disposeKeystrokeReport(participationID);
-                    dialog.remove();
-                }, { once: true });
-                // Close when clicking outside the modal card
-                dialog.addEventListener('click', (e) => {
-                    const r = dialog.getBoundingClientRect();
-                    const inside = e.clientX >= r.left && e.clientX <= r.right &&
-                        e.clientY >= r.top && e.clientY <= r.bottom;
-                    if (!inside) dialog.close();
-                });
-            }
-            if (window.setupTelemetryModal) {
-                window.setupTelemetryModal(
-                    participationID,
-                    `telemetry-recordings-${participationID}`,
-                    `telemetry-video-${participationID}`,
-                    `telemetry-status-${participationID}`
-                );
-            }
-            }) ();
-        </script>
     </div>
+    <script>
+        (function () {
+            const participationID = "{{.ParticipationID}}";
+            const config = {
+                data: { points: {{.Points | json}}, participationID },
+                containerId: `chart-container-${participationID}`,
+                legendId: `legend-container-${participationID}`,
+                noDataId: `no-data-param-${participationID}`,
+                selectionId: `timeline-selection-${participationID}`
+            };
+            const dialog = document.getElementById(`report-modal-${participationID}`);
+            if (!dialog) return;
+            dialog.showModal();
+            window.renderKeystrokeReport(config);
+            dialog.querySelectorAll('[data-window-step]').forEach(button => {
+                button.addEventListener('click', () => window.stepTelemetryWindow(participationID, button.dataset.windowStep === 'deviation' ? 'deviation' : Number(button.dataset.windowStep)));
+            });
+            dialog.addEventListener('close', () => {
+                window.disposeTelemetryRecording(participationID);
+                window.disposeKeystrokeReport(participationID);
+                dialog.remove();
+            }, { once: true });
+            dialog.addEventListener('click', event => {
+                const bounds = dialog.getBoundingClientRect();
+                if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
+            });
+            window.setupTelemetryModal(participationID, `telemetry-recordings-${participationID}`, `telemetry-video-${participationID}`, `telemetry-status-${participationID}`);
+        })();
+    </script>
 </dialog>
 {{end}}

@@ -12,10 +12,20 @@
         }).format(new Date(timestamp * 1000));
     }
 
-    function selectedMessage(start, end, coverage) {
+    function selectedMessage(point, segments) {
+        if (!point) return 'Sin ventana de telemetría en este instante.';
+        const start = point.startAt;
+        const end = start + WINDOW_SECONDS;
         const range = `${formatTime(start, true)}–${formatTime(end, true)}`;
-        if (!coverage) return `${range} · Sin video para este intervalo.`;
-        return `${range} · Video disponible desde ${formatTime(coverage.epoch, true)}.`;
+        const overlaps = segments.filter(segment => segment.epoch < end && segment.epoch + segment.duration > start);
+        let coveredUntil = start;
+        for (const segment of overlaps) {
+            if (segment.epoch > coveredUntil) break;
+            coveredUntil = Math.max(coveredUntil, segment.epoch + segment.duration);
+        }
+        const coverage = !overlaps.length ? 'Sin video' : coveredUntil >= end ? 'Video completo' : 'Video parcial';
+        const metric = point.isProfile ? 'Perfil de referencia' : point.isInactive ? 'Actividad insuficiente' : `SMD ${point.smd.toFixed(2)}`;
+        return `${range} · ${point.strokeCount} teclas · ${metric} · ${coverage}`;
     }
 
     function setSelection(participationID, timestamp, source) {
@@ -23,8 +33,8 @@
         if (!state || !Number.isFinite(timestamp)) return;
         state.selectedAt = timestamp;
         const { segments, selection, svg, xFor } = state;
-        const coverage = segments.find(s => timestamp >= s.epoch && timestamp < s.epoch + s.duration);
-        if (selection) selection.textContent = selectedMessage(timestamp, timestamp + WINDOW_SECONDS, coverage);
+        const point = state.results.find(point => timestamp >= point.startAt && timestamp < point.startAt + WINDOW_SECONDS);
+        if (selection) selection.textContent = selectedMessage(point, segments);
         if (!svg) return;
         const cursor = svg.querySelector('.timeline-cursor');
         if (cursor) {
@@ -41,7 +51,7 @@
             const block = el.querySelector('rect');
             if (block) {
                 block.setAttribute('stroke', selected ? '#0f172a' : 'none');
-                block.setAttribute('stroke-width', selected ? '2' : '0');
+                block.setAttribute('stroke-width', selected ? state.strokeWidth : '0');
             }
         });
         svg.querySelectorAll('.video-segment').forEach(el => {
@@ -52,7 +62,7 @@
             const block = el.querySelector('rect');
             if (block) {
                 block.setAttribute('stroke', selected ? '#0f172a' : 'none');
-                block.setAttribute('stroke-width', selected ? '2' : '0');
+                block.setAttribute('stroke-width', selected ? state.strokeWidth : '0');
             }
         });
         if (source === 'chart' && window.seekRecording) window.seekRecording(participationID, timestamp);
@@ -68,12 +78,13 @@
 
         const results = [...(data?.points || [])].sort((a, b) => (a.startAt || 0) - (b.startAt || 0));
         if (!results.length) {
-            if (noDataMsg) noDataMsg.classList.remove('hidden');
+            if (noDataMsg) { noDataMsg.classList.remove('hidden'); noDataMsg.classList.add('flex'); }
             container.innerHTML = '';
-            if (legendContainer) { legendContainer.innerHTML = ''; legendContainer.classList.add('hidden'); }
+            if (legendContainer) legendContainer.classList.add('hidden');
             return;
         }
-        if (noDataMsg) noDataMsg.classList.add('hidden');
+        if (noDataMsg) { noDataMsg.classList.add('hidden'); noDataMsg.classList.remove('flex'); }
+        if (legendContainer) legendContainer.classList.remove('hidden');
 
         const participationID = data.participationID;
         const existing = states.get(participationID);
@@ -85,108 +96,95 @@
         const t1 = Math.max(pointsEnd, ...(segments.map(s => s.epoch + s.duration)));
         const timeSpan = Math.max(t1 - t0, WINDOW_SECONDS);
 
-        const width = Math.max(1, container.clientWidth - 32);
-        const height = 318;
-        const chartWidth = width - 54 - 24;
-        const twoRows = chartWidth < 560;
-        const padding = { top: twoRows ? 56 : 44, right: 24, bottom: 38, left: 54 };
-        const plotBottom = 176;
-        const telemetryY = 204;
-        const coverageY = 246;
-        const trackHeight = 22;
+        // These are SVG coordinates, derived from the space allocated by Tailwind.
+        // The SVG has no intrinsic pixel width or height and cannot size its parent.
+        const width = Math.max(1, container.clientWidth);
+        const height = Math.max(1, container.clientHeight);
+        const padding = { top: height * 0.07, right: width * 0.05, left: width * 0.10 };
+        const chartWidth = width - padding.left - padding.right;
+        const plotBottom = height * 0.57;
+        const telemetryY = height * 0.69;
+        const coverageY = height * 0.85;
+        const trackHeight = height * 0.06;
+        const strokeWidth = Math.min(width, height) * 0.004;
         const xFor = t => padding.left + ((t - t0) / timeSpan) * chartWidth;
         const yFor = value => padding.top + ((plotBottom - padding.top) * (1 - Math.min(value, 5) / 5));
         // ponytail: grid fijo de 5 min alineado a época; bloques y segmentos van en tiempo pared preciso, sin snap.
         const gridStep = 300;
         const firstTick = Math.ceil(t0 / gridStep) * gridStep;
         const tickCount = Math.max(1, Math.floor((t1 - firstTick) / gridStep) + 1);
-        const labelEvery = chartWidth / tickCount < 24 ? 4 : chartWidth / tickCount < 48 ? 2 : 1;
+        // Estimate capacity in relative font units rather than pixel breakpoints.
+        const fontSize = parseFloat(getComputedStyle(container).fontSize);
+        const labelWidth = formatTime(t0).length * fontSize * 0.6;
+        const labelEvery = Math.max(1, Math.ceil(labelWidth * tickCount / chartWidth));
         const selectedAt = existing?.selectedAt;
-
-        let html = `<svg class="telemetry-timeline w-full min-w-0 max-w-full shrink-0 rounded border border-gray-200 bg-white" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Telemetría y cobertura de video en una línea de tiempo compartida">`;
-        html += `<defs><pattern id="no-video" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#f1f5f9"/><line x1="0" y1="0" x2="0" y2="8" stroke="#cbd5e1" stroke-width="3"/></pattern></defs>`;
-        html += `<text x="${padding.left}" y="14" font-size="12" fill="#374151" font-weight="600">Dinámica de pulsaciones (SMD)</text>`;
-        // ponytail: leyenda dentro del gráfico, arriba; una fila, dos si no cabe.
-        const legendItems = [
-            { t: 'Legítimo / perfil', c: '#16a34a', s: 'circle' },
-            { t: 'Sospechoso (>1.2)', c: '#dc2626', s: 'circle' },
-            { t: 'Inactivo', c: '#94a3b8', s: 'square' },
-            { t: 'Sin video', c: '', s: 'hatch' },
-        ];
-        const legendRows = twoRows ? [legendItems.slice(0, 2), legendItems.slice(2)] : [legendItems];
-        let legendY = 32;
-        legendRows.forEach(row => {
-            let lx = padding.left;
-            row.forEach(it => {
-                if (it.s === 'circle') html += `<circle cx="${lx + 5}" cy="${legendY - 4}" r="5" fill="${it.c}"/>`;
-                else if (it.s === 'square') html += `<rect x="${lx}" y="${legendY - 9}" width="10" height="10" fill="${it.c}"/>`;
-                else html += `<rect x="${lx}" y="${legendY - 9}" width="14" height="10" fill="url(#no-video)" stroke="#94a3b8"/>`;
-                const tx = lx + (it.s === 'hatch' ? 18 : 14);
-                html += `<text x="${tx}" y="${legendY}" font-size="11" fill="#374151">${it.t}</text>`;
-                lx = tx + it.t.length * 5.8 + 16;
-            });
-            legendY += 14;
-        });
-        html += `<line x1="${padding.left}" y1="${plotBottom}" x2="${width - padding.right}" y2="${plotBottom}" stroke="#374151" stroke-width="1.5"/>`;
-        html += `<line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${plotBottom}" stroke="#374151" stroke-width="1.5"/>`;
+        const gaps = results.slice(1).map((point, index) => xFor(point.startAt) - xFor(results[index].startAt)).filter(gap => gap > 0);
+        const pointRadius = Math.min(height * 0.018, ...gaps.map(gap => gap * 0.35));
+        const patternSize = height * 0.035;
+        const patternID = `no-video-${participationID}`;
+        let html = `<svg class="telemetry-timeline block h-full w-full" viewBox="0 0 ${width} ${height}" role="group" aria-label="Telemetría y cobertura de video en una línea de tiempo compartida">`;
+        html += `<defs><pattern id="${patternID}" width="${patternSize}" height="${patternSize}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="${patternSize}" height="${patternSize}" fill="#f1f5f9"/><line x1="0" y1="0" x2="0" y2="${patternSize}" stroke="#cbd5e1" stroke-width="${patternSize * 0.35}"/></pattern></defs>`;
+        html += `<line x1="${padding.left}" y1="${plotBottom}" x2="${width - padding.right}" y2="${plotBottom}" stroke="#374151" stroke-width="${strokeWidth}"/>`;
+        html += `<line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${plotBottom}" stroke="#374151" stroke-width="${strokeWidth}"/>`;
         for (let i = 0; i <= 5; i++) {
             const y = yFor(i);
             html += `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#e5e7eb"/>`;
-            html += `<text x="${padding.left - 9}" y="${y + 4}" text-anchor="end" font-size="11" fill="#6b7280">${i}</text>`;
+            html += `<text x="${padding.left - width * 0.02}" y="${y}" dominant-baseline="middle" text-anchor="end" class="text-xs" fill="#6b7280">${i}</text>`;
         }
         const thresholdY = yFor(1.2);
-        html += `<line x1="${padding.left}" y1="${thresholdY}" x2="${width - padding.right}" y2="${thresholdY}" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5 4"/>`;
-        html += `<text x="${width - padding.right + 4}" y="${thresholdY + 4}" font-size="10" fill="#b45309">1.2</text>`;
+        html += `<line x1="${padding.left}" y1="${thresholdY}" x2="${width - padding.right}" y2="${thresholdY}" stroke="#f59e0b" stroke-width="${strokeWidth}" stroke-dasharray="${strokeWidth * 4} ${strokeWidth * 3}"/>`;
+        html += `<text x="${width - padding.right + width * 0.01}" y="${thresholdY}" dominant-baseline="middle" class="text-xs" fill="#b45309">1.2</text>`;
         for (let n = 0, tick = firstTick; tick <= t1; tick += gridStep, n++) {
             const x = xFor(tick);
             html += `<line x1="${x}" y1="${padding.top}" x2="${x}" y2="${coverageY + trackHeight}" stroke="#e5e7eb"/>`;
-            if (n % labelEvery === 0) html += `<text x="${x}" y="${coverageY + trackHeight + 20}" text-anchor="middle" font-size="10" fill="#6b7280">${formatTime(tick)}</text>`;
+            if (n % labelEvery === 0) html += `<text x="${x}" y="${height * 0.97}" text-anchor="middle" class="text-xs" fill="#6b7280">${formatTime(tick)}</text>`;
         }
 
         let path = '';
         results.forEach((point, index) => {
             if (point.isInactive) {
-                if (path) html += `<path d="${path}" fill="none" stroke="#2563eb" stroke-width="2"/>`;
+                if (path) html += `<path d="${path}" fill="none" stroke="#2563eb" stroke-width="${strokeWidth}"/>`;
                 path = '';
                 return;
             }
             const command = `${path ? 'L' : 'M'} ${xFor(point.startAt + WINDOW_SECONDS / 2)} ${yFor(point.smd || 0)}`;
             path += `${path ? ' ' : ''}${command}`;
-            if (index === results.length - 1) html += `<path d="${path}" fill="none" stroke="#2563eb" stroke-width="2"/>`;
+            if (index === results.length - 1) html += `<path d="${path}" fill="none" stroke="#2563eb" stroke-width="${strokeWidth}"/>`;
         });
         results.forEach((point, index) => {
             const x = xFor(point.startAt);
             const y = yFor(point.smd || 0);
             const end = point.startAt + WINDOW_SECONDS;
-            const blockWidth = Math.max(3, xFor(end) - x);
-            const status = point.isInactive ? 'Inactivo' : point.isProfile ? 'Perfil' : point.smd > 1.2 ? 'Sospechoso' : 'Legítimo';
-            const color = point.isInactive ? '#94a3b8' : point.isProfile ? '#16a34a' : point.smd > 1.2 ? '#dc2626' : '#16a34a';
-            html += `<g class="ks-window" data-start="${point.startAt}" data-end="${end}" tabindex="0" role="button" aria-label="Ventana ${index + 1}, ${formatTime(point.startAt, true)}, ${status}">`;
+            const blockWidth = Math.max(0, xFor(end) - x);
+            const status = point.isInactive ? 'Actividad insuficiente' : point.isProfile ? 'Perfil de referencia' : point.smd > 1.2 ? 'Fuera del umbral' : 'Dentro del umbral';
+            const color = point.isInactive ? '#94a3b8' : point.isProfile ? '#60a5fa' : point.smd > 1.2 ? '#dc2626' : '#16a34a';
+            html += `<g class="ks-window cursor-pointer" data-start="${point.startAt}" data-end="${end}" tabindex="0" role="button" aria-label="Ventana ${index + 1}, ${formatTime(point.startAt, true)}, ${status}">`;
             html += `<title>${formatTime(point.startAt, true)}–${formatTime(end, true)} · ${point.strokeCount} teclas · ${status}</title>`;
-            html += `<rect x="${x}" y="${telemetryY}" width="${blockWidth}" height="20" rx="2" fill="${color}" fill-opacity=".8"/>`;
-            if (point.isInactive) html += `<text x="${x + blockWidth / 2}" y="${telemetryY + 15}" text-anchor="middle" font-size="12" fill="#fff">×</text>`;
-            if (!point.isInactive) html += `<circle cx="${xFor(point.startAt + WINDOW_SECONDS / 2)}" cy="${y}" r="5" fill="${color}" stroke="#fff" stroke-width="2"/>`;
+            html += `<rect x="${x}" y="${padding.top}" width="${blockWidth}" height="${telemetryY + trackHeight - padding.top}" fill="transparent"/>`;
+            html += `<rect x="${x}" y="${telemetryY}" width="${blockWidth}" height="${trackHeight}" fill="${color}" fill-opacity=".8"/>`;
+            if (point.isProfile) html += `<rect x="${xFor(point.startAt + WINDOW_SECONDS / 2) - pointRadius}" y="${y - pointRadius}" width="${pointRadius * 2}" height="${pointRadius * 2}" fill="${color}" stroke="#fff" stroke-width="${strokeWidth}"/>`;
+            else if (!point.isInactive) html += `<circle cx="${xFor(point.startAt + WINDOW_SECONDS / 2)}" cy="${y}" r="${pointRadius}" fill="${color}" stroke="#fff" stroke-width="${strokeWidth}"/>`;
             html += '</g>';
         });
-        html += `<text x="${padding.left}" y="${telemetryY - 7}" font-size="11" fill="#374151" font-weight="600">Telemetría · ventanas de 1 min</text>`;
-        html += `<text x="${padding.left}" y="${coverageY - 7}" font-size="11" fill="#374151" font-weight="600">Cobertura de video</text>`;
-        html += `<rect x="${padding.left}" y="${coverageY}" width="${chartWidth}" height="${trackHeight}" fill="url(#no-video)" stroke="#94a3b8" rx="3"/>`;
+        html += `<text x="${padding.left}" y="${telemetryY - height * 0.025}" class="text-xs font-semibold" fill="#374151">Telemetría · ventanas de 1 min</text>`;
+        html += `<text x="${padding.left}" y="${coverageY - height * 0.025}" class="text-xs font-semibold" fill="#374151">Cobertura de video</text>`;
+        html += `<rect x="${padding.left}" y="${coverageY}" width="${chartWidth}" height="${trackHeight}" fill="url(#${patternID})" stroke="#94a3b8"/>`;
         segments.forEach((segment, index) => {
             const x = xFor(segment.epoch);
-            const segmentWidth = Math.max(2, xFor(segment.epoch + segment.duration) - x);
-            html += `<g class="video-segment" data-start="${segment.epoch}" data-end="${segment.epoch + segment.duration}" tabindex="0" role="button" aria-label="Video ${index + 1}, desde ${formatTime(segment.epoch, true)}">`;
+            const segmentWidth = Math.max(0, xFor(segment.epoch + segment.duration) - x);
+            html += `<g class="video-segment cursor-pointer" data-start="${segment.epoch}" data-end="${segment.epoch + segment.duration}" tabindex="0" role="button" aria-label="Video ${index + 1}, desde ${formatTime(segment.epoch, true)}">`;
             html += `<title>Video ${index + 1}: ${formatTime(segment.epoch, true)}–${formatTime(segment.epoch + segment.duration, true)}</title>`;
-            html += `<rect x="${x}" y="${coverageY}" width="${segmentWidth}" height="${trackHeight}" fill="#2563eb" rx="2"/>`;
+            html += `<rect x="${x}" y="${coverageY}" width="${segmentWidth}" height="${trackHeight}" fill="#2563eb"/>`;
             html += '</g>';
         });
-        if (!segments.length) html += `<text x="${padding.left + chartWidth / 2}" y="${coverageY + 16}" text-anchor="middle" font-size="11" fill="#64748b">${segmentsResolved.has(participationID) ? 'Sin grabación disponible.' : 'Cargando disponibilidad de video…'}</text>`;
-        const cursorX = Number.isFinite(selectedAt) ? xFor(selectedAt) : -20;
-        html += `<line class="timeline-cursor${Number.isFinite(selectedAt) ? '' : ' hidden'}" x1="${cursorX}" x2="${cursorX}" y1="${padding.top}" y2="${coverageY + trackHeight}" stroke="#0f172a" stroke-width="2" stroke-dasharray="4 3" pointer-events="none"/>`;
+        if (!segments.length) html += `<text x="${padding.left + chartWidth / 2}" y="${coverageY + trackHeight / 2}" dominant-baseline="middle" text-anchor="middle" class="text-xs" fill="#64748b">${segmentsResolved.has(participationID) ? 'Sin grabación disponible.' : 'Cargando disponibilidad de video…'}</text>`;
+        const cursorX = Number.isFinite(selectedAt) ? xFor(selectedAt) : -width;
+        html += `<line class="timeline-cursor${Number.isFinite(selectedAt) ? '' : ' hidden'}" x1="${cursorX}" x2="${cursorX}" y1="${padding.top}" y2="${coverageY + trackHeight}" stroke="#0f172a" stroke-width="${strokeWidth}" stroke-dasharray="${strokeWidth * 3} ${strokeWidth * 2}" pointer-events="none"/>`;
         html += '</svg>';
         container.innerHTML = html;
 
         const svg = container.querySelector('svg');
-        const state = { config, segments, selectedAt, selection, svg, xFor, observer: existing?.observer };
+        const state = { config, segments, results, selectedAt, selection, svg, xFor, strokeWidth, observer: existing?.observer };
         states.set(participationID, state);
         const activate = event => setSelection(participationID, Number(event.currentTarget.dataset.start), 'chart');
         svg.querySelectorAll('.ks-window, .video-segment').forEach(el => {
@@ -199,7 +197,6 @@
             });
         });
         if (Number.isFinite(selectedAt)) setSelection(participationID, selectedAt, 'render');
-        if (legendContainer) { legendContainer.innerHTML = ''; legendContainer.classList.add('hidden'); }
     }
 
     window.renderKeystrokeReport = config => {
@@ -208,9 +205,11 @@
         const container = document.getElementById(config.containerId);
         if (!state || !container || state.observer) return;
         let previousWidth = container.clientWidth;
+        let previousHeight = container.clientHeight;
         state.observer = new ResizeObserver(() => {
-            if (container.clientWidth === previousWidth || !container.isConnected) return;
+            if ((container.clientWidth === previousWidth && container.clientHeight === previousHeight) || !container.isConnected) return;
             previousWidth = container.clientWidth;
+            previousHeight = container.clientHeight;
             render(config);
         });
         state.observer.observe(container);
@@ -228,4 +227,15 @@
         render(state.config);
     };
     window.setTelemetrySelection = (participationID, timestamp) => setSelection(participationID, timestamp, 'video');
+    window.stepTelemetryWindow = (participationID, direction) => {
+        const state = states.get(participationID);
+        if (!state) return;
+        const current = state.selectedAt;
+        const index = state.results.findIndex(point => current >= point.startAt && current < point.startAt + WINDOW_SECONDS);
+        const target = direction === 'deviation'
+            ? state.results.find(point => point.startAt > (current ?? -Infinity) && !point.isInactive && !point.isProfile && point.smd > 1.2)
+            : state.results[index < 0 ? 0 : index + direction];
+        if (target) setSelection(participationID, target.startAt, 'chart');
+        else if (state.selection) state.selection.textContent = direction === 'deviation' ? 'No hay más ventanas fuera del umbral.' : 'No hay más ventanas en esta dirección.';
+    };
 })();

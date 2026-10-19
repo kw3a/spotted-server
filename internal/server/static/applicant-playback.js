@@ -160,6 +160,14 @@
     if (window.setTelemetryRecordingSegments) window.setTelemetryRecordingSegments(participationID, segments);
   }
 
+  function updatePosition(participationID, timestamp, video) {
+    const position = document.getElementById(`telemetry-position-${participationID}`);
+    if (!position || !Number.isFinite(timestamp)) return;
+    const minutes = Math.floor((video.currentTime || 0) / 60);
+    const seconds = Math.floor((video.currentTime || 0) % 60).toString().padStart(2, '0');
+    position.textContent = `Hora local: ${formatLocalTime(timestamp)} · Video: ${minutes}:${seconds}`;
+  }
+
   function seekVideo(video, t) {
     return new Promise((resolve) => {
       const doSeek = () => {
@@ -292,16 +300,19 @@
         const timestamp = timestampAtPlayerTime(st, video.currentTime || 0);
         if (Number.isFinite(timestamp) && window.setTelemetrySelection) {
           window.setTelemetrySelection(participationID, timestamp);
+          updatePosition(participationID, timestamp, video);
         }
       }, { signal });
       video.addEventListener('seeked', () => {
         const timestamp = timestampAtPlayerTime(st, video.currentTime || 0);
         if (Number.isFinite(timestamp) && window.setTelemetrySelection) {
           window.setTelemetrySelection(participationID, timestamp);
+          updatePosition(participationID, timestamp, video);
         }
       }, { signal });
       const initialTimestamp = timestampAtPlayerTime(st, video.currentTime || 0);
       if (Number.isFinite(initialTimestamp)) window.setTelemetrySelection?.(participationID, initialTimestamp);
+      updatePosition(participationID, initialTimestamp, video);
       setStatus(status, '');
     } catch (err) {
       if (signal.aborted) return;
@@ -354,6 +365,15 @@
     const status = document.getElementById(statusId);
     if (container && video && status) {
       loadRecordings(participationID, container, video, status);
+      const dialog = video.closest('dialog');
+      const signal = loads.get(participationID)?.signal;
+      dialog?.querySelectorAll('[data-video-step]').forEach(button => button.addEventListener('click', () => {
+        if (!Number.isFinite(video.duration)) return;
+        video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + Number(button.dataset.videoStep)));
+      }, { signal }));
+      dialog?.querySelector('[data-video-speed]')?.addEventListener('change', event => {
+        video.playbackRate = Number(event.target.value);
+      }, { signal });
     }
   };
 
