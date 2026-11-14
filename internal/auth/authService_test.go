@@ -60,7 +60,7 @@ func TestSetTokenCookie(t *testing.T) {
 	w := httptest.NewRecorder()
 	cookie_name := "cookie_name"
 	cookie_value := "cookie_value"
-	SetTokenCookie(w, cookie_name, cookie_value)
+	SetTokenCookie(w, cookie_name, cookie_value, time.Hour)
 	cookies := w.Result().Cookies()
 	var cookie *http.Cookie
 	for _, c := range cookies {
@@ -73,6 +73,12 @@ func TestSetTokenCookie(t *testing.T) {
 	} else {
 		if cookie.Value != cookie_value {
 			t.Errorf("expected %v, got %v", cookie_value, cookie.Value)
+		}
+		if cookie.MaxAge != int(time.Hour.Seconds()) || !cookie.Expires.After(time.Now()) {
+			t.Errorf("expected persistent one-hour cookie, got MaxAge=%d Expires=%v", cookie.MaxAge, cookie.Expires)
+		}
+		if !cookie.HttpOnly || !cookie.Secure || cookie.SameSite != http.SameSiteLaxMode {
+			t.Errorf("expected secure HttpOnly SameSite=Lax cookie")
 		}
 	}
 }

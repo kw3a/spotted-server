@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	errEmailInvalid   = "Correo inválido"
-	errUnexpected     = "Error inesperado, inténtelo de nuevo"
+	errEmailInvalid = "Correo inválido"
+	errUnexpected   = "Error inesperado, inténtelo de nuevo"
 )
 
 type LoginInput struct {
@@ -89,8 +89,8 @@ func CreateLoginHandler(
 			}
 			return
 		}
-		auth.SetTokenCookie(w, "refresh_token", refreshToken)
-		auth.SetTokenCookie(w, "access_token", accessToken)
+		auth.SetTokenCookie(w, "refresh_token", refreshToken, auth.RefreshTokenLifetime)
+		auth.SetTokenCookie(w, "access_token", accessToken, auth.AccessTokenLifetime)
 		w.Header().Set("HX-Redirect", "/")
 		w.WriteHeader(http.StatusOK)
 	}

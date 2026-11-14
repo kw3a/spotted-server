@@ -6,6 +6,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const (
+	AccessTokenLifetime  = 6 * time.Hour
+	RefreshTokenLifetime = 120 * 24 * time.Hour
+)
+
 func newJWT(userID, secret string, tokenType tokenType) (string, error) {
 	signingKey := []byte(secret)
 	expiresIn, err := expirationTime(tokenType)
@@ -24,9 +29,9 @@ func newJWT(userID, secret string, tokenType tokenType) (string, error) {
 func expirationTime(tokenType tokenType) (time.Duration, error) {
 	switch tokenType {
 	case tokenTypeAccess:
-		return time.Hour * 6, nil
+		return AccessTokenLifetime, nil
 	case tokenTypeRefresh:
-		return time.Hour * 24 * 120, nil
+		return RefreshTokenLifetime, nil
 	default:
 		return 0, errTokenType
 	}

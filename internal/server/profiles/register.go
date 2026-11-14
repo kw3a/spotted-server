@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	errUserTaken         = "Nombre de usuario no disponible"
+	errUserTaken = "Nombre de usuario no disponible"
 )
 
 type UserStorage interface {
@@ -116,8 +116,8 @@ func CreateUserHandler(
 			}
 			return
 		}
-		auth.SetTokenCookie(w, "refresh_token", refreshToken)
-		auth.SetTokenCookie(w, "access_token", accessToken)
+		auth.SetTokenCookie(w, "refresh_token", refreshToken, auth.RefreshTokenLifetime)
+		auth.SetTokenCookie(w, "access_token", accessToken, auth.AccessTokenLifetime)
 		redirRoute := redirection + userID
 		w.Header().Set("HX-Redirect", redirRoute)
 		w.WriteHeader(http.StatusCreated)

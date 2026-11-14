@@ -45,11 +45,13 @@ func getCookies(r *http.Request) (string, string, error) {
 	}
 	return refresh.Value, access.Value, nil
 }
-func SetTokenCookie(w http.ResponseWriter, name, value string) {
+func SetTokenCookie(w http.ResponseWriter, name, value string, lifetime time.Duration) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     name,
 		Value:    value,
 		Path:     "/",
+		Expires:  time.Now().Add(lifetime),
+		MaxAge:   int(lifetime.Seconds()),
 		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
@@ -99,7 +101,7 @@ func AuthNMiddleware(storage MiddlewareStorage, authType MiddlewareAuthType, nex
 				setContext(AuthUser{Role: NotAuthRole})
 				return
 			}
-			SetTokenCookie(w, "access_token", access_token)
+			SetTokenCookie(w, "access_token", access_token, AccessTokenLifetime)
 			userID, err = authType.WhoAmI(access_token)
 			if err != nil {
 				setContext(AuthUser{Role: NotAuthRole})
