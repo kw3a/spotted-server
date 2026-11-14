@@ -172,11 +172,10 @@ async function instrument(page, color) {
   return alerts;
 }
 
-async function recording(browser,fixture,service,color='red') {
+async function recording(browser,fixture,service,color='red',id=randomUUID()) {
   const context=await browser.newContext({permissions:['camera','microphone']});
   const page=await context.newPage();
   const alerts=await instrument(page,color);
-  const id=randomUUID();
   const responses=[];
   page.on('response',response => {if(response.url().startsWith(service.publish)) responses.push({method:response.request().method(),status:response.status(),url:response.url()});});
   await page.goto(`${fixture.url}/record?id=${id}`);
@@ -205,7 +204,7 @@ async function stop(record,service) {
   await eventually(async () => !(await service.active(record.id))?.ready,'publisher removed');
 }
 
-async function capture(record,service) {
+async function capture(record,service,durationMs=5000) {
   await start(record,service);
   const began=Date.now();
   await eventually(async () => {
@@ -213,8 +212,8 @@ async function capture(record,service) {
       const stats=await window.__peerConnections[0].getStats();
       return [...stats.values()].filter(stat => stat.type==='outbound-rtp').map(stat => ({kind:stat.kind,bytes:stat.bytesSent,frames:stat.framesEncoded||0}));
     });
-    return Date.now()-began>=5000 && outbound.some(s => s.kind==='video' && s.frames>=60 && s.bytes>0) && outbound.some(s => s.kind==='audio' && s.bytes>0);
-  },'at least five seconds of encoded audio/video');
+    return Date.now()-began>=durationMs && outbound.some(s => s.kind==='video' && s.frames>=60 && s.bytes>0) && outbound.some(s => s.kind==='audio' && s.bytes>0);
+  },`at least ${Math.ceil(durationMs/1000)} seconds of encoded audio/video`,durationMs+15000);
   await stop(record,service);
   await eventually(async () => {
     const response=await fetch(`${service.playback}/list?path=${record.id}`,{signal:AbortSignal.timeout(2000)});
@@ -245,6 +244,47 @@ async function playback(browser,fixture,id,color) {
     else assert.ok(pixel[2]>150 && pixel[0]<100,`expected blue participation, pixel=${pixel}`);
   }
   return page;
+}
+
+async function playbackWindows(browser,fixture,id) {
+  const page=await browser.newPage();
+  const requests=[];
+  page.on('response',response => {if(new URL(response.url()).pathname==='/get')requests.push(response);});
+  await page.goto(`${fixture.url}/playback?id=${id}`);
+  await eventually(() => page.evaluate(() => {
+    const video=document.getElementById('video');return !video.classList.contains('hidden') && video.readyState>=2 && video.videoWidth>0 && video.duration>60;
+  }),'long recording initialized');
+  await page.evaluate(() => {const video=document.getElementById('video');video.playbackRate=16;return video.play();});
+  await eventually(() => page.evaluate(() => document.getElementById('video').currentTime>32),'playback crossed the first window');
+  await eventually(() => requests.length>=2,'next playback window requested');
+  const urls=requests.map(response => new URL(response.url()));
+  for(const response of requests) assert.equal(response.status(),200);
+  assert.ok(urls.every(url => Number(url.searchParams.get('duration'))<=30.001),'each /get request is capped at 30 seconds');
+  assert.ok(new Set(urls.map(url => url.searchParams.get('start'))).size>=2,'playback fetched distinct windows');
+  await page.close();
+}
+
+async function playbackSecondTimespan(browser,fixture,id) {
+  const page=await browser.newPage();
+  const requests=[];
+  page.on('response',response => {if(new URL(response.url()).pathname==='/get')requests.push(response);});
+  await page.goto(`${fixture.url}/playback?id=${id}`);
+  await eventually(() => page.evaluate(id => {
+    const segments=window.getTelemetryRecordingSegments(id);
+    const video=document.getElementById('video');
+    return segments.length>=2 && !video.classList.contains('hidden') && video.readyState>=2 && video.duration>0;
+  },id),'recording with multiple timespans initialized');
+  const target=await page.evaluate(id => {
+    const segment=window.getTelemetryRecordingSegments(id)[1];
+    window.seekRecording(id,segment.epoch+1);
+    return {start:segment.start,time:segment.timelineStart+1};
+  },id);
+  await eventually(() => requests.some(response => new URL(response.url()).searchParams.get('start')===target.start),'seek requested the precise second-timespan start');
+  const response=requests.find(item => new URL(item.url()).searchParams.get('start')===target.start);
+  assert.equal(response.status(),200,'second timespan /get must be found');
+  await eventually(() => page.evaluate(time => Math.abs(document.getElementById('video').currentTime-time)<1.5,target.time),'video sought into the second timespan');
+  assert.equal(await page.locator('#status').textContent(),'','seek completed without a playback error');
+  await page.close();
 }
 
 async function main() {
@@ -288,6 +328,23 @@ async function main() {
       for(const session of sessions){
         const page=await playback(browser,fixture,session.id,session.color);await page.close();
       }
+    } else if(scenario==='windows'){
+      const record=await recording(browser,fixture,service);
+      await capture(record,service,65000);
+      await playbackWindows(browser,fixture,record.id);
+      await record.context.close();
+    } else if(scenario==='seek-gap'){
+      const id=randomUUID();
+      let record=await recording(browser,fixture,service,'red',id);
+      await capture(record,service);await record.context.close();
+      await pause(1500);
+      record=await recording(browser,fixture,service,'red',id);
+      await capture(record,service);await record.context.close();
+      await eventually(async () => {
+        const response=await fetch(`${service.playback}/list?path=${id}`);
+        return response.ok && (await response.json()).length>=2;
+      },'two separated recording timespans');
+      await playbackSecondTimespan(browser,fixture,id);
     } else {
       const record=await recording(browser,fixture,service);
       if(scenario==='publish'){

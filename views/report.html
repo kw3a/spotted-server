@@ -57,9 +57,12 @@
                             <option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option>
                         </select>
                     </label>
+                    <span id="telemetry-status-{{.ParticipationID}}" role="status" aria-live="polite" class="flex h-8 shrink-0 items-center justify-end gap-2 overflow-hidden text-xs text-shark-300" style="width: 7rem" title="">
+                        <span data-status-spinner class="loader shrink-0" aria-hidden="true" style="display: none"></span>
+                        <span data-status-message class="min-w-0 truncate"></span>
+                    </span>
                 </div>
                 <p id="telemetry-position-{{.ParticipationID}}" class="shrink-0 font-mono text-xs text-shark-300">Selecciona un instante de la línea de tiempo.</p>
-                <p id="telemetry-status-{{.ParticipationID}}" aria-live="polite" class="hidden shrink-0 text-xs text-shark-300"></p>
                 <div class="shrink-0 rounded-lg border border-shark-700 bg-shark-800 p-3 text-xs leading-relaxed text-shark-300">
                     <div id="telemetry-recordings-{{.ParticipationID}}"></div>
                 </div>

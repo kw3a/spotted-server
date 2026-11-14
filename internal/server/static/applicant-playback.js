@@ -5,6 +5,9 @@
   const states = new Map();
   const recordingSegments = new Map();
   const loads = new Map();
+  const WINDOW_SECONDS = 30;
+  const BUFFER_AHEAD_SECONDS = 90;
+  const KEEP_BEHIND_SECONDS = 60;
 
   function listUrl(path) {
     const url = new URL('/list', BASE);
@@ -19,6 +22,18 @@
     url.searchParams.set('duration', String(duration));
     url.searchParams.set('format', 'fmp4');
     return url.toString();
+  }
+
+  function addSeconds(value, seconds) {
+    if (seconds === 0) return value;
+    const milliseconds = toEpochSeconds(value) * 1000;
+    if (!Number.isFinite(milliseconds)) return String(value);
+    const fraction = typeof value === 'string'
+      ? value.match(/\.(\d+)(?=Z|[+-]\d{2}:\d{2}$)/)?.[1]
+      : null;
+    const wholeSecond = Math.floor(milliseconds / 1000) * 1000 + seconds * 1000;
+    const utc = new Date(wholeSecond).toISOString();
+    return fraction ? utc.replace(/\.000Z$/, `.${fraction}Z`) : utc;
   }
 
   // MediaMTX /list returns `start` as an ISO-8601 string (e.g. "2026-03-18T18:23:16-04:00").
@@ -37,6 +52,18 @@
 
   function setStatus(el, text) {
     if (!el) return;
+    const spinner = el.querySelector?.('[data-status-spinner]');
+    const message = el.querySelector?.('[data-status-message]');
+    if (spinner && message) {
+      const value = text || '';
+      const loading = value.startsWith('Cargando');
+      if (loading && message.textContent && !message.textContent.startsWith('Cargando')) return;
+      spinner.style.display = loading ? 'inline-block' : 'none';
+      message.textContent = loading ? '' : value;
+      el.title = value;
+      el.setAttribute('aria-label', value);
+      return;
+    }
     if (!text) {
       el.textContent = '';
       el.classList.add('hidden');
@@ -44,6 +71,13 @@
     }
     el.textContent = text;
     el.classList.remove('hidden');
+  }
+
+  function clearLoadingStatus(el) {
+    if (!el) return;
+    const message = el.querySelector?.('[data-status-message]');
+    const current = message ? message.textContent : el.textContent;
+    if (!current || current.startsWith('Cargando')) setStatus(el, '');
   }
 
   // --- MP4 (fragmented) helpers ---
@@ -155,6 +189,118 @@
     return segment ? segment.epoch + (playerTime - segment.timelineStart) : null;
   }
 
+  function isPlayerTimeBuffered(video, playerTime) {
+    for (let i = 0; i < video.buffered.length; i++) {
+      if (playerTime >= video.buffered.start(i) - 0.25 && playerTime < video.buffered.end(i)) return true;
+    }
+    return false;
+  }
+
+  function windowKey(segmentIndex, windowIndex) {
+    return `${segmentIndex}:${windowIndex}`;
+  }
+
+  function enqueueAppend(st, action) {
+    const next = st.appendQueue.then(() => {
+      if (st.signal.aborted) throw st.signal.reason;
+      return action();
+    });
+    st.appendQueue = next.catch(() => {});
+    return next;
+  }
+
+  async function ensureWindow(st, segmentIndex, windowIndex) {
+    const key = windowKey(segmentIndex, windowIndex);
+    if (st.loadedWindows.has(key)) return;
+    if (st.pendingWindows.has(key)) return st.pendingWindows.get(key);
+    const segment = st.segments[segmentIndex];
+    const segmentOffset = windowIndex * WINDOW_SECONDS;
+    const duration = Math.min(WINDOW_SECONDS, segment.duration - segmentOffset);
+    if (duration <= 0) return;
+    const request = (async () => {
+      setStatus(st.status, 'Cargando tramo de video...');
+      const start = addSeconds(segment.start, segmentOffset);
+      const parts = splitInitAndMedia(await fetchBytes(getUrl(st.participationID, start, duration), st.signal));
+      await enqueueAppend(st, async () => {
+        const sb = st.sourceBuffer;
+        if (!sameBytes(st.currentInit, parts.init)) {
+          const nextMime = codecString(parts.init);
+          try { sb.changeType(nextMime); }
+          catch (err) { console.warn('SourceBuffer.changeType failed for recording window', err); }
+          await appendBuffer(sb, parts.init, st.signal);
+          st.currentInit = parts.init;
+          st.mime = nextMime;
+        }
+        sb.timestampOffset = segment.timelineStart + segmentOffset;
+        await appendBuffer(sb, parts.media, st.signal);
+      });
+      st.loadedWindows.add(key);
+      clearLoadingStatus(st.status);
+    })();
+    st.pendingWindows.set(key, request);
+    try { await request; }
+    finally { st.pendingWindows.delete(key); }
+  }
+
+  async function ensureBuffered(st, timestamp) {
+    const target = segmentAt(st, timestamp);
+    if (!target) return;
+    const targetIndex = st.segments.indexOf(target);
+    const targetOffset = timestamp - target.epoch;
+    const endTime = target.timelineStart + targetOffset + BUFFER_AHEAD_SECONDS;
+    const jobs = [];
+    for (let i = targetIndex; i < st.segments.length; i++) {
+      const segment = st.segments[i];
+      if (segment.timelineStart > endTime) break;
+      const from = i === targetIndex ? targetOffset : 0;
+      const to = Math.min(segment.duration, endTime - segment.timelineStart);
+      if (to < from) continue;
+      const firstWindow = Math.floor(from / WINDOW_SECONDS);
+      const lastWindow = Math.floor(Math.max(from, to - 0.001) / WINDOW_SECONDS);
+      for (let w = firstWindow; w <= lastWindow; w++) jobs.push([i, w]);
+    }
+    if (jobs.length === 0) return;
+    await ensureWindow(st, jobs[0][0], jobs[0][1]);
+    (async () => {
+      try {
+        for (const [i, w] of jobs.slice(1)) await ensureWindow(st, i, w);
+      } catch (err) {
+        if (!st.signal.aborted) {
+          console.error('Error buffering ahead:', err);
+          setStatus(st.status, 'No se pudo cargar la siguiente parte de la grabación');
+        }
+      }
+    })();
+  }
+
+  function trimBuffer(st) {
+    const sb = st.sourceBuffer;
+    if (!sb || sb.updating || sb.buffered.length === 0) return;
+    const cutoff = (st.video.currentTime || 0) - KEEP_BEHIND_SECONDS;
+    if (cutoff <= 0 || cutoff <= (st.lastTrimmed || 0) + WINDOW_SECONDS) return;
+    const end = Math.min(cutoff, sb.buffered.end(0));
+    if (end <= 0) return;
+    enqueueAppend(st, () => new Promise((resolve, reject) => {
+      if (st.signal.aborted) { reject(st.signal.reason); return; }
+      const onEnd = () => { cleanup(); resolve(); };
+      const onError = () => { cleanup(); reject(new Error('SourceBuffer remove failed')); };
+      const cleanup = () => { sb.removeEventListener('updateend', onEnd); sb.removeEventListener('error', onError); };
+      sb.addEventListener('updateend', onEnd, { once: true });
+      sb.addEventListener('error', onError, { once: true });
+      st.lastTrimmed = end;
+      try { sb.remove(0, end); } catch (err) { cleanup(); reject(err); }
+    })).then(() => {
+      for (let i = 0; i < st.segments.length; i++) {
+        const segment = st.segments[i];
+        const count = Math.ceil(segment.duration / WINDOW_SECONDS);
+        for (let w = 0; w < count; w++) {
+          if (segment.timelineStart + Math.min(segment.duration, (w + 1) * WINDOW_SECONDS) <= end)
+            st.loadedWindows.delete(windowKey(i, w));
+        }
+      }
+    }).catch(err => { if (!st.signal.aborted) console.warn('Unable to trim video buffer:', err); });
+  }
+
   function publishSegments(participationID, segments) {
     recordingSegments.set(participationID, segments);
     if (window.setTelemetryRecordingSegments) window.setTelemetryRecordingSegments(participationID, segments);
@@ -226,8 +372,9 @@
       }));
       publishSegments(participationID, segments);
 
+      const firstDuration = Math.min(WINDOW_SECONDS, segments[0].duration);
       const first = splitInitAndMedia(
-        await fetchBytes(getUrl(participationID, segments[0].start, segments[0].duration), signal)
+        await fetchBytes(getUrl(participationID, segments[0].start, firstDuration), signal)
       );
       const mime = codecString(first.init);
 
@@ -239,7 +386,9 @@
 
       const mediaSource = new MediaSource();
       const objectUrl = URL.createObjectURL(mediaSource);
-      const st = { segments, mediaSource, sourceBuffer: null, objectUrl, video };
+      const st = { segments, mediaSource, sourceBuffer: null, objectUrl, video, signal,
+        mime, currentInit: null, loadedWindows: new Set(), pendingWindows: new Map(),
+        appendQueue: Promise.resolve(), status, participationID };
       states.set(participationID, st);
       video.src = objectUrl;
 
@@ -253,50 +402,38 @@
       });
       const sb = mediaSource.addSourceBuffer(mime);
       st.sourceBuffer = sb;
-      await appendBuffer(sb, first.init, signal);
-
       let offset = 0;
-      let currentInit = first.init;
-      for (let k = 0; k < segments.length; k++) {
-        let segInit, segMedia;
-        if (k === 0) {
-          segInit = first.init;
-          segMedia = first.media;
-        } else {
-          const seg = splitInitAndMedia(
-            await fetchBytes(getUrl(participationID, segments[k].start, segments[k].duration), signal)
-          );
-          segInit = seg.init;
-          segMedia = seg.media;
-        }
-
-        // Recording segments come from independent publish sessions and may carry a
-        // different codec config (SPS/PPS). MSE can't mix configs in one SourceBuffer,
-        // so switch type and re-append the init segment when it changes.
-        if (k > 0 && !sameBytes(currentInit, segInit)) {
-          try {
-            sb.changeType(codecString(segInit));
-          } catch (e) {
-            console.warn('SourceBuffer.changeType failed for segment', k, e);
-          }
-          await appendBuffer(sb, segInit, signal);
-          currentInit = segInit;
-        }
-
-        segments[k].timelineStart = offset;
-        sb.timestampOffset = offset;
-        await appendBuffer(sb, segMedia, signal);
-
-        if (sb.buffered.length > 0) offset = sb.buffered.end(sb.buffered.length - 1);
-        setStatus(status, `Cargando grabación... ${k + 1}/${segments.length}`);
+      for (const segment of segments) {
+        segment.timelineStart = offset;
+        offset += segment.duration;
       }
-
       try { mediaSource.duration = offset; } catch (e) { }
-      if (mediaSource.readyState === 'open') mediaSource.endOfStream();
+      st.currentInit = first.init;
+      await enqueueAppend(st, async () => {
+        await appendBuffer(sb, first.init, signal);
+        sb.timestampOffset = segments[0].timelineStart;
+        await appendBuffer(sb, first.media, signal);
+      });
+      st.loadedWindows.add(windowKey(0, 0));
 
       video.classList.remove('hidden');
       renderPlaybackSummary(container, segments);
+      const ensureForCurrentTime = () => {
+        const playerTime = video.currentTime || 0;
+        const timestamp = timestampAtPlayerTime(st, playerTime);
+        if (timestamp !== null) ensureBuffered(st, timestamp).then(() => {
+          if (!signal.aborted && !isPlayerTimeBuffered(video, playerTime)) {
+            video.pause();
+            setStatus(status, 'Sin video en este punto');
+          }
+        }).catch(err => {
+          if (!signal.aborted) { console.error('Error buffering recording window:', err); setStatus(status, 'No se pudo cargar esta parte de la grabación'); }
+        });
+        trimBuffer(st);
+      };
+      st.ensureForCurrentTime = ensureForCurrentTime;
       video.addEventListener('timeupdate', () => {
+        ensureForCurrentTime();
         const timestamp = timestampAtPlayerTime(st, video.currentTime || 0);
         if (Number.isFinite(timestamp) && window.setTelemetrySelection) {
           window.setTelemetrySelection(participationID, timestamp);
@@ -304,16 +441,19 @@
         }
       }, { signal });
       video.addEventListener('seeked', () => {
+        ensureForCurrentTime();
         const timestamp = timestampAtPlayerTime(st, video.currentTime || 0);
         if (Number.isFinite(timestamp) && window.setTelemetrySelection) {
           window.setTelemetrySelection(participationID, timestamp);
           updatePosition(participationID, timestamp, video);
         }
       }, { signal });
+      video.addEventListener('seeking', ensureForCurrentTime, { signal });
       const initialTimestamp = timestampAtPlayerTime(st, video.currentTime || 0);
       if (Number.isFinite(initialTimestamp)) window.setTelemetrySelection?.(participationID, initialTimestamp);
       updatePosition(participationID, initialTimestamp, video);
       setStatus(status, '');
+      ensureBuffered(st, segments[0].epoch).catch(() => {});
     } catch (err) {
       if (signal.aborted) return;
       console.error('Error loading recordings:', err);
@@ -414,6 +554,18 @@
       }, { once: true });
       return;
     }
-    await seekVideo(st.video, segment.timelineStart + (unixTs - segment.epoch));
+    const targetTime = segment.timelineStart + (unixTs - segment.epoch);
+    try {
+      await ensureBuffered(st, unixTs);
+      if (!isPlayerTimeBuffered(st.video, targetTime)) {
+        st.video.pause();
+        setStatus(status, 'Sin video en este punto');
+        return;
+      }
+      await seekVideo(st.video, targetTime);
+      setStatus(status, '');
+    } catch (err) {
+      if (!st.signal.aborted) setStatus(status, 'No se pudo cargar esta parte de la grabación');
+    }
   };
 })();
