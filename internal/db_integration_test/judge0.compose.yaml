@@ -1,0 +1,54 @@
+# All images must already exist locally. The runner also enforces --pull never.
+services:
+  db:
+    image: postgres:16.2
+    pull_policy: never
+    env_file: ${JUDGE0_TEST_CONFIG:?}
+    volumes:
+      - data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U judge0 -d judge0']
+      interval: 2s
+      timeout: 3s
+      retries: 45
+  redis:
+    image: redis:7.2.4
+    pull_policy: never
+    env_file: ${JUDGE0_TEST_CONFIG:?}
+    command: [bash, -c, 'exec docker-entrypoint.sh --appendonly no --requirepass "$$REDIS_PASSWORD"']
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -q PONG']
+      interval: 2s
+      timeout: 3s
+      retries: 45
+  server:
+    image: judge0/judge0:1.13.1
+    pull_policy: never
+    privileged: true
+    volumes:
+      - ${JUDGE0_TEST_CONFIG:?}:/judge0.conf:ro
+    ports:
+      - '127.0.0.1::2358'
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD-SHELL, '. /judge0.conf && curl --fail --silent -H "X-Auth-Token: $$AUTHN_TOKEN" http://127.0.0.1:2358/languages >/dev/null']
+      interval: 2s
+      timeout: 5s
+      retries: 60
+      start_period: 10s
+  workers:
+    image: judge0/judge0:1.13.1
+    pull_policy: never
+    privileged: true
+    command: [./scripts/workers]
+    volumes:
+      - ${JUDGE0_TEST_CONFIG:?}:/judge0.conf:ro
+    depends_on:
+      server:
+        condition: service_healthy
+volumes:
+  data:

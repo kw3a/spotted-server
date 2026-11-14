@@ -27,3 +27,8 @@ func NewMysqlStorage(dbURL string) (*MysqlStorage, error) {
 
 	return &MysqlStorage{Queries: queries, db: db}, nil
 }
+
+// Close releases the database connection pool.
+func (s *MysqlStorage) Close() error {
+	return s.db.Close()
+}
