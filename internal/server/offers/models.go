@@ -150,8 +150,8 @@ func ValidateProblem(p ProblemJ) (shared.Problem, error) {
 			if len(tc.Input) < 1 || len(tc.Input) > 1000 {
 				return shared.Problem{}, lenError("entrada", 1, 1000)
 			}
-			if len(tc.Output) < 1 || len(tc.Output) > 1000 {
-				return shared.Problem{}, lenError("salida", 1, 1000)
+			if len(tc.Output) < 1 || len(tc.Output) > shared.MaxTestCaseOutputBytes {
+				return shared.Problem{}, lenError("salida", 1, shared.MaxTestCaseOutputBytes)
 			}
 			tcs = append(tcs, shared.TestCase{Input: tc.Input, Output: tc.Output})
 		}

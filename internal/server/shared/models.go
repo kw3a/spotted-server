@@ -4,6 +4,10 @@ import (
 	"time"
 )
 
+// MaxTestCaseOutputBytes is the output size accepted when registering a test
+// case. Judge output is truncated to the same byte limit before persistence.
+const MaxTestCaseOutputBytes = 1000
+
 type User struct {
 	ID          string
 	Name        string

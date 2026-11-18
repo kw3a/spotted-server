@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"unicode/utf8"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -58,6 +59,7 @@ func CreateCallbackHandler(storage CallbackStorage, st StreamService, decoder de
 			return
 		}
 		decoded.Stdout = string(plainText)
+		decoded.Stdout = truncateToMaxBytes(decoded.Stdout, shared.MaxTestCaseOutputBytes)
 		err = storage.UpdateTestCaseResult(r.Context(), decoded, urlParams.SubmissionID, urlParams.TestCaseID)
 		if err != nil {
 			log.Println(err)
@@ -69,4 +71,19 @@ func CreateCallbackHandler(storage CallbackStorage, st StreamService, decoder de
 			log.Printf("error updating stream: %v", err)
 		}
 	}
+}
+
+// truncateToMaxBytes keeps the result within the same byte limit accepted for
+// expected test output. If the boundary falls inside a UTF-8 character, omit
+// that character so the stored value remains valid UTF-8.
+func truncateToMaxBytes(value string, maxBytes int) string {
+	if len(value) <= maxBytes {
+		return value
+	}
+
+	end := maxBytes
+	for end > 0 && !utf8.RuneStart(value[end]) {
+		end--
+	}
+	return value[:end]
 }
