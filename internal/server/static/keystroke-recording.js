@@ -4,7 +4,7 @@
     let lastEventDownTime = null;
     let lastEventUpTime = null;
     let interval = null;
-    const SEND_INTERVAL_MS = 60000; // 1 minute
+    const SEND_INTERVAL_MS = 180000; // 3 minutes
 
     // Get Quiz ID globally set in HTML
     const getQuizID = () => window.quizID;

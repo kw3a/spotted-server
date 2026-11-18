@@ -112,12 +112,12 @@ func TestAnalyzeKeystrokesStartAt(t *testing.T) {
 	created := time.Date(2026, 8, 20, 12, 0, 30, 0, time.UTC)
 	windows := []shared.StrokeWindow{
 		{StrokeAmount: 100, UdMean: 10, CreatedAt: created},
-		{StrokeAmount: 50, UdMean: 12, CreatedAt: created.Add(60 * time.Second)},
+		{StrokeAmount: 50, UdMean: 12, CreatedAt: created.Add(3 * time.Minute)},
 	}
 
 	data := quizes.AnalyzeKeystrokes(windows, "part-id")
 
 	require.Len(t, data.Points, 2)
-	require.Equal(t, created.Unix()-60, data.Points[0].StartAt)
-	require.Equal(t, created.Add(60*time.Second).Unix()-60, data.Points[1].StartAt)
+	require.Equal(t, created.Unix()-int64((3*time.Minute).Seconds()), data.Points[0].StartAt)
+	require.Equal(t, created.Add(3*time.Minute).Unix()-int64((3*time.Minute).Seconds()), data.Points[1].StartAt)
 }

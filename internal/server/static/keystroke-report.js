@@ -1,6 +1,6 @@
 // Telemetry and recording coverage share one wall-clock timeline.
 (function () {
-    const WINDOW_SECONDS = 60;
+    const WINDOW_SECONDS = 3 * 60;
     const states = new Map();
     // ponytail: participaciones cuya disponibilidad de video ya se resolvió (haya o no segmentos).
     const segmentsResolved = new Set();

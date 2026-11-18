@@ -65,7 +65,7 @@ type KeystrokeReportData struct {
 	ParticipationID string
 }
 
-const strokeWindowInterval = 60
+const strokeWindowInterval = 3 * 60
 
 func AnalyzeKeystrokes(windows []shared.StrokeWindow, participationID string) KeystrokeReportData {
 	if len(windows) < 2 {

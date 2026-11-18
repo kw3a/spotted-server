@@ -92,7 +92,7 @@ test('60 windows keep distinct markers at both compact and wide chart sizes', ()
             ResizeObserver: class { observe() {} },
         });
         window.renderKeystrokeReport({
-            data: { participationID: 'dense', points: Array.from({ length: 60 }, (_, index) => ({ startAt: index * 60, smd: 1, strokeCount: 20 })) },
+            data: { participationID: 'dense', points: Array.from({ length: 60 }, (_, index) => ({ startAt: index * 180, smd: 1, strokeCount: 20 })) },
             containerId: 'chart',
         });
         const markers = [...chart.innerHTML.matchAll(/<circle cx="([^"]+)" cy="[^"]+" r="([^"]+)"[^>]*stroke-width="([^"]+)"/g)];
