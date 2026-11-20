@@ -1,6 +1,8 @@
 // Telemetry and recording coverage share one wall-clock timeline.
 (function () {
     const WINDOW_SECONDS = 3 * 60;
+    const CUSUM_THRESHOLD = 4;
+    const windowEnd = point => point.endAt > point.startAt ? point.endAt : point.startAt + WINDOW_SECONDS;
     const states = new Map();
     // ponytail: participaciones cuya disponibilidad de video ya se resolvió (haya o no segmentos).
     const segmentsResolved = new Set();
@@ -15,7 +17,7 @@
     function selectedMessage(point, segments) {
         if (!point) return 'Sin ventana de telemetría en este instante.';
         const start = point.startAt;
-        const end = start + WINDOW_SECONDS;
+        const end = windowEnd(point);
         const range = `${formatTime(start, true)}–${formatTime(end, true)}`;
         const overlaps = segments.filter(segment => segment.epoch < end && segment.epoch + segment.duration > start);
         let coveredUntil = start;
@@ -24,7 +26,7 @@
             coveredUntil = Math.max(coveredUntil, segment.epoch + segment.duration);
         }
         const coverage = !overlaps.length ? 'Sin video' : coveredUntil >= end ? 'Video completo' : 'Video parcial';
-        const metric = point.isProfile ? 'Perfil de referencia' : point.isInactive ? 'Actividad insuficiente' : `SMD ${point.smd.toFixed(2)}`;
+        const metric = point.isBaseline ? 'Referencia provisional' : point.isInsufficient ? 'Datos insuficientes' : `distancia ${point.score.toFixed(2)} · CUSUM ${point.cusum.toFixed(2)}${point.isSuspicious ? ' · cambio sospechoso' : ''}`;
         return `${range} · ${point.strokeCount} teclas · ${metric} · ${coverage}`;
     }
 
@@ -33,7 +35,7 @@
         if (!state || !Number.isFinite(timestamp)) return;
         state.selectedAt = timestamp;
         const { segments, selection, svg, xFor } = state;
-        const point = state.results.find(point => timestamp >= point.startAt && timestamp < point.startAt + WINDOW_SECONDS);
+        const point = state.results.find(point => timestamp >= point.startAt && timestamp < windowEnd(point));
         if (selection) selection.textContent = selectedMessage(point, segments);
         if (!svg) return;
         const cursor = svg.querySelector('.timeline-cursor');
@@ -91,7 +93,7 @@
         const knownSegments = existing?.segments || window.getTelemetryRecordingSegments?.(participationID) || [];
         const segments = knownSegments.filter(s => Number.isFinite(s.epoch) && Number.isFinite(s.duration));
         const pointsStart = Math.min(...results.map(r => r.startAt));
-        const pointsEnd = Math.max(...results.map(r => r.startAt + WINDOW_SECONDS));
+        const pointsEnd = Math.max(...results.map(windowEnd));
         const t0 = Math.min(pointsStart, ...(segments.map(s => s.epoch)));
         const t1 = Math.max(pointsEnd, ...(segments.map(s => s.epoch + s.duration)));
         const timeSpan = Math.max(t1 - t0, WINDOW_SECONDS);
@@ -108,7 +110,7 @@
         const trackHeight = height * 0.06;
         const strokeWidth = Math.min(width, height) * 0.004;
         const xFor = t => padding.left + ((t - t0) / timeSpan) * chartWidth;
-        const yFor = value => padding.top + ((plotBottom - padding.top) * (1 - Math.min(value, 5) / 5));
+        const yFor = value => padding.top + ((plotBottom - padding.top) * (1 - Math.min(value, 8) / 8));
         // ponytail: grid fijo de 5 min alineado a época; bloques y segmentos van en tiempo pared preciso, sin snap.
         const gridStep = 300;
         const firstTick = Math.ceil(t0 / gridStep) * gridStep;
@@ -126,14 +128,14 @@
         html += `<defs><pattern id="${patternID}" width="${patternSize}" height="${patternSize}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="${patternSize}" height="${patternSize}" fill="#f1f5f9"/><line x1="0" y1="0" x2="0" y2="${patternSize}" stroke="#cbd5e1" stroke-width="${patternSize * 0.35}"/></pattern></defs>`;
         html += `<line x1="${padding.left}" y1="${plotBottom}" x2="${width - padding.right}" y2="${plotBottom}" stroke="#374151" stroke-width="${strokeWidth}"/>`;
         html += `<line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${plotBottom}" stroke="#374151" stroke-width="${strokeWidth}"/>`;
-        for (let i = 0; i <= 5; i++) {
+        for (let i = 0; i <= 8; i += 2) {
             const y = yFor(i);
             html += `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#e5e7eb"/>`;
             html += `<text x="${padding.left - width * 0.02}" y="${y}" dominant-baseline="middle" text-anchor="end" class="text-xs" fill="#6b7280">${i}</text>`;
         }
-        const thresholdY = yFor(1.2);
+        const thresholdY = yFor(CUSUM_THRESHOLD);
         html += `<line x1="${padding.left}" y1="${thresholdY}" x2="${width - padding.right}" y2="${thresholdY}" stroke="#f59e0b" stroke-width="${strokeWidth}" stroke-dasharray="${strokeWidth * 4} ${strokeWidth * 3}"/>`;
-        html += `<text x="${width - padding.right + width * 0.01}" y="${thresholdY}" dominant-baseline="middle" class="text-xs" fill="#b45309">1.2</text>`;
+        html += `<text x="${width - padding.right + width * 0.01}" y="${thresholdY}" dominant-baseline="middle" class="text-xs" fill="#b45309">4</text>`;
         for (let n = 0, tick = firstTick; tick <= t1; tick += gridStep, n++) {
             const x = xFor(tick);
             html += `<line x1="${x}" y1="${padding.top}" x2="${x}" y2="${coverageY + trackHeight}" stroke="#e5e7eb"/>`;
@@ -142,31 +144,30 @@
 
         let path = '';
         results.forEach((point, index) => {
-            if (point.isInactive) {
+            if (point.isInsufficient || point.hasGapBefore) {
                 if (path) html += `<path d="${path}" fill="none" stroke="#2563eb" stroke-width="${strokeWidth}"/>`;
                 path = '';
                 return;
             }
-            const command = `${path ? 'L' : 'M'} ${xFor(point.startAt + WINDOW_SECONDS / 2)} ${yFor(point.smd || 0)}`;
+            const command = `${path ? 'L' : 'M'} ${xFor((point.startAt + windowEnd(point)) / 2)} ${yFor(point.cusum || 0)}`;
             path += `${path ? ' ' : ''}${command}`;
             if (index === results.length - 1) html += `<path d="${path}" fill="none" stroke="#2563eb" stroke-width="${strokeWidth}"/>`;
         });
         results.forEach((point, index) => {
             const x = xFor(point.startAt);
-            const y = yFor(point.smd || 0);
-            const end = point.startAt + WINDOW_SECONDS;
+            const y = yFor(point.cusum || 0);
+            const end = windowEnd(point);
             const blockWidth = Math.max(0, xFor(end) - x);
-            const status = point.isInactive ? 'Actividad insuficiente' : point.isProfile ? 'Perfil de referencia' : point.smd > 1.2 ? 'Fuera del umbral' : 'Dentro del umbral';
-            const color = point.isInactive ? '#94a3b8' : point.isProfile ? '#60a5fa' : point.smd > 1.2 ? '#dc2626' : '#16a34a';
+            const status = point.isInsufficient ? 'Datos insuficientes' : point.isBaseline ? 'Referencia provisional' : point.isSuspicious ? 'Cambio sospechoso' : 'Sin cambio acumulado';
+            const color = point.isInsufficient ? '#94a3b8' : point.isBaseline ? '#60a5fa' : point.isSuspicious ? '#dc2626' : '#16a34a';
             html += `<g class="ks-window cursor-pointer" data-start="${point.startAt}" data-end="${end}" tabindex="0" role="button" aria-label="Ventana ${index + 1}, ${formatTime(point.startAt, true)}, ${status}">`;
             html += `<title>${formatTime(point.startAt, true)}–${formatTime(end, true)} · ${point.strokeCount} teclas · ${status}</title>`;
             html += `<rect x="${x}" y="${padding.top}" width="${blockWidth}" height="${telemetryY + trackHeight - padding.top}" fill="transparent"/>`;
             html += `<rect x="${x}" y="${telemetryY}" width="${blockWidth}" height="${trackHeight}" fill="${color}" fill-opacity=".8"/>`;
-            if (point.isProfile) html += `<rect x="${xFor(point.startAt + WINDOW_SECONDS / 2) - pointRadius}" y="${y - pointRadius}" width="${pointRadius * 2}" height="${pointRadius * 2}" fill="${color}" stroke="#fff" stroke-width="${strokeWidth}"/>`;
-            else if (!point.isInactive) html += `<circle cx="${xFor(point.startAt + WINDOW_SECONDS / 2)}" cy="${y}" r="${pointRadius}" fill="${color}" stroke="#fff" stroke-width="${strokeWidth}"/>`;
+            if (!point.isInsufficient) html += `<circle cx="${xFor((point.startAt + end) / 2)}" cy="${y}" r="${pointRadius}" fill="${color}" stroke="#fff" stroke-width="${strokeWidth}"/>`;
             html += '</g>';
         });
-        html += `<text x="${padding.left}" y="${telemetryY - height * 0.025}" class="text-xs font-semibold" fill="#374151">Telemetría · ventanas de 1 min</text>`;
+        html += `<text x="${padding.left}" y="${telemetryY - height * 0.025}" class="text-xs font-semibold" fill="#374151">Telemetría · CUSUM</text>`;
         html += `<text x="${padding.left}" y="${coverageY - height * 0.025}" class="text-xs font-semibold" fill="#374151">Cobertura de video</text>`;
         html += `<rect x="${padding.left}" y="${coverageY}" width="${chartWidth}" height="${trackHeight}" fill="url(#${patternID})" stroke="#94a3b8"/>`;
         segments.forEach((segment, index) => {
@@ -231,9 +232,9 @@
         const state = states.get(participationID);
         if (!state) return;
         const current = state.selectedAt;
-        const index = state.results.findIndex(point => current >= point.startAt && current < point.startAt + WINDOW_SECONDS);
+        const index = state.results.findIndex(point => current >= point.startAt && current < windowEnd(point));
         const target = direction === 'deviation'
-            ? state.results.find(point => point.startAt > (current ?? -Infinity) && !point.isInactive && !point.isProfile && point.smd > 1.2)
+            ? state.results.find(point => point.startAt > (current ?? -Infinity) && point.isSuspicious)
             : state.results[index < 0 ? 0 : index + direction];
         if (target) setSelection(participationID, target.startAt, 'chart');
         else if (state.selection) state.selection.textContent = direction === 'deviation' ? 'No hay más ventanas fuera del umbral.' : 'No hay más ventanas en esta dirección.';

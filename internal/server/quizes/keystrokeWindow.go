@@ -33,6 +33,12 @@ func GetStrokeWindowInput(r *http.Request) (StrokeWindowInput, error) {
 		}
 		return shared.IntToInt32(val64), nil
 	}
+	parseOptional := func(key string) (int32, error) {
+		if r.FormValue(key) == "" {
+			return 0, nil
+		}
+		return parse(key)
+	}
 
 	var input StrokeWindowInput
 	var sw shared.StrokeWindow
@@ -41,6 +47,45 @@ func GetStrokeWindowInput(r *http.Request) (StrokeWindowInput, error) {
 		return StrokeWindowInput{}, err
 	}
 	input.QuizID = quizID
+	windowID := r.FormValue("windowId")
+	if windowID != "" {
+		if err := shared.ValidateUUID(windowID); err != nil {
+			return StrokeWindowInput{}, err
+		}
+		sw.ID = windowID
+	}
+	featureVersion := int32(0)
+	var err error
+	if r.FormValue("featureVersion") != "" {
+		featureVersion, err = parse("featureVersion")
+		if err != nil {
+			return StrokeWindowInput{}, err
+		}
+	}
+	if featureVersion < 0 || featureVersion > 1 {
+		return StrokeWindowInput{}, strconv.ErrRange
+	}
+	sw.FeatureVersion = uint8(featureVersion)
+	parseUint64 := func(key string) (uint64, error) {
+		value, err := strconv.ParseUint(r.FormValue(key), 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return value, nil
+	}
+	if r.FormValue("windowStartMs") != "" {
+		if sw.WindowStartMs, err = parseUint64("windowStartMs"); err != nil {
+			return StrokeWindowInput{}, err
+		}
+	}
+	if r.FormValue("windowEndMs") != "" {
+		if sw.WindowEndMs, err = parseUint64("windowEndMs"); err != nil {
+			return StrokeWindowInput{}, err
+		}
+	}
+	if sw.FeatureVersion > 0 && (sw.WindowStartMs == 0 || sw.WindowEndMs < sw.WindowStartMs) {
+		return StrokeWindowInput{}, strconv.ErrRange
+	}
 	strokeAmount, err := parse("strokeAmount")
 	if err != nil {
 		return StrokeWindowInput{}, err
@@ -56,6 +101,12 @@ func GetStrokeWindowInput(r *http.Request) (StrokeWindowInput, error) {
 		return StrokeWindowInput{}, err
 	}
 	sw.UdStdDev = udStdDev
+	if sw.UdMedian, err = parseOptional("udMedian"); err != nil {
+		return StrokeWindowInput{}, err
+	}
+	if sw.UdMad, err = parseOptional("udMad"); err != nil {
+		return StrokeWindowInput{}, err
+	}
 	du1Mean, err := parse("du1Mean")
 	if err != nil {
 		return StrokeWindowInput{}, err
@@ -66,6 +117,12 @@ func GetStrokeWindowInput(r *http.Request) (StrokeWindowInput, error) {
 		return StrokeWindowInput{}, err
 	}
 	sw.Du1StdDev = du1StdDev
+	if sw.Du1Median, err = parseOptional("du1Median"); err != nil {
+		return StrokeWindowInput{}, err
+	}
+	if sw.Du1Mad, err = parseOptional("du1Mad"); err != nil {
+		return StrokeWindowInput{}, err
+	}
 	du2Mean, err := parse("du2Mean")
 	if err != nil {
 		return StrokeWindowInput{}, err
@@ -76,6 +133,12 @@ func GetStrokeWindowInput(r *http.Request) (StrokeWindowInput, error) {
 		return StrokeWindowInput{}, err
 	}
 	sw.Du2StdDev = du2StdDev
+	if sw.Du2Median, err = parseOptional("du2Median"); err != nil {
+		return StrokeWindowInput{}, err
+	}
+	if sw.Du2Mad, err = parseOptional("du2Mad"); err != nil {
+		return StrokeWindowInput{}, err
+	}
 	ddMean, err := parse("ddMean")
 	if err != nil {
 		return StrokeWindowInput{}, err
@@ -86,6 +149,12 @@ func GetStrokeWindowInput(r *http.Request) (StrokeWindowInput, error) {
 		return StrokeWindowInput{}, err
 	}
 	sw.DdStdDev = ddStdDev
+	if sw.DdMedian, err = parseOptional("ddMedian"); err != nil {
+		return StrokeWindowInput{}, err
+	}
+	if sw.DdMad, err = parseOptional("ddMad"); err != nil {
+		return StrokeWindowInput{}, err
+	}
 	uuMean, err := parse("uuMean")
 	if err != nil {
 		return StrokeWindowInput{}, err
@@ -96,6 +165,18 @@ func GetStrokeWindowInput(r *http.Request) (StrokeWindowInput, error) {
 		return StrokeWindowInput{}, err
 	}
 	sw.UuStdDev = uuStdDev
+	if sw.UuMedian, err = parseOptional("uuMedian"); err != nil {
+		return StrokeWindowInput{}, err
+	}
+	if sw.UuMad, err = parseOptional("uuMad"); err != nil {
+		return StrokeWindowInput{}, err
+	}
+	if sw.LongPausePermille, err = parseOptional("longPausePermille"); err != nil {
+		return StrokeWindowInput{}, err
+	}
+	if sw.LongPausePermille < 0 || sw.LongPausePermille > 1000 {
+		return StrokeWindowInput{}, strconv.ErrRange
+	}
 	input.StrokeWindow = sw
 	return input, nil
 }
@@ -123,7 +204,9 @@ func CreateKeyStrokeWindowHandler(storage KeyStrokeWindowStorage, authService sh
 			http.Error(w, "your participation is over", http.StatusUnauthorized)
 			return
 		}
-		input.StrokeWindow.ID = uuid.NewString()
+		if input.StrokeWindow.ID == "" {
+			input.StrokeWindow.ID = uuid.NewString()
+		}
 		if err := storage.InsertKeyStrokeWindow(r.Context(), partiData.ID, input.StrokeWindow); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

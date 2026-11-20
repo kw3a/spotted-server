@@ -1,0 +1,33 @@
+-- +goose Up
+ALTER TABLE stroke_window
+  ADD COLUMN feature_version TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  ADD COLUMN window_start_ms BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  ADD COLUMN window_end_ms BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  ADD COLUMN ud_median INT NOT NULL DEFAULT 0,
+  ADD COLUMN ud_mad INT NOT NULL DEFAULT 0,
+  ADD COLUMN du1_median INT NOT NULL DEFAULT 0,
+  ADD COLUMN du1_mad INT NOT NULL DEFAULT 0,
+  ADD COLUMN du2_median INT NOT NULL DEFAULT 0,
+  ADD COLUMN du2_mad INT NOT NULL DEFAULT 0,
+  ADD COLUMN dd_median INT NOT NULL DEFAULT 0,
+  ADD COLUMN dd_mad INT NOT NULL DEFAULT 0,
+  ADD COLUMN uu_median INT NOT NULL DEFAULT 0,
+  ADD COLUMN uu_mad INT NOT NULL DEFAULT 0,
+  ADD COLUMN long_pause_permille INT NOT NULL DEFAULT 0;
+
+-- +goose Down
+ALTER TABLE stroke_window
+  DROP COLUMN long_pause_permille,
+  DROP COLUMN uu_mad,
+  DROP COLUMN uu_median,
+  DROP COLUMN dd_mad,
+  DROP COLUMN dd_median,
+  DROP COLUMN du2_mad,
+  DROP COLUMN du2_median,
+  DROP COLUMN du1_mad,
+  DROP COLUMN du1_median,
+  DROP COLUMN ud_mad,
+  DROP COLUMN ud_median,
+  DROP COLUMN window_end_ms,
+  DROP COLUMN window_start_ms,
+  DROP COLUMN feature_version;

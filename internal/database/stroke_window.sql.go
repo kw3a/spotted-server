@@ -16,24 +16,46 @@ ud_mean, ud_std_dev,
 du1_mean, du1_std_dev, 
 du2_mean, du2_std_dev, 
 dd_mean, dd_std_dev, 
-uu_mean, uu_std_dev)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+uu_mean, uu_std_dev,
+feature_version, window_start_ms, window_end_ms,
+ud_median, ud_mad,
+du1_median, du1_mad,
+du2_median, du2_mad,
+dd_median, dd_mad,
+uu_median, uu_mad,
+long_pause_permille)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON DUPLICATE KEY UPDATE id = VALUES(id)
 `
 
 type InsertStrokeWindowParams struct {
-	ID              string
-	ParticipationID string
-	StrokeAmount    int32
-	UdMean          int32
-	UdStdDev        int32
-	Du1Mean         int32
-	Du1StdDev       int32
-	Du2Mean         int32
-	Du2StdDev       int32
-	DdMean          int32
-	DdStdDev        int32
-	UuMean          int32
-	UuStdDev        int32
+	ID                string
+	ParticipationID   string
+	StrokeAmount      int32
+	UdMean            int32
+	UdStdDev          int32
+	Du1Mean           int32
+	Du1StdDev         int32
+	Du2Mean           int32
+	Du2StdDev         int32
+	DdMean            int32
+	DdStdDev          int32
+	UuMean            int32
+	UuStdDev          int32
+	FeatureVersion    uint8
+	WindowStartMs     uint64
+	WindowEndMs       uint64
+	UdMedian          int32
+	UdMad             int32
+	Du1Median         int32
+	Du1Mad            int32
+	Du2Median         int32
+	Du2Mad            int32
+	DdMedian          int32
+	DdMad             int32
+	UuMedian          int32
+	UuMad             int32
+	LongPausePermille int32
 }
 
 func (q *Queries) InsertStrokeWindow(ctx context.Context, arg InsertStrokeWindowParams) error {
@@ -51,12 +73,26 @@ func (q *Queries) InsertStrokeWindow(ctx context.Context, arg InsertStrokeWindow
 		arg.DdStdDev,
 		arg.UuMean,
 		arg.UuStdDev,
+		arg.FeatureVersion,
+		arg.WindowStartMs,
+		arg.WindowEndMs,
+		arg.UdMedian,
+		arg.UdMad,
+		arg.Du1Median,
+		arg.Du1Mad,
+		arg.Du2Median,
+		arg.Du2Mad,
+		arg.DdMedian,
+		arg.DdMad,
+		arg.UuMedian,
+		arg.UuMad,
+		arg.LongPausePermille,
 	)
 	return err
 }
 
 const selectStrokeWindows = `-- name: SelectStrokeWindows :many
-SELECT stroke_window.id, stroke_window.created_at, stroke_window.updated_at, stroke_window.stroke_amount, stroke_window.ud_mean, stroke_window.ud_std_dev, stroke_window.du1_mean, stroke_window.du1_std_dev, stroke_window.du2_mean, stroke_window.du2_std_dev, stroke_window.dd_mean, stroke_window.dd_std_dev, stroke_window.uu_mean, stroke_window.uu_std_dev, stroke_window.participation_id
+SELECT stroke_window.id, stroke_window.created_at, stroke_window.updated_at, stroke_window.stroke_amount, stroke_window.ud_mean, stroke_window.ud_std_dev, stroke_window.du1_mean, stroke_window.du1_std_dev, stroke_window.du2_mean, stroke_window.du2_std_dev, stroke_window.dd_mean, stroke_window.dd_std_dev, stroke_window.uu_mean, stroke_window.uu_std_dev, stroke_window.participation_id, stroke_window.feature_version, stroke_window.window_start_ms, stroke_window.window_end_ms, stroke_window.ud_median, stroke_window.ud_mad, stroke_window.du1_median, stroke_window.du1_mad, stroke_window.du2_median, stroke_window.du2_mad, stroke_window.dd_median, stroke_window.dd_mad, stroke_window.uu_median, stroke_window.uu_mad, stroke_window.long_pause_permille
 FROM stroke_window
 WHERE participation_id = ?
 ORDER BY created_at DESC
@@ -87,6 +123,20 @@ func (q *Queries) SelectStrokeWindows(ctx context.Context, participationID strin
 			&i.UuMean,
 			&i.UuStdDev,
 			&i.ParticipationID,
+			&i.FeatureVersion,
+			&i.WindowStartMs,
+			&i.WindowEndMs,
+			&i.UdMedian,
+			&i.UdMad,
+			&i.Du1Median,
+			&i.Du1Mad,
+			&i.Du2Median,
+			&i.Du2Mad,
+			&i.DdMedian,
+			&i.DdMad,
+			&i.UuMedian,
+			&i.UuMad,
+			&i.LongPausePermille,
 		); err != nil {
 			return nil, err
 		}

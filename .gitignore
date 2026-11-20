@@ -9,4 +9,5 @@ internal/server/static/sse.js
 internal/server/static/tailwind.js
 node_modules
 *.sql
+!sql/schema/024_keystroke_robust_features.sql
 mediamtx_*

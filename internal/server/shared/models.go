@@ -165,17 +165,31 @@ type Summary struct {
 }
 
 type StrokeWindow struct {
-	ID           string
-	CreatedAt    time.Time
-	StrokeAmount int32
-	UdMean       int32
-	UdStdDev     int32
-	Du1Mean      int32
-	Du1StdDev    int32
-	Du2Mean      int32
-	Du2StdDev    int32
-	DdMean       int32
-	DdStdDev     int32
-	UuMean       int32
-	UuStdDev     int32
+	ID                string
+	CreatedAt         time.Time
+	StrokeAmount      int32
+	FeatureVersion    uint8
+	WindowStartMs     uint64
+	WindowEndMs       uint64
+	UdMean            int32
+	UdStdDev          int32
+	UdMedian          int32
+	UdMad             int32
+	Du1Mean           int32
+	Du1StdDev         int32
+	Du1Median         int32
+	Du1Mad            int32
+	Du2Mean           int32
+	Du2StdDev         int32
+	Du2Median         int32
+	Du2Mad            int32
+	DdMean            int32
+	DdStdDev          int32
+	DdMedian          int32
+	DdMad             int32
+	UuMean            int32
+	UuStdDev          int32
+	UuMedian          int32
+	UuMad             int32
+	LongPausePermille int32
 }
