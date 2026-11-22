@@ -94,11 +94,25 @@ func windowTimes(w shared.StrokeWindow) (int64, int64) {
 	return end - strokeWindowInterval, end
 }
 
+func windowOrderTimes(w shared.StrokeWindow) (int64, int64) {
+	if w.FeatureVersion > 0 && w.WindowStartMs > 0 && w.WindowEndMs >= w.WindowStartMs {
+		return int64(w.WindowStartMs), int64(w.WindowEndMs)
+	}
+	end := w.CreatedAt.UnixMilli()
+	return end - int64(strokeWindowInterval)*1000, end
+}
+
 func AnalyzeKeystrokes(windows []shared.StrokeWindow, participationID string) KeystrokeReportData {
 	sort.SliceStable(windows, func(i, j int) bool {
-		startI, _ := windowTimes(windows[i])
-		startJ, _ := windowTimes(windows[j])
-		return startI < startJ
+		startI, endI := windowOrderTimes(windows[i])
+		startJ, endJ := windowOrderTimes(windows[j])
+		if startI != startJ {
+			return startI < startJ
+		}
+		if endI != endJ {
+			return endI < endJ
+		}
+		return windows[i].ID < windows[j].ID
 	})
 	points := make([]AnalysisPoint, 0, len(windows))
 	validIndexes := make([]int, 0)
