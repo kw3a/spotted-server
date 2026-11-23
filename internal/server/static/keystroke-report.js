@@ -50,10 +50,10 @@
             const end = Number(el.dataset.end);
             const selected = timestamp >= start && timestamp < end;
             el.classList.toggle('is-selected', selected);
-            const block = el.querySelector('rect');
-            if (block) {
-                block.setAttribute('stroke', selected ? '#0f172a' : 'none');
-                block.setAttribute('stroke-width', selected ? state.strokeWidth : '0');
+            const bar = el.querySelector('.ks-bar');
+            if (bar) {
+                bar.setAttribute('stroke', selected ? '#0f172a' : 'none');
+                bar.setAttribute('stroke-width', selected ? state.strokeWidth * 2 : '0');
             }
         });
         svg.querySelectorAll('.video-segment').forEach(el => {
@@ -148,50 +148,27 @@
             if (n % labelEvery === 0) html += `<text x="${x}" y="${height * 0.97}" text-anchor="middle" class="text-xs" fill="#6b7280">${formatTime(tick)}</text>`;
         }
 
-        let path = '';
-        let pathColor = '';
-        let previousPoint = null;
-        const flushPath = () => {
-            if (path) html += `<path d="${path}" fill="none" stroke="${pathColor}" stroke-width="${strokeWidth}"/>`;
-            path = '';
-            pathColor = '';
-        };
-        results.forEach(point => {
-            if (point.isInsufficient || point.hasGapBefore) {
-                flushPath();
-                previousPoint = null;
-                return;
-            }
-            const x = xFor((point.startAt + windowEnd(point)) / 2);
-            const y = yFor(metricValue(point));
-            const color = point.isSuspicious ? '#dc2626' : '#2563eb';
-            if (!path) {
-                path = `M ${x} ${y}`;
-                pathColor = color;
-            } else if (pathColor === color) {
-                path += ` L ${x} ${y}`;
-            } else {
-                const previousX = xFor((previousPoint.startAt + windowEnd(previousPoint)) / 2);
-                const previousY = yFor(metricValue(previousPoint));
-                flushPath();
-                path = `M ${previousX} ${previousY} L ${x} ${y}`;
-                pathColor = color;
-            }
-            previousPoint = point;
-        });
-        flushPath();
         results.forEach((point, index) => {
-            const x = xFor(point.startAt);
-            const y = yFor(metricValue(point));
+            const windowX = xFor(point.startAt);
             const end = windowEnd(point);
-            const blockWidth = Math.max(0, xFor(end) - x);
+            const windowWidth = Math.max(0, xFor(end) - windowX);
+            const inset = Math.min(width * 0.002, windowWidth * 0.08);
+            const barX = windowX + inset;
+            const barWidth = Math.max(0, windowWidth - inset * 2);
+            const value = Math.max(0, Math.min(metricValue(point), metricMax));
+            const barHeight = Math.max(strokeWidth * 2, plotBottom - yFor(value));
+            const barY = plotBottom - barHeight;
             const status = point.isInsufficient ? 'Datos insuficientes' : point.isBaseline ? 'Referencia provisional' : point.isSuspicious ? 'Cambio sospechoso' : 'Sin cambio acumulado';
             const color = point.isInsufficient ? '#94a3b8' : point.isBaseline ? '#60a5fa' : point.isSuspicious ? '#dc2626' : '#16a34a';
             html += `<g class="ks-window cursor-pointer" data-start="${point.startAt}" data-end="${end}" tabindex="0" role="button" aria-label="Ventana ${index + 1}, ${formatTime(point.startAt, true)}, ${status}">`;
             html += `<title>${formatTime(point.startAt, true)}–${formatTime(end, true)} · ${point.strokeCount} teclas · ${metricMode === 'score' ? `score ${Number(point.score || 0).toFixed(2)} · ` : ''}CUSUM ${Number(point.cusum || 0).toFixed(2)} · ${status}</title>`;
-            html += `<rect x="${x}" y="${padding.top}" width="${blockWidth}" height="${telemetryY + trackHeight - padding.top}" fill="transparent"/>`;
-            html += `<rect x="${x}" y="${telemetryY}" width="${blockWidth}" height="${trackHeight}" fill="${color}" fill-opacity=".8"/>`;
-            if (!point.isInsufficient) html += `<circle cx="${xFor((point.startAt + end) / 2)}" cy="${y}" r="${pointRadius}" fill="${color}" stroke="#fff" stroke-width="${strokeWidth}"/>`;
+            html += `<rect x="${windowX}" y="${padding.top}" width="${windowWidth}" height="${telemetryY + trackHeight - padding.top}" fill="transparent"/>`;
+            if (point.isInsufficient) {
+                html += `<rect class="ks-bar" x="${barX}" y="${plotBottom - strokeWidth * 2}" width="${barWidth}" height="${strokeWidth * 2}" rx="${strokeWidth}" fill="${color}" fill-opacity=".8"/>`;
+            } else {
+                html += `<rect class="ks-bar" x="${barX}" y="${barY}" width="${barWidth}" height="${barHeight}" rx="${Math.min(strokeWidth, barWidth / 4, barHeight / 4)}" fill="${color}" fill-opacity=".82"/>`;
+            }
+            html += `<rect x="${windowX}" y="${telemetryY}" width="${windowWidth}" height="${trackHeight}" fill="${color}" fill-opacity=".8"/>`;
             html += '</g>';
         });
         html += `<text x="${padding.left}" y="${telemetryY - height * 0.025}" class="text-xs font-semibold" fill="#374151">Telemetría · ${metricMode === 'score' ? 'score directo' : 'CUSUM'}</text>`;
