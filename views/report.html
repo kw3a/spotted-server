@@ -17,10 +17,10 @@
 
         <div class="grid min-h-0 min-w-0 flex-1 grid-cols-12 gap-5 p-5">
             <section aria-labelledby="timeline-heading-{{.ParticipationID}}" class="col-span-7 flex min-h-0 min-w-0 flex-col gap-3">
-                <h3 id="timeline-heading-{{.ParticipationID}}" class="shrink-0 text-sm font-semibold text-white">Cambios en la dinámica de pulsaciones (CUSUM)</h3>
+                <h3 id="timeline-heading-{{.ParticipationID}}" class="shrink-0 text-sm font-semibold text-white">Dinámica de pulsaciones</h3>
                 <div id="legend-container-{{.ParticipationID}}" class="flex shrink-0 flex-wrap gap-x-4 gap-y-1 text-xs text-shark-300">
                     <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-green-600"></span>Sin cambio acumulado</span>
-                    <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-red-600"></span>Cambio sospechoso (CUSUM ≥ 4)</span>
+                    <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-red-600"></span>Alerta CUSUM (≥ 4)</span>
                     <span class="flex items-center gap-1.5"><span class="size-2.5 bg-slate-400"></span>Datos insuficientes</span>
                     <span class="flex items-center gap-1.5"><span class="size-2.5 bg-blue-400"></span>Referencia provisional</span>
                     <span class="flex items-center gap-1.5"><span aria-hidden="true" class="text-slate-400">▧</span>Sin video</span>
@@ -34,6 +34,7 @@
                     </div>
                 </div>
                 <div class="flex shrink-0 flex-wrap items-center gap-2 text-xs">
+                    <button type="button" data-metric-toggle aria-pressed="false" class="rounded-lg border border-shark-600 px-3 py-2 hover:bg-shark-800">Ver score directo</button>
                     <button type="button" data-window-step="-1" class="rounded-lg border border-shark-600 px-3 py-2 hover:bg-shark-800">← Ventana</button>
                     <button type="button" data-window-step="1" class="rounded-lg border border-shark-600 px-3 py-2 hover:bg-shark-800">Ventana →</button>
                     <button type="button" data-window-step="deviation" class="rounded-lg border border-shark-600 px-3 py-2 hover:bg-shark-800">Siguiente cambio sospechoso</button>
@@ -83,6 +84,7 @@
             if (!dialog) return;
             dialog.showModal();
             window.renderKeystrokeReport(config);
+            dialog.querySelector('[data-metric-toggle]')?.addEventListener('click', () => window.toggleKeystrokeMetric(participationID));
             dialog.querySelectorAll('[data-window-step]').forEach(button => {
                 button.addEventListener('click', () => window.stepTelemetryWindow(participationID, button.dataset.windowStep === 'deviation' ? 'deviation' : Number(button.dataset.windowStep)));
             });

@@ -26,7 +26,7 @@
             coveredUntil = Math.max(coveredUntil, segment.epoch + segment.duration);
         }
         const coverage = !overlaps.length ? 'Sin video' : coveredUntil >= end ? 'Video completo' : 'Video parcial';
-        const metric = point.isBaseline ? 'Referencia provisional' : point.isInsufficient ? 'Datos insuficientes' : `distancia ${point.score.toFixed(2)} · CUSUM ${point.cusum.toFixed(2)}${point.isSuspicious ? ' · cambio sospechoso' : ''}`;
+        const metric = point.isBaseline ? 'Referencia provisional' : point.isInsufficient ? 'Datos insuficientes' : `score ${Number(point.score || 0).toFixed(2)} · CUSUM ${Number(point.cusum || 0).toFixed(2)}${point.isSuspicious ? ' · cambio sospechoso' : ''}`;
         return `${range} · ${point.strokeCount} teclas · ${metric} · ${coverage}`;
     }
 
@@ -90,6 +90,7 @@
 
         const participationID = data.participationID;
         const existing = states.get(participationID);
+        const metricMode = existing?.metricMode || 'cusum';
         const knownSegments = existing?.segments || window.getTelemetryRecordingSegments?.(participationID) || [];
         const segments = knownSegments.filter(s => Number.isFinite(s.epoch) && Number.isFinite(s.duration));
         const pointsStart = Math.min(...results.map(r => r.startAt));
@@ -110,7 +111,9 @@
         const trackHeight = height * 0.06;
         const strokeWidth = Math.min(width, height) * 0.004;
         const xFor = t => padding.left + ((t - t0) / timeSpan) * chartWidth;
-        const yFor = value => padding.top + ((plotBottom - padding.top) * (1 - Math.min(value, 8) / 8));
+        const metricMax = metricMode === 'score' ? 3 : 8;
+        const metricValue = point => metricMode === 'score' ? point.score || 0 : point.cusum || 0;
+        const yFor = value => padding.top + ((plotBottom - padding.top) * (1 - Math.min(value, metricMax) / metricMax));
         // ponytail: grid fijo de 5 min alineado a época; bloques y segmentos van en tiempo pared preciso, sin snap.
         const gridStep = 300;
         const firstTick = Math.ceil(t0 / gridStep) * gridStep;
@@ -128,14 +131,17 @@
         html += `<defs><pattern id="${patternID}" width="${patternSize}" height="${patternSize}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="${patternSize}" height="${patternSize}" fill="#f1f5f9"/><line x1="0" y1="0" x2="0" y2="${patternSize}" stroke="#cbd5e1" stroke-width="${patternSize * 0.35}"/></pattern></defs>`;
         html += `<line x1="${padding.left}" y1="${plotBottom}" x2="${width - padding.right}" y2="${plotBottom}" stroke="#374151" stroke-width="${strokeWidth}"/>`;
         html += `<line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${plotBottom}" stroke="#374151" stroke-width="${strokeWidth}"/>`;
-        for (let i = 0; i <= 8; i += 2) {
+        const yTicks = metricMode === 'score' ? [0, 1, 2, 3] : [0, 2, 4, 6, 8];
+        yTicks.forEach(i => {
             const y = yFor(i);
             html += `<line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="#e5e7eb"/>`;
             html += `<text x="${padding.left - width * 0.02}" y="${y}" dominant-baseline="middle" text-anchor="end" class="text-xs" fill="#6b7280">${i}</text>`;
+        });
+        if (metricMode === 'cusum') {
+            const thresholdY = yFor(CUSUM_THRESHOLD);
+            html += `<line x1="${padding.left}" y1="${thresholdY}" x2="${width - padding.right}" y2="${thresholdY}" stroke="#f59e0b" stroke-width="${strokeWidth}" stroke-dasharray="${strokeWidth * 4} ${strokeWidth * 3}"/>`;
+            html += `<text x="${width - padding.right + width * 0.01}" y="${thresholdY}" dominant-baseline="middle" class="text-xs" fill="#b45309">4</text>`;
         }
-        const thresholdY = yFor(CUSUM_THRESHOLD);
-        html += `<line x1="${padding.left}" y1="${thresholdY}" x2="${width - padding.right}" y2="${thresholdY}" stroke="#f59e0b" stroke-width="${strokeWidth}" stroke-dasharray="${strokeWidth * 4} ${strokeWidth * 3}"/>`;
-        html += `<text x="${width - padding.right + width * 0.01}" y="${thresholdY}" dominant-baseline="middle" class="text-xs" fill="#b45309">4</text>`;
         for (let n = 0, tick = firstTick; tick <= t1; tick += gridStep, n++) {
             const x = xFor(tick);
             html += `<line x1="${x}" y1="${padding.top}" x2="${x}" y2="${coverageY + trackHeight}" stroke="#e5e7eb"/>`;
@@ -157,7 +163,7 @@
                 return;
             }
             const x = xFor((point.startAt + windowEnd(point)) / 2);
-            const y = yFor(point.cusum || 0);
+            const y = yFor(metricValue(point));
             const color = point.isSuspicious ? '#dc2626' : '#2563eb';
             if (!path) {
                 path = `M ${x} ${y}`;
@@ -166,7 +172,7 @@
                 path += ` L ${x} ${y}`;
             } else {
                 const previousX = xFor((previousPoint.startAt + windowEnd(previousPoint)) / 2);
-                const previousY = yFor(previousPoint.cusum || 0);
+                const previousY = yFor(metricValue(previousPoint));
                 flushPath();
                 path = `M ${previousX} ${previousY} L ${x} ${y}`;
                 pathColor = color;
@@ -176,19 +182,19 @@
         flushPath();
         results.forEach((point, index) => {
             const x = xFor(point.startAt);
-            const y = yFor(point.cusum || 0);
+            const y = yFor(metricValue(point));
             const end = windowEnd(point);
             const blockWidth = Math.max(0, xFor(end) - x);
             const status = point.isInsufficient ? 'Datos insuficientes' : point.isBaseline ? 'Referencia provisional' : point.isSuspicious ? 'Cambio sospechoso' : 'Sin cambio acumulado';
             const color = point.isInsufficient ? '#94a3b8' : point.isBaseline ? '#60a5fa' : point.isSuspicious ? '#dc2626' : '#16a34a';
             html += `<g class="ks-window cursor-pointer" data-start="${point.startAt}" data-end="${end}" tabindex="0" role="button" aria-label="Ventana ${index + 1}, ${formatTime(point.startAt, true)}, ${status}">`;
-            html += `<title>${formatTime(point.startAt, true)}–${formatTime(end, true)} · ${point.strokeCount} teclas · ${status}</title>`;
+            html += `<title>${formatTime(point.startAt, true)}–${formatTime(end, true)} · ${point.strokeCount} teclas · ${metricMode === 'score' ? `score ${Number(point.score || 0).toFixed(2)} · ` : ''}CUSUM ${Number(point.cusum || 0).toFixed(2)} · ${status}</title>`;
             html += `<rect x="${x}" y="${padding.top}" width="${blockWidth}" height="${telemetryY + trackHeight - padding.top}" fill="transparent"/>`;
             html += `<rect x="${x}" y="${telemetryY}" width="${blockWidth}" height="${trackHeight}" fill="${color}" fill-opacity=".8"/>`;
             if (!point.isInsufficient) html += `<circle cx="${xFor((point.startAt + end) / 2)}" cy="${y}" r="${pointRadius}" fill="${color}" stroke="#fff" stroke-width="${strokeWidth}"/>`;
             html += '</g>';
         });
-        html += `<text x="${padding.left}" y="${telemetryY - height * 0.025}" class="text-xs font-semibold" fill="#374151">Telemetría · CUSUM</text>`;
+        html += `<text x="${padding.left}" y="${telemetryY - height * 0.025}" class="text-xs font-semibold" fill="#374151">Telemetría · ${metricMode === 'score' ? 'score directo' : 'CUSUM'}</text>`;
         html += `<text x="${padding.left}" y="${coverageY - height * 0.025}" class="text-xs font-semibold" fill="#374151">Cobertura de video</text>`;
         html += `<rect x="${padding.left}" y="${coverageY}" width="${chartWidth}" height="${trackHeight}" fill="url(#${patternID})" stroke="#94a3b8"/>`;
         segments.forEach((segment, index) => {
@@ -206,8 +212,13 @@
         container.innerHTML = html;
 
         const svg = container.querySelector('svg');
-        const state = { config, segments, results, selectedAt, selection, svg, xFor, strokeWidth, observer: existing?.observer };
+        const state = { config, segments, results, selectedAt, selection, svg, xFor, strokeWidth, metricMode, observer: existing?.observer };
         states.set(participationID, state);
+        const metricToggle = container.closest('dialog')?.querySelector('[data-metric-toggle]');
+        if (metricToggle) {
+            metricToggle.textContent = metricMode === 'cusum' ? 'Ver score directo' : 'Ver CUSUM';
+            metricToggle.setAttribute('aria-pressed', String(metricMode === 'score'));
+        }
         const activate = event => setSelection(participationID, Number(event.currentTarget.dataset.start), 'chart');
         svg.querySelectorAll('.ks-window, .video-segment').forEach(el => {
             el.addEventListener('click', activate);
@@ -249,6 +260,12 @@
         render(state.config);
     };
     window.setTelemetrySelection = (participationID, timestamp) => setSelection(participationID, timestamp, 'video');
+    window.toggleKeystrokeMetric = participationID => {
+        const state = states.get(participationID);
+        if (!state) return;
+        state.metricMode = state.metricMode === 'cusum' ? 'score' : 'cusum';
+        render(state.config);
+    };
     window.stepTelemetryWindow = (participationID, direction) => {
         const state = states.get(participationID);
         if (!state) return;
