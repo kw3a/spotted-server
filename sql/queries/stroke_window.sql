@@ -19,5 +19,13 @@ ON DUPLICATE KEY UPDATE id = VALUES(id);
 -- name: SelectStrokeWindows :many
 SELECT stroke_window.*
 FROM stroke_window
-WHERE participation_id = ?
-ORDER BY created_at DESC;
+JOIN participation ON participation.id = stroke_window.participation_id
+WHERE stroke_window.participation_id = ?
+  AND (
+    stroke_window.feature_version = 0
+    OR (
+      stroke_window.window_start_ms >= (UNIX_TIMESTAMP(participation.created_at) - 120) * 1000
+      AND stroke_window.window_end_ms <= (UNIX_TIMESTAMP(participation.expires_at) + 120) * 1000
+    )
+  )
+ORDER BY stroke_window.created_at DESC;

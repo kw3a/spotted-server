@@ -94,8 +94,16 @@ func (q *Queries) InsertStrokeWindow(ctx context.Context, arg InsertStrokeWindow
 const selectStrokeWindows = `-- name: SelectStrokeWindows :many
 SELECT stroke_window.id, stroke_window.created_at, stroke_window.updated_at, stroke_window.stroke_amount, stroke_window.ud_mean, stroke_window.ud_std_dev, stroke_window.du1_mean, stroke_window.du1_std_dev, stroke_window.du2_mean, stroke_window.du2_std_dev, stroke_window.dd_mean, stroke_window.dd_std_dev, stroke_window.uu_mean, stroke_window.uu_std_dev, stroke_window.participation_id, stroke_window.feature_version, stroke_window.window_start_ms, stroke_window.window_end_ms, stroke_window.ud_median, stroke_window.ud_mad, stroke_window.du1_median, stroke_window.du1_mad, stroke_window.du2_median, stroke_window.du2_mad, stroke_window.dd_median, stroke_window.dd_mad, stroke_window.uu_median, stroke_window.uu_mad, stroke_window.long_pause_permille
 FROM stroke_window
-WHERE participation_id = ?
-ORDER BY created_at DESC
+JOIN participation ON participation.id = stroke_window.participation_id
+WHERE stroke_window.participation_id = ?
+  AND (
+    stroke_window.feature_version = 0
+    OR (
+      stroke_window.window_start_ms >= (UNIX_TIMESTAMP(participation.created_at) - 120) * 1000
+      AND stroke_window.window_end_ms <= (UNIX_TIMESTAMP(participation.expires_at) + 120) * 1000
+    )
+  )
+ORDER BY stroke_window.created_at DESC
 `
 
 func (q *Queries) SelectStrokeWindows(ctx context.Context, participationID string) ([]StrokeWindow, error) {

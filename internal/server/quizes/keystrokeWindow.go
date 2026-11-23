@@ -183,6 +183,8 @@ func GetStrokeWindowInput(r *http.Request) (StrokeWindowInput, error) {
 
 type keystrokeWindowInputFn func(*http.Request) (StrokeWindowInput, error)
 
+const telemetryWindowTolerance = 2 * time.Minute
+
 func CreateKeyStrokeWindowHandler(storage KeyStrokeWindowStorage, authService shared.AuthRep, inputFn keystrokeWindowInputFn) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := authService.GetUser(r)
@@ -203,6 +205,20 @@ func CreateKeyStrokeWindowHandler(storage KeyStrokeWindowStorage, authService sh
 		if partiData.ExpiresAt.Before(time.Now()) {
 			http.Error(w, "your participation is over", http.StatusUnauthorized)
 			return
+		}
+		if input.StrokeWindow.FeatureVersion > 0 {
+			const maxInt64 = int64(1<<63 - 1)
+			if input.StrokeWindow.WindowStartMs > uint64(maxInt64) || input.StrokeWindow.WindowEndMs > uint64(maxInt64) {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			oldestWindow := partiData.CreatedAt.Add(-telemetryWindowTolerance).UnixMilli()
+			latestWindow := partiData.ExpiresAt.Add(telemetryWindowTolerance).UnixMilli()
+			if int64(input.StrokeWindow.WindowStartMs) < oldestWindow || int64(input.StrokeWindow.WindowEndMs) > latestWindow {
+				// Return success so the client discards stale queued telemetry instead of retrying it forever.
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
 		}
 		if input.StrokeWindow.ID == "" {
 			input.StrokeWindow.ID = uuid.NewString()
