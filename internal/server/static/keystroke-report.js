@@ -143,16 +143,37 @@
         }
 
         let path = '';
-        results.forEach((point, index) => {
+        let pathColor = '';
+        let previousPoint = null;
+        const flushPath = () => {
+            if (path) html += `<path d="${path}" fill="none" stroke="${pathColor}" stroke-width="${strokeWidth}"/>`;
+            path = '';
+            pathColor = '';
+        };
+        results.forEach(point => {
             if (point.isInsufficient || point.hasGapBefore) {
-                if (path) html += `<path d="${path}" fill="none" stroke="#2563eb" stroke-width="${strokeWidth}"/>`;
-                path = '';
+                flushPath();
+                previousPoint = null;
                 return;
             }
-            const command = `${path ? 'L' : 'M'} ${xFor((point.startAt + windowEnd(point)) / 2)} ${yFor(point.cusum || 0)}`;
-            path += `${path ? ' ' : ''}${command}`;
-            if (index === results.length - 1) html += `<path d="${path}" fill="none" stroke="#2563eb" stroke-width="${strokeWidth}"/>`;
+            const x = xFor((point.startAt + windowEnd(point)) / 2);
+            const y = yFor(point.cusum || 0);
+            const color = point.isSuspicious ? '#dc2626' : '#2563eb';
+            if (!path) {
+                path = `M ${x} ${y}`;
+                pathColor = color;
+            } else if (pathColor === color) {
+                path += ` L ${x} ${y}`;
+            } else {
+                const previousX = xFor((previousPoint.startAt + windowEnd(previousPoint)) / 2);
+                const previousY = yFor(previousPoint.cusum || 0);
+                flushPath();
+                path = `M ${previousX} ${previousY} L ${x} ${y}`;
+                pathColor = color;
+            }
+            previousPoint = point;
         });
+        flushPath();
         results.forEach((point, index) => {
             const x = xFor(point.startAt);
             const y = yFor(point.cusum || 0);
