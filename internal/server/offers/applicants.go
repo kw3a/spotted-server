@@ -2,6 +2,8 @@ package offers
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"net/http"
 	"os"
 
@@ -42,6 +44,15 @@ func GetApplicantsInput(r *http.Request) (ApplicantsInput, error) {
 
 type offerApplInputFn func(r *http.Request) (ApplicantsInput, error)
 
+func redirectApplicantsToHome(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", "/")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
 func CreateApplicantsHandler(
 	inputFn offerApplInputFn,
 	authService shared.AuthRep,
@@ -51,7 +62,11 @@ func CreateApplicantsHandler(
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := authService.GetUser(r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			redirectApplicantsToHome(w, r)
+			return
+		}
+		if user.Role == auth.NotAuthRole {
+			redirectApplicantsToHome(w, r)
 			return
 		}
 		input, err := inputFn(r)
@@ -61,7 +76,11 @@ func CreateApplicantsHandler(
 		}
 		offer, err := storage.SelectOfferByUser(r.Context(), input.OfferID, user.ID)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			if errors.Is(err, sql.ErrNoRows) {
+				redirectApplicantsToHome(w, r)
+				return
+			}
+			http.Error(w, "could not load offer", http.StatusInternalServerError)
 			return
 		}
 		quiz, err := storage.SelectQuizByOffer(r.Context(), input.OfferID)
